@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "waveview-api"
+version = "0.1.0"
+description = "WaveView API endpoints"
+authors = ["Indra Rudianto <indrarudianto.official@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "4.2.11"
+django-environ = "^0.11.2"
+djangorestframework = "^3.15.1"
+djangorestframework-simplejwt = "^5.3.1"
+django-cors-headers = "^4.3.1"
+drf-yasg = "^1.21.7"
+celery = "^5.4.0"
+redis = "^5.0.4"
+pillow = "^10.3.0"
+psycopg2-binary = "^2.9.9"
+pymemcache = "^4.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

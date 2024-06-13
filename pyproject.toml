@@ -22,6 +22,7 @@ pymemcache = "^4.0.0"
 channels = {extras = ["daphne"], version = "^4.1.0"}
 obspy = "^1.4.1"
 lttbc = "^0.2.4"
+pycairo = "^1.26.0"
 
 
 [build-system]

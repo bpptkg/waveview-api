@@ -19,6 +19,9 @@ redis = "^5.0.4"
 pillow = "^10.3.0"
 psycopg2-binary = "^2.9.9"
 pymemcache = "^4.0.0"
+channels = {extras = ["daphne"], version = "^4.1.0"}
+obspy = "^1.4.1"
+lttbc = "^0.2.4"
 
 
 [build-system]

@@ -18,6 +18,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 STORAGE_DIR = BASE_DIR / "storage"
 
 PREREQUISITE_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -73,6 +74,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "waveview.wsgi.application"
+
+ASGI_APPLICATION = "waveview.asgi.application"
 
 DATABASES = {
     "default": {

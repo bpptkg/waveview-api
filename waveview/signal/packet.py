@@ -1,43 +1,56 @@
 import datetime
+from dataclasses import dataclass
+from typing import Literal
 
 import lttbc
 import numpy as np
-from obspy import UTCDateTime, read
+from obspy import Trace, UTCDateTime, read
 
 
+def pad(a: bytes, n: int) -> bytes:
+    if len(a) >= n:
+        return a[:n]
+    return a.ljust(n, b"\0")
+
+
+@dataclass(frozen=True)
 class Packet:
-    def __init__(self, x: np.ndarray, y: np.ndarray, start: float, end: float) -> None:
-        self.x = x
-        self.y = y
-        self.start = start
-        self.end = end
+    x: np.ndarray
+    y: np.ndarray
+    start: int
+    end: int
+    channel_id: str
 
     def encode(self) -> bytes:
-        y = self.y.copy()
-        x = self.x.copy()
-        n_out = min(len(y), 100 * 60)
-        a, b = lttbc.downsample(x, y, n_out)
+        channel_id = pad(self.channel_id.encode("utf-8"), 64)
         header = np.array(
             [
-                len(a),
-                self.start,
-                self.end,
-                0,
+                int(self.start),
+                int(self.end),
+                len(self.x),
+                len(self.y),
                 0,
                 0,
                 0,
                 0,
             ],
-            dtype=np.int64,
+            dtype=np.uint64,
         )
-        return header.tobytes() + a.tobytes() + b.tobytes()
+        return b"".join(
+            [
+                channel_id,
+                header.tobytes(),
+                self.x.tobytes(),
+                self.y.tobytes(),
+            ]
+        )
 
 
 path = "/Users/iori/Projects/testonly/MEPAS.msd"
 st = read(path)
 
 
-def get_data(start: float, end: float) -> bytes:
+def get_data(start: float, end: float) -> Trace:
     """
     Stream1: 1 Trace(s) in Stream:
     VG.MEPAS.00.HHZ | 2024-06-10T08:00:00.000000Z - 2024-06-12T08:00:00.000000Z | 100.0 Hz, 17280001 samples
@@ -50,8 +63,66 @@ def get_data(start: float, end: float) -> bytes:
     ns = st.slice(starttime=starttime, endtime=endtime)
     trace = ns[0]
 
-    x = np.linspace(start, end, len(trace.data))
-    y = trace.data
+    return trace
 
-    packet = Packet(x, y, start, end)
-    return packet.encode()
+
+@dataclass
+class FetcherData:
+    channel_id: str
+    start: float
+    end: float
+    mode: Literal[
+        "match_width",
+        "max_points",
+        "none",
+        "auto",
+    ]
+    width: float
+    max_points: int
+
+    @classmethod
+    def parse_raw(cls, raw: dict) -> "FetcherData":
+        return cls(
+            channel_id=raw["channelId"],
+            start=raw["start"],
+            end=raw["end"],
+            mode=raw["mode"],
+            width=raw.get("width", 0),
+            max_points=raw.get("max_points", 0),
+        )
+
+
+class StreamFetcher:
+    def __init__(self, payload: FetcherData) -> None:
+        self.payload = payload
+
+    def fetch(self) -> bytes:
+        channel_id = self.payload.channel_id
+        start = self.payload.start
+        end = self.payload.end
+        width = self.payload.width
+        mode = self.payload.mode
+
+        trace = get_data(start, end)
+        x = np.linspace(start, end, num=len(trace.data))
+        y = trace.data
+
+        if mode == "auto":
+            n_out = int(width * 2)
+        elif mode == "match_width":
+            n_out = int(width)
+        elif mode == "max_points":
+            max_points = self.payload.max_points
+            n_out = np.min([len(y), max_points])
+        else:
+            n_out = len(y)
+
+        a, b = lttbc.downsample(x, y, n_out)
+        packet = Packet(
+            channel_id=channel_id,
+            start=start,
+            end=end,
+            x=a,
+            y=b,
+        )
+        return packet.encode()

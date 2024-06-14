@@ -1,7 +1,7 @@
 import enum
 import json
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, Literal, TypeVar
 
 T = TypeVar("T")
 
@@ -22,17 +22,21 @@ class WebSocketResponseStatus(enum.Enum):
 
 
 @dataclass
-class WebSocketRequestMessage(Generic[T]):
-    command: str
+class WebSocketRequest(Generic[T]):
+    command: Literal[
+        "stream.ssr",
+        "stream.fetch",
+        "ping",
+    ]
     data: T
 
     @staticmethod
-    def parse_raw(text_data: str) -> "WebSocketRequestMessage":
-        return WebSocketRequestMessage(**json.loads(text_data))
+    def parse_raw(text_data: str) -> "WebSocketRequest":
+        return WebSocketRequest(**json.loads(text_data))
 
 
 @dataclass
-class WebSocketResponseMessage(Generic[T]):
+class WebSocketResponse(Generic[T]):
     status: str
     type: str
     data: T

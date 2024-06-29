@@ -1,14 +1,14 @@
 from django.urls import path, re_path
 
-from .endpoints.account import AccountEndpoint
-from .endpoints.auth import (
+from .v1.account import AccountEndpoint
+from .v1.auth import (
     TokenBlacklistEndpoint,
     TokenObtainPairEndpoint,
     TokenRefreshEndpoint,
     TokenVerifyEndpoint,
 )
-from .endpoints.catchall import CatchallEndpoint
-from .endpoints.index import IndexEndpoint
+from .v1.catchall import CatchallEndpoint
+from .v1.index import IndexEndpoint
 
 urlpatterns = [
     path("account/", AccountEndpoint.as_view(), name="waveview-api-1-account"),

@@ -3,7 +3,6 @@ import uuid
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from waveview.organization.permissions import PermissionChoices
@@ -34,12 +33,8 @@ class OrganizationMember(models.Model):
         on_delete=models.SET_NULL,
     )
     email = models.EmailField(null=True, blank=True)
-    date_added = models.DateTimeField(
-        verbose_name=_("date added"), auto_now_add=timezone.now
-    )
-    expiration_date = models.DateTimeField(
-        verbose_name=_("expiration date"), null=True, blank=True
-    )
+    date_added = models.DateTimeField(auto_now_add=True)
+    expiration_date = models.DateTimeField(null=True, blank=True)
     inviter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -69,8 +64,8 @@ class Organization(models.Model):
     avatar = models.ImageField(
         upload_to=MediaPath("organization-avatars"), null=True, blank=True
     )
-    created_at = models.DateTimeField(auto_now_add=timezone.now)
-    updated_at = models.DateTimeField(auto_now=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -109,6 +104,7 @@ class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     slug = models.SlugField(max_length=250, null=False, blank=False)
     name = models.CharField(max_length=200, null=False, blank=False)
+    description = models.TextField(null=True, blank=True, default="")
     permissions = ArrayField(
         models.TextField(null=False, blank=False, choices=PermissionChoices.choices),
         null=True,

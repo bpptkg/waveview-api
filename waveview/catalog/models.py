@@ -2,7 +2,6 @@ import uuid
 
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -17,8 +16,8 @@ class Catalog(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True, default="")
     is_default = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=timezone.now)
-    updated_at = models.DateTimeField(auto_now=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta:

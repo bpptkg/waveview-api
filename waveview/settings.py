@@ -1,6 +1,6 @@
+import tempfile
 from datetime import timedelta
 from pathlib import Path
-import tempfile
 
 import environ
 
@@ -34,6 +34,7 @@ PREREQUISITE_APPS = [
 
 PROJECT_APPS = [
     "waveview.users",
+    "waveview.organization",
 ]
 
 INSTALLED_APPS = PREREQUISITE_APPS + PROJECT_APPS

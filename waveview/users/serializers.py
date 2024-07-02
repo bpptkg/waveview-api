@@ -11,3 +11,10 @@ class UserSerializer(serializers.Serializer):
     avatar = serializers.ImageField(
         help_text=_("User avatar image URL."), allow_null=True
     )
+    bio = serializers.CharField(
+        help_text=_("User biography description."), allow_blank=True
+    )
+    is_staff = serializers.BooleanField(help_text=_("True if user is an admin staff."))
+    is_superuser = serializers.BooleanField(
+        help_text=_("True if the user is a superuser.")
+    )

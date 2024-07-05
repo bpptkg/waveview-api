@@ -36,7 +36,8 @@ PROJECT_APPS = [
     "waveview.users",
     "waveview.organization",
     "waveview.volcano",
-    "waveview.catalog",
+    "waveview.inventory",
+    "waveview.event",
 ]
 
 INSTALLED_APPS = PREREQUISITE_APPS + PROJECT_APPS

@@ -102,6 +102,14 @@ class Organization(models.Model):
 
 class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        "organization.Organization",
+        null=True,
+        blank=False,
+        related_name="roles",
+        related_query_name="role",
+        on_delete=models.CASCADE,
+    )
     slug = models.SlugField(max_length=250, null=False, blank=False)
     name = models.CharField(max_length=200, null=False, blank=False)
     description = models.TextField(null=True, blank=True, default="")
@@ -112,14 +120,6 @@ class Role(models.Model):
         default=list,
     )
     order = models.IntegerField(default=0, null=False, blank=False)
-    organization = models.ForeignKey(
-        "organization.Organization",
-        null=True,
-        blank=False,
-        related_name="roles",
-        related_query_name="role",
-        on_delete=models.CASCADE,
-    )
 
     class Meta:
         verbose_name = _("role")

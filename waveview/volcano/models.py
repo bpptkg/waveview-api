@@ -10,6 +10,12 @@ from waveview.utils.media import MediaPath, MediaType
 
 class Volcano(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        "organization.Organization",
+        on_delete=models.CASCADE,
+        related_name="volcanoes",
+        related_query_name="volcano",
+    )
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True, default="")
     elevation = models.IntegerField(null=True, blank=True)

@@ -1,6 +1,7 @@
 import os
 from uuid import uuid4
 
+from django.db import models
 from django.utils.deconstruct import deconstructible
 
 
@@ -13,3 +14,11 @@ class MediaPath(object):
         ext = filename.split(".")[-1]
         filename = "{}.{}".format(uuid4(), ext)
         return os.path.join(self.path, filename)
+
+
+class MediaType(models.TextChoices):
+    PHOTO = "photo", "Photo"
+    VIDEO = "video", "Video"
+    AUDIO = "audio", "Audio"
+    DOCUMENT = "document", "Document"
+    OTHER = "other", "Other"

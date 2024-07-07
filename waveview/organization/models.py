@@ -103,7 +103,7 @@ class Organization(models.Model):
 class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(
-        "organization.Organization",
+        "Organization",
         null=True,
         blank=False,
         related_name="roles",
@@ -124,7 +124,7 @@ class Role(models.Model):
     class Meta:
         verbose_name = _("role")
         verbose_name_plural = _("roles")
-        unique_together = (("slug", "organization"),)
+        unique_together = ("organization", "slug")
 
     def __str__(self) -> str:
         return self.name

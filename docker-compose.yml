@@ -1,0 +1,102 @@
+version: "3"
+
+services:
+    postgres:
+        image: postgres:14-alpine
+        container_name: postgres
+        restart: always
+        env_file:
+            - ./.env
+        volumes:
+            - ./storage/db:/var/lib/postgresql/data
+        ports:
+            - 5432:5432
+
+    memcached:
+        image: memcached:1.6-alpine
+        container_name: memcached
+        restart: always
+        expose:
+            - "11211"
+        entrypoint:
+            - memcached
+            - -m 64
+
+    redis:
+      image: redis:7.2-alpine
+      container_name: redis
+      restart: always
+
+    rabbitmq:
+        image: rabbitmq:3.12-alpine
+        container_name: rabbitmq
+        restart: always
+        env_file:
+            - ./.env
+        ports:
+            - 5672:5672
+            - 15672:15672
+        volumes:
+            - ./storage/rabbitmq/data:/var/lib/rabbitmq/
+            - ./storage/rabbitmq/log:/var/log/rabbitmq/
+        networks:
+            - rabbitmq
+
+    app:
+        build: .
+        container_name: waveview
+        restart: always
+        env_file:
+            - ./.env
+        ports:
+            - 8000:8000
+        volumes:
+            - ./storage/:/app/storage/
+        command: "gunicorn --workers 4 --bind 0.0.0.0:8000 waveview.wsgi:application"
+        depends_on:
+            - postgres
+            - redis
+            - rabbitmq
+            - memcached
+
+    nginx:
+        image: nginx:1.27-alpine
+        container_name: nginx
+        restart: always
+        ports:
+            - 8080:80
+        volumes:
+            - ./conf/docker/waveview.conf:/etc/nginx/conf.d/waveview.conf
+            - ./storage/:/var/www/html/
+        depends_on:
+            - app
+
+    celery:
+        build: .
+        container_name: celery
+        restart: always
+        env_file:
+            - ./.env
+        command: "celery -A waveview worker -l info"
+        depends_on:
+            - app
+            - redis
+            - rabbitmq
+            - memcached
+
+    celery-beat:
+        build: .
+        container_name: celerybeat
+        restart: always
+        env_file:
+            - ./.env
+        command: "celery -A waveview beat -l info"
+        depends_on:
+            - app
+            - redis
+            - rabbitmq
+            - memcached
+
+networks:
+  rabbitmq:
+    driver: bridge

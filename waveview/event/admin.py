@@ -47,10 +47,7 @@ class EventAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "catalog",
-        "time",
-        "duration",
         "type",
-        "station_of_first_arrival",
         "author",
         "created_at",
         "updated_at",

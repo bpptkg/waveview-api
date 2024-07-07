@@ -9,8 +9,14 @@ from .v1.auth import (
 )
 from .v1.catchall import CatchallEndpoint
 from .v1.index import IndexEndpoint
+from .v1.organization_index import OrganizationIndexEndpoint
 
 urlpatterns = [
+    path(
+        "organizations/",
+        OrganizationIndexEndpoint.as_view(),
+        name="waveview-api-1-organizatio-index",
+    ),
     path("account/", AccountEndpoint.as_view(), name="waveview-api-1-account"),
     path(
         "login/",

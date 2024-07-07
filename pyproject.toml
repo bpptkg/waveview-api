@@ -24,6 +24,7 @@ obspy = "^1.4.1"
 lttbc = "^0.2.4"
 pycairo = "^1.26.0"
 django-countries = "^7.6.1"
+drf-standardized-errors = "^0.14.0"
 
 
 [build-system]

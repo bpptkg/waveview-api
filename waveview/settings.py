@@ -30,6 +30,7 @@ PREREQUISITE_APPS = [
     "rest_framework",
     "corsheaders",
     "drf_yasg",
+    "drf_standardized_errors",
 ]
 
 PROJECT_APPS = [
@@ -157,6 +158,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
 }
 
 JWT_ACCESS_TOKEN_LIFETIME = env.int("JWT_ACCESS_TOKEN_LIFETIME", default=60)
@@ -266,6 +268,7 @@ SWAGGER_SETTINGS = {
 
 REDOC_SETTINGS = {
     "SPEC_URL": ("schema-json", {"format": ".json"}),
+    "LAZY_RENDERING": True,
 }
 
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379")

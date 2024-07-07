@@ -1,18 +1,22 @@
 from django.contrib import admin
 
-from waveview.organization.models import Organization, OrganizationMember, Role
+from waveview.organization.models import (
+    Organization,
+    OrganizationMember,
+    Role,
+)
 
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "slug",
         "name",
         "email",
         "description",
         "url",
         "address",
-        "authority_domain",
         "author",
         "created_at",
         "updated_at",
@@ -23,6 +27,7 @@ class OrganizationAdmin(admin.ModelAdmin):
 @admin.register(OrganizationMember)
 class OrganizationMemberAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "organization",
         "user",
         "role",
@@ -37,6 +42,7 @@ class OrganizationMemberAdmin(admin.ModelAdmin):
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "slug",
         "name",
         "permissions",

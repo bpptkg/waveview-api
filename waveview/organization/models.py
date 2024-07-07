@@ -5,7 +5,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from waveview.organization.permissions import PermissionChoices
+from waveview.organization.permissions import PermissionType
 from waveview.utils.media import MediaPath
 
 
@@ -47,6 +47,9 @@ class OrganizationMember(models.Model):
         verbose_name = _("organization member")
         verbose_name_plural = _("organization members")
 
+    def __str__(self) -> str:
+        return self.user.username
+
 
 class Organization(models.Model):
     """
@@ -54,13 +57,12 @@ class Organization(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, db_index=True)
     name = models.CharField(max_length=255)
     email = models.EmailField(null=True, blank=True)
     description = models.TextField(null=True, blank=True, default="")
     url = models.URLField(null=True, blank=True)
     address = models.TextField(null=True, blank=True, default="")
-    authority_domain = models.CharField(max_length=64, null=True, blank=True)
     avatar = models.ImageField(
         upload_to=MediaPath("organization-avatars"), null=True, blank=True
     )
@@ -88,16 +90,15 @@ class Organization(models.Model):
     def __str__(self) -> str:
         return self.name
 
-    def get_authority_id(self) -> str:
-        """
-        Get organization authority identifier used in QuakeML URI.
 
-        If authority_domain is not None, return its value. Otherwise, return
-        slug.
-        """
-        if self.authority_domain is not None:
-            return self.authority_domain
-        return self.slug
+class RoleType(models.TextChoices):
+    """
+    Role types for organizations.
+    """
+
+    OWNER = "owner", _("Owner")
+    ADMIN = "admin", _("Admin")
+    MEMBER = "member", _("Member")
 
 
 class Role(models.Model):
@@ -114,7 +115,7 @@ class Role(models.Model):
     name = models.CharField(max_length=200, null=False, blank=False)
     description = models.TextField(null=True, blank=True, default="")
     permissions = ArrayField(
-        models.TextField(null=False, blank=False, choices=PermissionChoices.choices),
+        models.TextField(null=False, blank=False, choices=PermissionType.choices),
         null=True,
         blank=True,
         default=list,

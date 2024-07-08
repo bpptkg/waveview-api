@@ -49,6 +49,41 @@ class OrganizationMemberIndexEndpoint(Endpoint):
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
+        operation_id="List Organization Members",
+        operation_description=(
+            """
+            List all members of the organization. Only organization members can
+            view other members of the organization.
+            """
+        ),
+        tags=["Organization"],
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", OrganizationMemberSerializer)
+        },
+    )
+    def get(self, request: Request, organization_id: str) -> Response:
+        if not is_valid_uuid(organization_id):
+            raise serializers.ValidationError(
+                {"organization_id": _("Invalid UUID format.")},
+            )
+        if not Organization.objects.filter(id=organization_id).exists():
+            raise NotFound(_("Organization does not exist."))
+        if not OrganizationMember.objects.filter(
+            organization_id=organization_id, user=request.user
+        ).exists():
+            raise PermissionDenied(
+                _("You do not have permission to view members of this organization."),
+            )
+
+        organization_members = OrganizationMember.objects.filter(
+            organization_id=organization_id
+        )
+        return Response(
+            OrganizationMemberSerializer(organization_members, many=True).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @swagger_auto_schema(
         operation_id="Add Organization Member",
         operation_description=(
             """

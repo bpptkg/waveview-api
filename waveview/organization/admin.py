@@ -31,7 +31,6 @@ class OrganizationMemberAdmin(admin.ModelAdmin):
         "organization",
         "user",
         "role",
-        "email",
         "date_added",
         "expiration_date",
         "inviter",

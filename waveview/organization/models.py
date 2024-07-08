@@ -32,7 +32,6 @@ class OrganizationMember(models.Model):
         related_name="orgmember",
         on_delete=models.SET_NULL,
     )
-    email = models.EmailField(null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
     expiration_date = models.DateTimeField(null=True, blank=True)
     inviter = models.ForeignKey(

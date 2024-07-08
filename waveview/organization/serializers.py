@@ -105,7 +105,6 @@ class OrganizationPayloadSerializer(serializers.Serializer):
         OrganizationMember.objects.create(
             organization=organization,
             user=user,
-            email=user.email,
             role=role,
             inviter=user,
         )

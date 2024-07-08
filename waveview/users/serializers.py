@@ -1,6 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from waveview.users.models import User
+
 
 class UserSerializer(serializers.Serializer):
     id = serializers.UUIDField(help_text=_("User ID."))
@@ -18,3 +20,21 @@ class UserSerializer(serializers.Serializer):
     is_superuser = serializers.BooleanField(
         help_text=_("True if the user is a superuser.")
     )
+
+
+class UserUpdatePayloadSerializer(serializers.Serializer):
+    name = serializers.CharField(
+        help_text=_("User name."), allow_blank=True, required=False
+    )
+    avatar = serializers.ImageField(
+        help_text=_("User avatar image URL."), allow_null=True, required=False
+    )
+    bio = serializers.CharField(
+        help_text=_("User biography description."), allow_blank=True, required=False
+    )
+
+    def update(self, instance: User, validated_data: dict) -> User:
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance

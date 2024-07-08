@@ -10,6 +10,7 @@ from .v1.auth import (
 from .v1.catchall import CatchallEndpoint
 from .v1.index import IndexEndpoint
 from .v1.organization_index import OrganizationIndexEndpoint
+from .v1.search_user import SearchUserEndpoint
 
 urlpatterns = [
     path(
@@ -18,6 +19,11 @@ urlpatterns = [
         name="waveview-api-1-organizatio-index",
     ),
     path("account/", AccountEndpoint.as_view(), name="waveview-api-1-account"),
+    path(
+        "users/search/",
+        SearchUserEndpoint.as_view(),
+        name="waveview-api-1-users-search",
+    ),
     path(
         "login/",
         TokenObtainPairEndpoint.as_view(),

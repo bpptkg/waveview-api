@@ -11,6 +11,10 @@ from .v1.catchall import CatchallEndpoint
 from .v1.index import IndexEndpoint
 from .v1.organization_detail import OrganizationDetailEndpoint
 from .v1.organization_index import OrganizationIndexEndpoint
+from .v1.organization_member import (
+    OrganizationMemberDetailEndpoint,
+    OrganizationMemberIndexEndpoint,
+)
 from .v1.search_user import SearchUserEndpoint
 
 urlpatterns = [
@@ -23,6 +27,16 @@ urlpatterns = [
         "organizations/<str:organization_id>/",
         OrganizationDetailEndpoint.as_view(),
         name="waveview-api-1-organization-detail",
+    ),
+    path(
+        "organizations/<str:organization_id>/members/",
+        OrganizationMemberIndexEndpoint.as_view(),
+        name="waveview-api-1-organization-member-index",
+    ),
+    path(
+        "organizations/<str:organization_id>/members/<str:user_id>/",
+        OrganizationMemberDetailEndpoint.as_view(),
+        name="waveview-api-1-organization-member-detail",
     ),
     path("account/", AccountEndpoint.as_view(), name="waveview-api-1-account"),
     path(

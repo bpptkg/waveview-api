@@ -11,10 +11,8 @@ from .v1.catchall import CatchallEndpoint
 from .v1.index import IndexEndpoint
 from .v1.organization_detail import OrganizationDetailEndpoint
 from .v1.organization_index import OrganizationIndexEndpoint
-from .v1.organization_member import (
-    OrganizationMemberDetailEndpoint,
-    OrganizationMemberIndexEndpoint,
-)
+from .v1.organization_member_detail import OrganizationMemberDetailEndpoint
+from .v1.organization_member_index import OrganizationMemberIndexEndpoint
 from .v1.search_user import SearchUserEndpoint
 
 urlpatterns = [

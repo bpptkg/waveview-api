@@ -56,7 +56,6 @@ class OrganizationSerializer(serializers.Serializer):
         help_text=_("Organization avatar."), allow_null=True, required=False
     )
     author = UserSerializer(required=False)
-    member = OrganizationMemberSerializer(many=True, required=False)
     created_at = serializers.DateTimeField(
         help_text=_("Date when the organization was created."), required=False
     )

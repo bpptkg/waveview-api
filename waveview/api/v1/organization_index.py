@@ -38,7 +38,7 @@ class OrganizationIndexEndpoint(Endpoint):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_id="Create an Organization",
+        operation_id="Create Organization",
         operation_description=(
             """
             Create a new organization. Only the superuser can create an

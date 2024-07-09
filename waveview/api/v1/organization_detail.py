@@ -2,15 +2,15 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
+from waveview.api.permissions import IsOrganizationMember, IsSuperUser
 from waveview.organization.models import Organization
 from waveview.organization.serializers import (
-    OrganizationMember,
     OrganizationPayloadSerializer,
     OrganizationSerializer,
 )
@@ -18,7 +18,13 @@ from waveview.utils.uuid import is_valid_uuid
 
 
 class OrganizationDetailEndpoint(Endpoint):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOrganizationMember]
+
+    def get_permissions(self) -> list:
+        permissions = super().get_permissions()
+        if self.request.method in ["PUT", "DELETE"]:
+            permissions.append(IsSuperUser())
+        return permissions
 
     @swagger_auto_schema(
         operation_id="Get Organization Detail",
@@ -36,15 +42,13 @@ class OrganizationDetailEndpoint(Endpoint):
             raise serializers.ValidationError(
                 {"organization_id": _("Invalid UUID format.")},
             )
-        if not Organization.objects.filter(id=organization_id).exists():
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
             raise NotFound(_("Organization not found."))
-        if not OrganizationMember.objects.filter(
-            organization_id=organization_id, user=request.user
-        ).exists():
-            raise PermissionDenied(
-                _("You are not a member of this organization."),
-            )
-        organization = Organization.objects.get(id=organization_id)
+        self.check_object_permissions(request, organization)
+
         serializer = OrganizationSerializer(organization)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -70,19 +74,13 @@ class OrganizationDetailEndpoint(Endpoint):
             raise serializers.ValidationError(
                 {"organization_id": _("Invalid UUID format.")},
             )
-        if not Organization.objects.filter(id=organization_id).exists():
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
             raise NotFound(_("Organization not found."))
-        if not OrganizationMember.objects.filter(
-            organization_id=organization_id, user=request.user
-        ).exists():
-            raise PermissionDenied(
-                _("You are not a member of this organization."),
-            )
-        organization = Organization.objects.get(id=organization_id)
-        if not request.user.is_superuser:
-            raise PermissionDenied(
-                _("Only superuser can update an organization."),
-            )
+        self.check_object_permissions(request, organization)
+
         serializer = OrganizationPayloadSerializer(
             instance=organization,
             data=request.data,
@@ -124,23 +122,14 @@ class OrganizationDetailEndpoint(Endpoint):
             raise serializers.ValidationError(
                 {"organization_id": _("Invalid UUID format.")},
             )
-        if not Organization.objects.filter(id=organization_id).exists():
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
             raise NotFound(_("Organization not found."))
-        if not OrganizationMember.objects.filter(
-            organization_id=organization_id, user=request.user
-        ).exists():
-            raise PermissionDenied(
-                _("You are not a member of this organization."),
-            )
-        if not request.user.is_superuser:
-            raise PermissionDenied(
-                _("Only superuser can delete an organization."),
-            )
+        self.check_object_permissions(request, organization)
+
         return Response(
-            {
-                "detail": _(
-                    "Please delete the organization manually following the proper procedures."
-                )
-            },
+            {"detail": _(f"Please delete {organization} organization manually.")},
             status=status.HTTP_200_OK,
         )

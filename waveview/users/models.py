@@ -127,3 +127,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self) -> str:
         return self.username
+
+    def has_permission(self, organization_id: str, permission: str) -> bool:
+        user_roles = self.organization_memberships.filter(
+            organization_id=organization_id
+        ).values_list("roles__permissions", flat=True)
+        for role_permissions in user_roles:
+            if permission in role_permissions:
+                return True
+        return False

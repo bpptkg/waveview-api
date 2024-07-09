@@ -1,13 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from waveview.organization.models import (
-    Organization,
-    OrganizationMember,
-    Role,
-    RoleType,
-)
-from waveview.organization.permissions import PermissionType
+from waveview.organization.models import Organization
 from waveview.users.serializers import UserSerializer
 
 
@@ -93,20 +87,7 @@ class OrganizationPayloadSerializer(serializers.Serializer):
 
     def create(self, validated_data: dict) -> Organization:
         user = self.context["request"].user
-        organization = Organization.objects.create(**validated_data)
-        role, _ = Role.objects.get_or_create(
-            slug=RoleType.OWNER,
-            name=RoleType.OWNER,
-            organization=organization,
-            permissions=[PermissionType.FULL_ACCESS],
-            order=1,
-        )
-        OrganizationMember.objects.create(
-            organization=organization,
-            user=user,
-            role=role,
-            inviter=user,
-        )
+        organization = Organization.objects.create(author=user, **validated_data)
         return organization
 
     def update(self, instance: Organization, validated_data: dict) -> Organization:

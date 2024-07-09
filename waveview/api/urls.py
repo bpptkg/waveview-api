@@ -14,6 +14,8 @@ from .v1.organization_index import OrganizationIndexEndpoint
 from .v1.organization_member_detail import OrganizationMemberDetailEndpoint
 from .v1.organization_member_index import OrganizationMemberIndexEndpoint
 from .v1.search_user import SearchUserEndpoint
+from .v1.volcano_detail import VolcanoDetailEndpoint
+from .v1.volcano_index import VolcanoIndexEndpoint
 
 urlpatterns = [
     path(
@@ -36,11 +38,25 @@ urlpatterns = [
         OrganizationMemberDetailEndpoint.as_view(),
         name="waveview-api-1-organization-member-detail",
     ),
-    path("account/", AccountEndpoint.as_view(), name="waveview-api-1-account"),
+    path(
+        "organizations/<str:organization_id>/volcanoes/",
+        VolcanoIndexEndpoint.as_view(),
+        name="waveview-api-1-volcano-index",
+    ),
+    path(
+        "organizations/<str:organization_id>/volcanoes/<str:volcano_id>/",
+        VolcanoDetailEndpoint.as_view(),
+        name="waveview-api-1-volcano-detail",
+    ),
+    path(
+        "account/",
+        AccountEndpoint.as_view(),
+        name="waveview-api-1-account",
+    ),
     path(
         "users/search/",
         SearchUserEndpoint.as_view(),
-        name="waveview-api-1-users-search",
+        name="waveview-api-1-user-search",
     ),
     path(
         "login/",

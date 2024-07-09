@@ -9,14 +9,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
-from waveview.organization.models import (
-    Organization,
-    OrganizationMember,
-    Role,
-    RoleType,
-)
+from waveview.organization.models import Organization, OrganizationMember, Role
+from waveview.organization.permissions import PermissionType
 from waveview.organization.serializers import OrganizationMemberSerializer
 from waveview.utils.uuid import is_valid_uuid
+from waveview.api.permissions import IsOrganizationMember
 
 
 class OrganizationMemberPayloadSerializer(serializers.Serializer):
@@ -46,7 +43,7 @@ class OrganizationMemberPayloadSerializer(serializers.Serializer):
 
 
 class OrganizationMemberIndexEndpoint(Endpoint):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOrganizationMember]
 
     @swagger_auto_schema(
         operation_id="List Organization Members",
@@ -62,18 +59,13 @@ class OrganizationMemberIndexEndpoint(Endpoint):
         },
     )
     def get(self, request: Request, organization_id: str) -> Response:
-        if not is_valid_uuid(organization_id):
-            raise serializers.ValidationError(
-                {"organization_id": _("Invalid UUID format.")},
-            )
-        if not Organization.objects.filter(id=organization_id).exists():
+        self.validate_uuid(organization_id, "organization_id")
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
             raise NotFound(_("Organization does not exist."))
-        if not OrganizationMember.objects.filter(
-            organization_id=organization_id, user=request.user
-        ).exists():
-            raise PermissionDenied(
-                _("You do not have permission to view members of this organization."),
-            )
+        self.check_object_permissions(request, organization)
 
         organization_members = OrganizationMember.objects.filter(
             organization_id=organization_id
@@ -98,15 +90,19 @@ class OrganizationMemberIndexEndpoint(Endpoint):
         },
     )
     def post(self, request: Request, organization_id: str) -> Response:
-        if not is_valid_uuid(organization_id):
-            raise serializers.ValidationError(
-                {"organization_id": _("Invalid UUID format.")},
-            )
-        if not Organization.objects.filter(id=organization_id).exists():
+        self.validate_uuid(organization_id, "organization_id")
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
             raise NotFound(_("Organization does not exist."))
-        if not OrganizationMember.objects.filter(
-            organization_id=organization_id, user=request.user, role=RoleType.OWNER
-        ).exists():
+        self.check_object_permissions(request, organization)
+
+        is_author = organization.author == request.user
+        has_permission = request.user.has_permission(
+            organization_id, PermissionType.ADD_MEMBER
+        )
+        if not is_author or not has_permission:
             raise PermissionDenied(
                 _("You do not have permission to add members to this organization."),
             )

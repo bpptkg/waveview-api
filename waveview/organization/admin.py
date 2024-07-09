@@ -30,7 +30,6 @@ class OrganizationMemberAdmin(admin.ModelAdmin):
         "id",
         "organization",
         "user",
-        "role",
         "date_added",
         "expiration_date",
         "inviter",

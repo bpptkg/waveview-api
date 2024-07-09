@@ -1,6 +1,8 @@
 import typing
 
 from django.db.models import QuerySet
+from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 from rest_framework.authentication import BaseAuthentication, SessionAuthentication
 from rest_framework.pagination import BasePagination
 from rest_framework.permissions import BasePermission
@@ -9,6 +11,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from waveview.api.permissions import NoPermission
+from waveview.utils.uuid import is_valid_uuid
 
 DEFAULT_AUTHENTICATION = [JWTAuthentication, SessionAuthentication]
 
@@ -49,3 +52,9 @@ class Endpoint(APIView):
         """
         assert self.paginator is not None
         return self.paginator.get_paginated_response(data)
+
+    def validate_uuid(self, value: str, field: str) -> str:
+        """Validate UUID format."""
+        if not is_valid_uuid(value):
+            raise serializers.ValidationError({field: _("Invalid UUID format.")})
+        return value

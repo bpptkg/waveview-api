@@ -1,11 +1,12 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, re_path, include
+from django.shortcuts import redirect
+from django.urls import include, path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAdminUser
-from django.conf import settings
-from django.conf.urls.static import static
 
 swagger_info = openapi.Info(
     title="WaveView API",
@@ -40,6 +41,7 @@ urlpatterns = [
         name="schema-redoc",
     ),
     path("api/v1/", include("waveview.api.urls")),
+    re_path(r"^$", lambda _: redirect("redoc/", permanent=False)),
 ]
 
 if settings.DEBUG:

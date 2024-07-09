@@ -1,24 +1,23 @@
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, status
+from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
-from waveview.api.permissions import IsOrganizationMember, IsSuperUser
+from waveview.api.permissions import IsOwnerOrReadOnly, IsSuperUser
 from waveview.organization.models import Organization
 from waveview.organization.serializers import (
     OrganizationPayloadSerializer,
     OrganizationSerializer,
 )
-from waveview.utils.uuid import is_valid_uuid
 
 
 class OrganizationDetailEndpoint(Endpoint):
-    permission_classes = [IsAuthenticated, IsOrganizationMember]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_permissions(self) -> list:
         permissions = super().get_permissions()
@@ -38,10 +37,7 @@ class OrganizationDetailEndpoint(Endpoint):
         responses={status.HTTP_200_OK: openapi.Response("OK", OrganizationSerializer)},
     )
     def get(self, request: Request, organization_id: str) -> Response:
-        if not is_valid_uuid(organization_id):
-            raise serializers.ValidationError(
-                {"organization_id": _("Invalid UUID format.")},
-            )
+        self.validate_uuid(organization_id, "organization_id")
 
         try:
             organization = Organization.objects.get(id=organization_id)
@@ -70,10 +66,7 @@ class OrganizationDetailEndpoint(Endpoint):
         responses={status.HTTP_200_OK: openapi.Response("OK", OrganizationSerializer)},
     )
     def put(self, request: Request, organization_id: str) -> Response:
-        if not is_valid_uuid(organization_id):
-            raise serializers.ValidationError(
-                {"organization_id": _("Invalid UUID format.")},
-            )
+        self.validate_uuid(organization_id, "organization_id")
 
         try:
             organization = Organization.objects.get(id=organization_id)
@@ -118,10 +111,7 @@ class OrganizationDetailEndpoint(Endpoint):
         },
     )
     def delete(self, request: Request, organization_id: str) -> Response:
-        if not is_valid_uuid(organization_id):
-            raise serializers.ValidationError(
-                {"organization_id": _("Invalid UUID format.")},
-            )
+        self.validate_uuid(organization_id, "organization_id")
 
         try:
             organization = Organization.objects.get(id=organization_id)

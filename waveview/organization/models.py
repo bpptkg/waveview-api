@@ -5,7 +5,6 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from waveview.organization.permissions import PermissionType
 from waveview.utils.media import MediaPath
 
 
@@ -17,20 +16,16 @@ class OrganizationMember(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(
         "Organization",
-        related_name="member",
+        related_name="memberships",
         on_delete=models.CASCADE,
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name="orgmember",
+        related_name="organization_memberships",
         on_delete=models.CASCADE,
     )
-    role = models.ForeignKey(
-        "Role",
-        null=True,
-        blank=True,
-        related_name="orgmember",
-        on_delete=models.SET_NULL,
+    roles = models.ManyToManyField(
+        "Role", blank=True, related_name="organization_members"
     )
     date_added = models.DateTimeField(auto_now_add=True)
     expiration_date = models.DateTimeField(null=True, blank=True)
@@ -38,7 +33,7 @@ class OrganizationMember(models.Model):
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
-        related_name="inviter",
+        related_name="invited_members",
         on_delete=models.SET_NULL,
     )
 
@@ -78,7 +73,6 @@ class Organization(models.Model):
     members = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         through="OrganizationMember",
-        related_name="organization_memberships",
         through_fields=("organization", "user"),
     )
 
@@ -88,16 +82,6 @@ class Organization(models.Model):
 
     def __str__(self) -> str:
         return self.name
-
-
-class RoleType(models.TextChoices):
-    """
-    Role types for organizations.
-    """
-
-    OWNER = "owner", _("Owner")
-    ADMIN = "admin", _("Admin")
-    MEMBER = "member", _("Member")
 
 
 class Role(models.Model):
@@ -110,16 +94,17 @@ class Role(models.Model):
         related_query_name="role",
         on_delete=models.CASCADE,
     )
-    slug = models.SlugField(max_length=250, null=False, blank=False)
-    name = models.CharField(max_length=200, null=False, blank=False)
+    slug = models.SlugField(max_length=150, null=False, blank=False)
+    name = models.CharField(max_length=255, null=False, blank=False)
     description = models.TextField(null=True, blank=True, default="")
     permissions = ArrayField(
-        models.TextField(null=False, blank=False, choices=PermissionType.choices),
+        models.TextField(null=False, blank=False),
         null=True,
         blank=True,
         default=list,
     )
     order = models.IntegerField(default=0, null=False, blank=False)
+    is_default = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = _("role")

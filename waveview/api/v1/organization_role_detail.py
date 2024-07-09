@@ -1,0 +1,96 @@
+from django.utils.translation import gettext_lazy as _
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.exceptions import NotFound
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+
+from waveview.api.base import Endpoint
+from waveview.api.permissions import IsOwnerOrReadOnly
+from waveview.organization.models import Organization
+from waveview.organization.serializers import RolePayloadSerializer, RoleSerializer
+
+
+class OrganizationRoleDetailEndpoint(Endpoint):
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    @swagger_auto_schema(
+        operation_id="Get Organization Role Detail",
+        operation_description=(
+            """
+            Get organization role detail by organization ID and role ID. Only
+            members of the organization can view the role details.
+            """
+        ),
+        tags=["Organization"],
+        responses={status.HTTP_200_OK: openapi.Response("OK", RoleSerializer)},
+    )
+    def get(self, request: Request, organization_id: str, role_id: str) -> Response:
+        self.validate_uuid(organization_id, "organization_id")
+        self.validate_uuid(role_id, "role_id")
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
+            raise NotFound(_("Organization not found."))
+        self.check_object_permissions(request, organization)
+
+        role = organization.roles.get(id=role_id)
+        serializer = RoleSerializer(role)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_id="Update Organization Role Detail",
+        operation_description=(
+            """
+            Update the details of an existing organization role. Only organization
+            owners can update roles.
+            """
+        ),
+        tags=["Organization"],
+        request_body=RolePayloadSerializer,
+        responses={status.HTTP_200_OK: openapi.Response("OK", RoleSerializer)},
+    )
+    def put(self, request: Request, organization_id: str, role_id: str) -> Response:
+        self.validate_uuid(organization_id, "organization_id")
+        self.validate_uuid(role_id, "role_id")
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
+            raise NotFound(_("Organization not found."))
+        self.check_object_permissions(request, organization)
+
+        role = organization.roles.get(id=role_id)
+        serializer = RolePayloadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        role = serializer.update(role, serializer.validated_data)
+        return Response(RoleSerializer(role).data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_id="Delete Organization Role",
+        operation_description=(
+            """
+            Delete an existing organization role. Only organization owners can delete
+            roles.
+            """
+        ),
+        tags=["Organization"],
+        responses={status.HTTP_204_NO_CONTENT: openapi.Response("No Content")},
+    )
+    def delete(self, request: Request, organization_id: str, role_id: str) -> Response:
+        self.validate_uuid(organization_id, "organization_id")
+        self.validate_uuid(role_id, "role_id")
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
+            raise NotFound(_("Organization not found."))
+        self.check_object_permissions(request, organization)
+
+        role = organization.roles.get(id=role_id)
+        role.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -13,6 +13,9 @@ from .v1.organization_detail import OrganizationDetailEndpoint
 from .v1.organization_index import OrganizationIndexEndpoint
 from .v1.organization_member_detail import OrganizationMemberDetailEndpoint
 from .v1.organization_member_index import OrganizationMemberIndexEndpoint
+from .v1.organization_permissions import OrganizationPermissionsEndpoint
+from .v1.organization_role_detail import OrganizationRoleDetailEndpoint
+from .v1.organization_role_index import OrganizationRoleIndexEndpoint
 from .v1.search_user import SearchUserEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
 from .v1.volcano_index import VolcanoIndexEndpoint
@@ -22,6 +25,11 @@ urlpatterns = [
         "organizations/",
         OrganizationIndexEndpoint.as_view(),
         name="waveview-api-1-organizatio-index",
+    ),
+    path(
+        "organizations/permissions/",
+        OrganizationPermissionsEndpoint.as_view(),
+        name="waveview-api-1-organization-permissions",
     ),
     path(
         "organizations/<str:organization_id>/",
@@ -47,6 +55,16 @@ urlpatterns = [
         "organizations/<str:organization_id>/volcanoes/<str:volcano_id>/",
         VolcanoDetailEndpoint.as_view(),
         name="waveview-api-1-volcano-detail",
+    ),
+    path(
+        "organizations/<str:organization_id>/roles/",
+        OrganizationRoleIndexEndpoint.as_view(),
+        name="waveview-api-1-organization-role-index",
+    ),
+    path(
+        "organizations/<str:organization_id>/roles/<str:role_id>/",
+        OrganizationRoleDetailEndpoint.as_view(),
+        name="waveview-api-1-organization-role-detail",
     ),
     path(
         "account/",

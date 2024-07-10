@@ -9,11 +9,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
+from waveview.api.permissions import IsOrganizationMember
 from waveview.organization.models import Organization, OrganizationMember, Role
 from waveview.organization.permissions import PermissionType
 from waveview.organization.serializers import OrganizationMemberSerializer
-from waveview.utils.uuid import is_valid_uuid
-from waveview.api.permissions import IsOrganizationMember
 
 
 class OrganizationMemberPayloadSerializer(serializers.Serializer):

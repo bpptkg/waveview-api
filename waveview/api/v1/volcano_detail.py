@@ -19,7 +19,7 @@ class VolcanoDetailEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOrganizationMember]
 
     @swagger_auto_schema(
-        operation_id="Get Volcano Detail",
+        operation_id="Retrieve Volcano",
         operation_description=(
             """
             Get volcano detail by volcano ID. Only users within the organization
@@ -50,7 +50,7 @@ class VolcanoDetailEndpoint(Endpoint):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_id="Update Volcano Detail",
+        operation_id="Update Volcano",
         operation_description=(
             """
             Update the details of an existing volcano. Only organization owner

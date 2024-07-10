@@ -1,11 +1,24 @@
 import uuid
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.db import models
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
+
+if TYPE_CHECKING:
+    from waveview.event.models.event import Event
 
 
 class Catalog(models.Model):
+    """
+    The class Catalog describes a collection of events. A catalog is usually
+    associated with a volcano and contains information about the events that
+    occurred at the volcano.
+    """
+
+    events: QuerySet["Event"]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     volcano = models.ForeignKey(
         "volcano.Volcano",

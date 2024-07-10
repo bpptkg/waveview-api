@@ -26,7 +26,7 @@ class OrganizationDetailEndpoint(Endpoint):
         return permissions
 
     @swagger_auto_schema(
-        operation_id="Get Organization Detail",
+        operation_id="Retrieve Organization",
         operation_description=(
             """
             Get organization detail by organization ID. Only members of the
@@ -49,7 +49,7 @@ class OrganizationDetailEndpoint(Endpoint):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_id="Update Organization Detail",
+        operation_id="Update Organization",
         operation_description=(
             """
             Allows a superuser to update the details of an existing

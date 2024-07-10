@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema

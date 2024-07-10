@@ -18,7 +18,7 @@ class EventTypeDetailEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOrganizationMember]
 
     @swagger_auto_schema(
-        operation_id="Get Event Type Detail",
+        operation_id="Retrieve Event Type",
         operation_description=(
             """
             Retrieve an event type within the organization. Only users within

@@ -7,14 +7,18 @@ class PermissionType(models.TextChoices):
     Permission choices for organization roles.
     """
 
-    ADD_MEMBER = "add_member", _("Add Member")
-    REMOVE_MEMBER = "remove_member", _("Remove Member")
-    UPDATE_MEMBER = "update_member", _("Update Member")
+    ADD_MEMBER = "member:add", _("Add Member")
+    REMOVE_MEMBER = "member:remove", _("Remove Member")
+    UPDATE_MEMBER = "member:update", _("Update Member")
 
-    CREATE_VOLCANO = "create_volcano", _("Create Volcano")
-    UPDATE_VOLCANO = "update_volcano", _("Update Volcano")
-    DELETE_VOLCANO = "delete_volcano", _("Delete Volcano")
+    CREATE_VOLCANO = "volcano:create", _("Create Volcano")
+    UPDATE_VOLCANO = "volcano:update", _("Update Volcano")
+    DELETE_VOLCANO = "volcano:delete", _("Delete Volcano")
 
-    CREATE_CATALOG = "create_catalog", _("Create Catalog")
-    UPDATE_CATALOG = "update_catalog", _("Update Catalog")
-    DELETE_CATALOG = "delete_catalog", _("Delete Catalog")
+    CREATE_CATALOG = "catalog:create", _("Create Catalog")
+    UPDATE_CATALOG = "catalog:update", _("Update Catalog")
+    DELETE_CATALOG = "catalog:delete", _("Delete Catalog")
+
+    CREATE_EVENT = "event:create", _("Create Event")
+    UPDATE_EVENT = "event:update", _("Update Event")
+    DELETE_EVENT = "event:delete", _("Delete Event")

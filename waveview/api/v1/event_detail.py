@@ -9,32 +9,34 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.event.models import Catalog
-from waveview.event.serializers import CatalogPayloadSerializer, CatalogSerializer
+from waveview.event.models import Event
+from waveview.event.serializers import EventPayloadSerializer, EventSerializer
 from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 
 
-class CatalogDetailEndpoint(Endpoint):
+class EventDetailEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOrganizationMember]
 
     @swagger_auto_schema(
-        operation_id="Retrieve Catalog",
+        operation_id="Retrieve Event",
         operation_description=(
             """
-            Get catalog detail by catalog ID. Only users within the organization
-            can view the details.
+            Retrieve an event in the catalog.
             """
         ),
-        tags=["Catalog"],
-        responses={status.HTTP_200_OK: openapi.Response("OK", CatalogSerializer)},
+        tags=["Event"],
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", EventSerializer),
+            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
+        },
     )
     def get(
-        self, request: Request, organization_id: str, volcano_id: str, catalog_id: str
+        self, request: Request, organization_id: str, catalog_id: str, event_id: str
     ) -> Response:
         self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(volcano_id, "volcano_id")
         self.validate_uuid(catalog_id, "catalog_id")
+        self.validate_uuid(event_id, "event_id")
 
         try:
             organization = Organization.objects.get(id=organization_id)
@@ -43,31 +45,34 @@ class CatalogDetailEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         try:
-            catalog = Catalog.objects.get(volcano_id=volcano_id, id=catalog_id)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
+            event = Event.objects.get(catalog_id=catalog_id, id=event_id)
+        except Event.DoesNotExist:
+            raise NotFound(_("Event not found."))
 
-        serializer = CatalogSerializer(catalog)
+        serializer = EventSerializer(event)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_id="Update Catalog",
+        operation_id="Update Event",
         operation_description=(
             """
-            Update the details of an existing catalog. Only organization owner
-            or admin can update catalogs.
+            Update an event in the catalog.
             """
         ),
-        tags=["Catalog"],
-        request_body=CatalogPayloadSerializer,
-        responses={status.HTTP_200_OK: openapi.Response("OK", CatalogSerializer)},
+        tags=["Event"],
+        request_body=EventPayloadSerializer,
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", EventSerializer),
+            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
+            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
+        },
     )
     def put(
-        self, request: Request, organization_id: str, volcano_id: str, catalog_id: str
+        self, request: Request, organization_id: str, catalog_id: str, event_id: str
     ) -> Response:
         self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(volcano_id, "volcano_id")
         self.validate_uuid(catalog_id, "catalog_id")
+        self.validate_uuid(event_id, "event_id")
 
         try:
             organization = Organization.objects.get(id=organization_id)
@@ -77,38 +82,42 @@ class CatalogDetailEndpoint(Endpoint):
 
         is_author = organization.author == request.user
         has_permission = request.user.has_permission(
-            organization, PermissionType.UPDATE_CATALOG
+            organization_id, PermissionType.UPDATE_EVENT
         )
         if not is_author and not has_permission:
-            raise PermissionDenied(_("You do not have permission to update catalogs."))
+            raise PermissionDenied(_("You do not have permission to update events."))
 
         try:
-            catalog = Catalog.objects.get(volcano_id=volcano_id, id=catalog_id)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
+            event = Event.objects.get(catalog_id=catalog_id, id=event_id)
+        except Event.DoesNotExist:
+            raise NotFound(_("Event not found."))
 
-        serializer = CatalogPayloadSerializer(catalog, data=request.data, partial=True)
+        serializer = EventPayloadSerializer(
+            event, data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        event = serializer.save()
+        return Response(EventSerializer(event).data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_id="Delete Catalog",
+        operation_id="Delete Event",
         operation_description=(
             """
-            Delete a catalog by catalog ID. Only organization owner or admin can
-            delete catalogs.
+            Delete an event in the catalog.
             """
         ),
-        tags=["Catalog"],
-        responses={status.HTTP_204_NO_CONTENT: openapi.Response("No Content")},
+        tags=["Event"],
+        responses={
+            status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
+            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
+        },
     )
     def delete(
-        self, request: Request, organization_id: str, volcano_id: str, catalog_id: str
+        self, request: Request, organization_id: str, catalog_id: str, event_id: str
     ) -> Response:
         self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(volcano_id, "volcano_id")
         self.validate_uuid(catalog_id, "catalog_id")
+        self.validate_uuid(event_id, "event_id")
 
         try:
             organization = Organization.objects.get(id=organization_id)
@@ -118,18 +127,15 @@ class CatalogDetailEndpoint(Endpoint):
 
         is_author = organization.author == request.user
         has_permission = request.user.has_permission(
-            organization, PermissionType.DELETE_CATALOG
+            organization_id, PermissionType.DELETE_EVENT
         )
         if not is_author and not has_permission:
-            raise PermissionDenied(_("You do not have permission to delete catalogs."))
+            raise PermissionDenied(_("You do not have permission to delete events."))
 
         try:
-            catalog = Catalog.objects.get(volcano_id=volcano_id, id=catalog_id)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
+            event = Event.objects.get(catalog_id=catalog_id, id=event_id)
+        except Event.DoesNotExist:
+            raise NotFound(_("Event not found."))
 
-        if catalog.is_default:
-            raise PermissionDenied(_("You cannot delete the default catalog."))
-
-        catalog.delete()
+        event.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

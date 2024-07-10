@@ -43,4 +43,5 @@ class CatalogPayloadSerializer(serializers.Serializer):
     def update(self, instance: Catalog, validated_data: dict) -> Catalog:
         for key, value in validated_data.items():
             setattr(instance, key, value)
+        instance.save()
         return instance

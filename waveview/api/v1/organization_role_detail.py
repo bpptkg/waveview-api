@@ -17,7 +17,7 @@ class OrganizationRoleDetailEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     @swagger_auto_schema(
-        operation_id="Get Organization Role Detail",
+        operation_id="Retrieve Organization Role",
         operation_description=(
             """
             Get organization role detail by organization ID and role ID. Only
@@ -42,7 +42,7 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_id="Update Organization Role Detail",
+        operation_id="Update Organization Role",
         operation_description=(
             """
             Update the details of an existing organization role. Only organization

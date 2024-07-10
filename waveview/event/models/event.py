@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.db import models
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from waveview.event.header import EventTypeCertainty
@@ -52,6 +53,21 @@ class EventType(models.Model):
 
 
 class Event(models.Model):
+    """
+    The class Event describes a seismic event. An event is usually associated
+    with one or more origins, which contain information about focal time and
+    geographical location of the event. Multiple origins can cover automatic and
+    manual locations, a set of location from different agencies, locations
+    generated with different location programs and earth models, etc.
+    Furthermore, an event is usually associated with one or more magnitudes, and
+    with one or more focal mechanism determinations.
+    """
+
+    origins: QuerySet["Origin"]
+    magnitudes: QuerySet["Magnitude"]
+    amplitudes: QuerySet["Amplitude"]
+    attachments: QuerySet["Attachment"]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     catalog = models.ForeignKey(
         Catalog,
@@ -98,9 +114,16 @@ class Event(models.Model):
 
 
 class Attachment(models.Model):
+    """
+    This class represents an attachment. An attachment is a file that is
+    associated with an event.
+    """
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event = models.ForeignKey(
         Event,
+        null=True,
+        blank=True,
         on_delete=models.CASCADE,
         related_name="attachments",
         related_query_name="attachment",
@@ -122,7 +145,7 @@ class Attachment(models.Model):
         verbose_name_plural = _("Attachments")
 
     def __str__(self) -> str:
-        return self.file.name
+        return self.name
 
     def delete(self, *args, **kwargs) -> None:
         self.file.delete()

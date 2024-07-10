@@ -37,4 +37,5 @@ class EventTypePayloadSerializer(serializers.Serializer):
     def update(self, instance: EventType, validated_data: dict) -> EventType:
         for key, value in validated_data.items():
             setattr(instance, key, value)
+        instance.save()
         return instance

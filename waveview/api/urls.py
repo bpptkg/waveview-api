@@ -10,6 +10,8 @@ from .v1.auth import (
 from .v1.catalog_detail import CatalogDetailEndpoint
 from .v1.catalog_index import CatalogIndexEndpoint
 from .v1.catchall import CatchallEndpoint
+from .v1.event_type_detail import EventTypeDetailEndpoint
+from .v1.event_type_index import EventTypeIndexEndpoint
 from .v1.index import IndexEndpoint
 from .v1.organization_detail import OrganizationDetailEndpoint
 from .v1.organization_index import OrganizationIndexEndpoint
@@ -86,6 +88,19 @@ CATALOG_URLS = [
     ),
 ]
 
+EVENT_TYPE_URLS = [
+    path(
+        "event-types/",
+        EventTypeIndexEndpoint.as_view(),
+        name="waveview-api-1-event-type-index",
+    ),
+    path(
+        "event-types/<str:event_type_id>/",
+        EventTypeDetailEndpoint.as_view(),
+        name="waveview-api-1-event-type-detail",
+    ),
+]
+
 ACCOUNT_URLS = [
     path(
         "",
@@ -125,6 +140,7 @@ AUTH_URLS = [
 urlpatterns = [
     path("organizations/", include(ORGANIZATION_URLS)),
     path("organizations/<str:organization_id>/", include(VOLCANO_URLS)),
+    path("organizations/<str:organization_id>/", include(EVENT_TYPE_URLS)),
     path(
         "organizations/<str:organization_id>/volcanoes/<str:volcano_id>/",
         include(CATALOG_URLS),

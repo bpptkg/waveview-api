@@ -33,3 +33,7 @@ class Catalog(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def event_count(self) -> int:
+        return self.events.count()

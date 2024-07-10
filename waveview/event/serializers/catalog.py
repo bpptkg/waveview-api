@@ -15,6 +15,9 @@ class CatalogSerializer(serializers.Serializer):
     is_default = serializers.BooleanField(
         help_text=_("Whether the catalog is the default one.")
     )
+    event_count = serializers.IntegerField(
+        help_text=_("Number of events in the catalog.")
+    )
     created_at = serializers.DateTimeField(
         help_text=_("Date when the catalog was created.")
     )

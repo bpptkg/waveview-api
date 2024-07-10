@@ -14,3 +14,7 @@ class PermissionType(models.TextChoices):
     CREATE_VOLCANO = "create_volcano", _("Create Volcano")
     UPDATE_VOLCANO = "update_volcano", _("Update Volcano")
     DELETE_VOLCANO = "delete_volcano", _("Delete Volcano")
+
+    CREATE_CATALOG = "create_catalog", _("Create Catalog")
+    UPDATE_CATALOG = "update_catalog", _("Update Catalog")
+    DELETE_CATALOG = "delete_catalog", _("Delete Catalog")

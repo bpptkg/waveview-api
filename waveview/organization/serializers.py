@@ -1,6 +1,8 @@
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from waveview.inventory.models import Inventory
 from waveview.organization.models import Organization, Role
 from waveview.organization.permissions import PermissionType
 from waveview.users.serializers import UserSerializer
@@ -86,9 +88,13 @@ class OrganizationPayloadSerializer(serializers.Serializer):
             )
         return value
 
+    @transaction.atomic
     def create(self, validated_data: dict) -> Organization:
         user = self.context["request"].user
         organization = Organization.objects.create(author=user, **validated_data)
+        Inventory.objects.create(
+            organization=organization, name="Inventory", author=user
+        )
         return organization
 
     def update(self, instance: Organization, validated_data: dict) -> Organization:

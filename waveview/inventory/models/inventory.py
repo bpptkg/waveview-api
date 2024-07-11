@@ -1,11 +1,22 @@
 import uuid
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.db import models
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
+
+if TYPE_CHECKING:
+    from waveview.inventory.models.network import Network
 
 
 class Inventory(models.Model):
+    """
+    This class describes an inventory of seismic networks.
+    """
+
+    networks: QuerySet["Network"]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.OneToOneField(
         "organization.Organization", on_delete=models.CASCADE, related_name="inventory"
@@ -28,3 +39,7 @@ class Inventory(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def network_count(self) -> int:
+        return self.networks.count()

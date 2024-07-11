@@ -54,7 +54,10 @@ class OrganizationMemberIndexEndpoint(Endpoint):
         ),
         tags=["Organization"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", OrganizationMemberSerializer)
+            status.HTTP_200_OK: openapi.Response("OK", OrganizationMemberSerializer),
+            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
+            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
+            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def get(self, request: Request, organization_id: str) -> Response:

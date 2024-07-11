@@ -9,82 +9,87 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
+from waveview.inventory.models import Network, Station
+from waveview.inventory.serializers import StationPayloadSerializer, StationSerializer
 from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
-from waveview.volcano.models import Volcano
-from waveview.volcano.serializers import VolcanoPayloadSerializer, VolcanoSerializer
 
 
-class VolcanoIndexEndpoint(Endpoint):
+class StationIndexEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOrganizationMember]
 
     @swagger_auto_schema(
-        operation_id="List Volcanoes",
+        operation_id="List Stations",
         operation_description=(
             """
-            Get list of all managed volcanoes within organization. Only users
-            within the organization can list volcanoes.
+            List all stations in the specified network.
             """
         ),
-        tags=["Volcano"],
+        tags=["Inventory"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", VolcanoSerializer(many=True)),
+            status.HTTP_200_OK: openapi.Response("OK", StationSerializer(many=True)),
             status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
             status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
-    def get(self, request: Request, organization_id: str) -> Response:
+    def get(self, request: Request, organization_id: str, network_id: str) -> Response:
         self.validate_uuid(organization_id, "organization_id")
+        self.validate_uuid(network_id, "network_id")
 
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+            raise NotFound(_("Organization not found"))
         self.check_object_permissions(request, organization)
 
-        volcanoes = Volcano.objects.filter(organization_id=organization_id)
-        serializer = VolcanoSerializer(volcanoes, many=True)
+        inventory = organization.inventory
+        stations = Station.objects.filter(
+            network__inventory=inventory, network_id=network_id
+        ).all()
+        serializer = StationSerializer(stations, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_id="Create Volcano",
+        operation_id="Create Station",
         operation_description=(
             """
-            Create a new volcano. Only organization owner or admin can create
-            volcanoes.
+            Create a new station in the specified network. Only authorized
+            organization members can create stations.
             """
         ),
-        tags=["Volcano"],
-        request_body=VolcanoPayloadSerializer,
+        tags=["Inventory"],
+        request_body=StationPayloadSerializer,
         responses={
-            status.HTTP_201_CREATED: openapi.Response("Created", VolcanoSerializer),
+            status.HTTP_201_CREATED: openapi.Response("Created", StationSerializer),
             status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
             status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
             status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
-    def post(self, request: Request, organization_id: str) -> Response:
+    def post(self, request: Request, organization_id: str, network_id: str) -> Response:
         self.validate_uuid(organization_id, "organization_id")
+        self.validate_uuid(network_id, "network_id")
 
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+            raise NotFound(_("Organization not found"))
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
         has_permission = request.user.has_permission(
-            organization_id, PermissionType.CREATE_VOLCANO
+            organization_id, PermissionType.MANAGE_INVENTORY
         )
         if not is_author and not has_permission:
-            raise PermissionDenied(
-                _("You do not have permission to create volcanoes."),
-            )
+            raise PermissionDenied(_("You do not have permission to create stations"))
 
-        serializer = VolcanoPayloadSerializer(
-            data=request.data,
-            context={"request": request, "organization_id": organization_id},
+        inventory = organization.inventory
+        try:
+            network = inventory.networks.get(id=network_id)
+        except Network.DoesNotExist:
+            raise NotFound(_("Network not found"))
+
+        serializer = StationPayloadSerializer(
+            data=request.data, context={"request": request, "network_id": network.id}
         )
-        serializer.is_valid(raise_exception=True)
-        volcano = serializer.save()
-        return Response(VolcanoSerializer(volcano).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

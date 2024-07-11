@@ -10,6 +10,8 @@ from .v1.auth import (
 from .v1.catalog_detail import CatalogDetailEndpoint
 from .v1.catalog_index import CatalogIndexEndpoint
 from .v1.catchall import CatchallEndpoint
+from .v1.channel_detail import ChannelDetailEndpoint
+from .v1.channel_index import ChannelIndexEndpoint
 from .v1.event_attachment_detail import EventAttachmentDetailEndpoint
 from .v1.event_attachment_index import EventAttachmentUploadEndpoint
 from .v1.event_detail import EventDetailEndpoint
@@ -19,6 +21,9 @@ from .v1.event_origin_index import EventOriginIndexEndpoint
 from .v1.event_type_detail import EventTypeDetailEndpoint
 from .v1.event_type_index import EventTypeIndexEndpoint
 from .v1.index import IndexEndpoint
+from .v1.inventory import InventoryEndpoint
+from .v1.network_detail import NetworkDetailEndpoint
+from .v1.network_index import NetworkIndexEndpoint
 from .v1.organization_detail import OrganizationDetailEndpoint
 from .v1.organization_index import OrganizationIndexEndpoint
 from .v1.organization_member_detail import OrganizationMemberDetailEndpoint
@@ -28,6 +33,8 @@ from .v1.organization_role_detail import OrganizationRoleDetailEndpoint
 from .v1.organization_role_index import OrganizationRoleIndexEndpoint
 from .v1.registration import AccountRegistrationEndpoint
 from .v1.search_user import SearchUserEndpoint
+from .v1.station_detail import StationDetailEndpoint
+from .v1.station_index import StationIndexEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
 from .v1.volcano_index import VolcanoIndexEndpoint
 
@@ -147,6 +154,45 @@ EVENT_TYPE_URLS = [
     ),
 ]
 
+INVENTORY_URLS = [
+    path(
+        "inventory/",
+        InventoryEndpoint.as_view(),
+        name="waveview-api-1-inventory-detail",
+    ),
+    path(
+        "inventory/networks/",
+        NetworkIndexEndpoint.as_view(),
+        name="waveview-api-1-inventory-network-index",
+    ),
+    path(
+        "inventory/networks/<str:network_id>/",
+        NetworkDetailEndpoint.as_view(),
+        name="waveview-api-1-inventory-network-detail",
+    ),
+    path(
+        "inventory/networks/<str:network_id>/stations/",
+        StationIndexEndpoint.as_view(),
+        name="waveview-api-1-inventory-station-index",
+    ),
+    path(
+        "inventory/networks/<str:network_id>/stations/<str:station_id>/",
+        StationDetailEndpoint.as_view(),
+        name="waveview-api-1-inventory-station-detail",
+    ),
+    path(
+        "inventory/networks/<str:network_id>/stations/<str:station_id>/channels/",
+        ChannelIndexEndpoint.as_view(),
+        name="waveview-api-1-inventory-channel-index",
+    ),
+    path(
+        "inventory/networks/<str:network_id>/stations/<str:station_id>/channels/<str:channel_id>/",
+        ChannelDetailEndpoint.as_view(),
+        name="waveview-api-1-inventory-channel-detail",
+    ),
+]
+
+
 ACCOUNT_URLS = [
     path(
         "",
@@ -192,6 +238,7 @@ urlpatterns = [
     path("organizations/", include(ORGANIZATION_URLS)),
     path("organizations/<str:organization_id>/", include(VOLCANO_URLS)),
     path("organizations/<str:organization_id>/", include(EVENT_TYPE_URLS)),
+    path("organizations/<str:organization_id>/", include(INVENTORY_URLS)),
     path(
         "organizations/<str:organization_id>/volcanoes/<str:volcano_id>/",
         include(CATALOG_URLS),

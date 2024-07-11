@@ -59,6 +59,11 @@ class VolcanoDetailEndpoint(Endpoint):
         ),
         tags=["Volcano"],
         request_body=VolcanoPayloadSerializer,
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", VolcanoSerializer),
+            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
+            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
+        },
     )
     def put(self, request: Request, organization_id: str, volcano_id: str) -> Response:
         self.validate_uuid(organization_id, "organization_id")
@@ -114,7 +119,9 @@ class VolcanoDetailEndpoint(Endpoint):
         responses={
             status.HTTP_200_OK: openapi.Response(
                 "OK", openapi.Schema(type=openapi.TYPE_OBJECT)
-            )
+            ),
+            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
+            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def delete(

@@ -9,29 +9,24 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
+from waveview.inventory.serializers import NetworkPayloadSerializer, NetworkSerializer
 from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
-from waveview.volcano.models import Volcano
-from waveview.volcano.serializers import VolcanoPayloadSerializer, VolcanoSerializer
 
 
-class VolcanoIndexEndpoint(Endpoint):
+class NetworkIndexEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOrganizationMember]
 
     @swagger_auto_schema(
-        operation_id="List Volcanoes",
+        operation_id="List Networks",
         operation_description=(
             """
-            Get list of all managed volcanoes within organization. Only users
-            within the organization can list volcanoes.
+            Get list of seismic networks within inventory. Only members of the
+            organization can view the details.
             """
         ),
-        tags=["Volcano"],
-        responses={
-            status.HTTP_200_OK: openapi.Response("OK", VolcanoSerializer(many=True)),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
-        },
+        tags=["Inventory"],
+        responses={status.HTTP_200_OK: openapi.Response("OK", NetworkSerializer)},
     )
     def get(self, request: Request, organization_id: str) -> Response:
         self.validate_uuid(organization_id, "organization_id")
@@ -42,25 +37,23 @@ class VolcanoIndexEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        volcanoes = Volcano.objects.filter(organization_id=organization_id)
-        serializer = VolcanoSerializer(volcanoes, many=True)
+        inventory = organization.inventory
+        networks = inventory.networks.all()
+        serializer = NetworkSerializer(networks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_id="Create Volcano",
+        operation_id="Create Network",
         operation_description=(
             """
-            Create a new volcano. Only organization owner or admin can create
-            volcanoes.
+            Create a new network. Only authorized members of the organization
+            can create new networks.
             """
         ),
-        tags=["Volcano"],
-        request_body=VolcanoPayloadSerializer,
+        tags=["Inventory"],
+        request_body=NetworkPayloadSerializer,
         responses={
-            status.HTTP_201_CREATED: openapi.Response("Created", VolcanoSerializer),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
+            status.HTTP_201_CREATED: openapi.Response("Created", NetworkSerializer)
         },
     )
     def post(self, request: Request, organization_id: str) -> Response:
@@ -74,17 +67,16 @@ class VolcanoIndexEndpoint(Endpoint):
 
         is_author = organization.author == request.user
         has_permission = request.user.has_permission(
-            organization_id, PermissionType.CREATE_VOLCANO
+            organization_id, PermissionType.MANAGE_INVENTORY
         )
         if not is_author and not has_permission:
-            raise PermissionDenied(
-                _("You do not have permission to create volcanoes."),
-            )
+            raise PermissionDenied(_("You do not have permission to create networks."))
 
-        serializer = VolcanoPayloadSerializer(
+        inventory = organization.inventory
+        serializer = NetworkPayloadSerializer(
             data=request.data,
-            context={"request": request, "organization_id": organization_id},
+            context={"request": request, "inventory_id": inventory.id},
         )
         serializer.is_valid(raise_exception=True)
-        volcano = serializer.save()
-        return Response(VolcanoSerializer(volcano).data, status=status.HTTP_201_CREATED)
+        network = serializer.save(organization=organization)
+        return Response(NetworkSerializer(network).data, status=status.HTTP_201_CREATED)

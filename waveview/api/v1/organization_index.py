@@ -25,7 +25,7 @@ class OrganizationIndexEndpoint(Endpoint):
         return permissions
 
     @swagger_auto_schema(
-        operation_id="Get List of Organizations",
+        operation_id="List Organizations",
         operation_description=(
             """
             Get list of organizations which the user is a member of.

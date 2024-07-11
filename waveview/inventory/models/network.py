@@ -1,16 +1,23 @@
 import uuid
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.db import models
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from waveview.inventory.header import RestrictedStatus
+
+if TYPE_CHECKING:
+    from waveview.inventory.models.station import Station
 
 
 class Network(models.Model):
     """
     This class describes a network of seismic stations.
     """
+
+    stations: QuerySet["Station"]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     inventory = models.ForeignKey(
@@ -68,3 +75,7 @@ class Network(models.Model):
 
     def __str__(self) -> str:
         return self.code
+
+    @property
+    def station_count(self) -> int:
+        return self.stations.count()

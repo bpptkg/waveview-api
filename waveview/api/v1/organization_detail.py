@@ -47,7 +47,7 @@ class OrganizationDetailEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        serializer = OrganizationSerializer(organization)
+        serializer = OrganizationSerializer(organization, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(

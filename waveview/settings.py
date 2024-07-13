@@ -239,7 +239,7 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
 EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=None)
-EMAIL_SENDER = env("EMAIL_SENDER", default="")
+EMAIL_FROM_ADDRESS = env("EMAIL_FROM_ADDRESS", default="")
 
 SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {

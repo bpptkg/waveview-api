@@ -7,7 +7,7 @@ from waveview.users.serializers import UserSerializer
 
 class CatalogSerializer(serializers.Serializer):
     id = serializers.UUIDField(help_text=_("Catalog ID."))
-    volcano = serializers.UUIDField(help_text=_("Volcano ID."))
+    volcano_id = serializers.UUIDField(help_text=_("Volcano ID."))
     name = serializers.CharField(help_text=_("Catalog name."))
     description = serializers.CharField(
         help_text=_("Catalog description."), allow_blank=True

@@ -77,7 +77,7 @@ class CatalogIndexEndpoint(Endpoint):
         has_permission = is_author or request.user.has_permission(
             organization_id, PermissionType.CREATE_CATALOG
         )
-        if has_permission:
+        if not has_permission:
             raise PermissionDenied(_("You do not have permission to create catalogs."))
 
         serializer = CatalogPayloadSerializer(

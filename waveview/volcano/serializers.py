@@ -1,6 +1,8 @@
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from waveview.event.models import Catalog
 from waveview.users.serializers import UserSerializer
 from waveview.volcano.models import Volcano
 
@@ -51,12 +53,21 @@ class VolcanoPayloadSerializer(serializers.Serializer):
         help_text=_("Volcano longitude."), allow_null=True, required=False
     )
 
+    @transaction.atomic
     def create(self, validated_data: dict) -> Volcano:
         user = self.context["request"].user
         organization_id = self.context["organization_id"]
-        return Volcano.objects.create(
+        volcano = Volcano.objects.create(
             organization_id=organization_id, author=user, **validated_data
         )
+        Catalog.objects.create(
+            volcano_id=volcano.id,
+            name=volcano.name,
+            description=f"Default catalog for {volcano.name}.",
+            is_default=True,
+            author=user,
+        )
+        return volcano
 
     def update(self, instance: Volcano, validated_data: dict) -> Volcano:
         for key, value in validated_data.items():

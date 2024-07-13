@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -39,8 +40,12 @@ class OrganizationIndexEndpoint(Endpoint):
         },
     )
     def get(self, request: Request) -> Response:
-        organizations = Organization.objects.filter(members=request.user).all()
-        serializer = OrganizationSerializer(organizations, many=True)
+        organizations = Organization.objects.filter(
+            Q(members=request.user) | Q(author=request.user)
+        ).all()
+        serializer = OrganizationSerializer(
+            organizations, many=True, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(

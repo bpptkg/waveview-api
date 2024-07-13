@@ -83,6 +83,10 @@ class Organization(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    @property
+    def member_count(self) -> int:
+        return self.memberships.count()
+
 
 class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

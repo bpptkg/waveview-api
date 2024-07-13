@@ -36,28 +36,29 @@ class OrganizationMemberSerializer(serializers.Serializer):
 
 
 class OrganizationSerializer(serializers.Serializer):
-    id = serializers.UUIDField(help_text=_("Organization ID."), required=False)
-    slug = serializers.SlugField(help_text=_("Organization slug."), required=False)
-    name = serializers.CharField(help_text=_("Organization name."), required=False)
-    email = serializers.EmailField(help_text=_("Organization email."), required=False)
+    id = serializers.UUIDField(help_text=_("Organization ID."))
+    slug = serializers.SlugField(help_text=_("Organization slug."))
+    name = serializers.CharField(help_text=_("Organization name."))
+    email = serializers.EmailField(help_text=_("Organization email."))
     description = serializers.CharField(
-        help_text=_("Organization description."), allow_blank=True, required=False
+        help_text=_("Organization description."), allow_blank=True
     )
-    url = serializers.URLField(
-        help_text=_("Organization URL."), allow_blank=True, required=False
-    )
+    url = serializers.URLField(help_text=_("Organization URL."), allow_blank=True)
     address = serializers.CharField(
-        help_text=_("Organization address."), allow_blank=True, required=False
+        help_text=_("Organization address."), allow_blank=True
     )
     avatar = serializers.ImageField(
-        help_text=_("Organization avatar."), allow_null=True, required=False
+        help_text=_("Organization avatar."), allow_null=True
     )
     author = UserSerializer(required=False)
     created_at = serializers.DateTimeField(
-        help_text=_("Date when the organization was created."), required=False
+        help_text=_("Date when the organization was created.")
     )
     updated_at = serializers.DateTimeField(
-        help_text=_("Date when the organization was last updated."), required=False
+        help_text=_("Date when the organization was last updated.")
+    )
+    member_count = serializers.IntegerField(
+        help_text=_("Number of organization members.")
     )
 
 

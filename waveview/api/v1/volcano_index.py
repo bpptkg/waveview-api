@@ -29,8 +29,6 @@ class VolcanoIndexEndpoint(Endpoint):
         tags=["Volcano"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", VolcanoSerializer(many=True)),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def get(self, request: Request, organization_id: str) -> Response:
@@ -58,9 +56,6 @@ class VolcanoIndexEndpoint(Endpoint):
         request_body=VolcanoPayloadSerializer,
         responses={
             status.HTTP_201_CREATED: openapi.Response("Created", VolcanoSerializer),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def post(self, request: Request, organization_id: str) -> Response:

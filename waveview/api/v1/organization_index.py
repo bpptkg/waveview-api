@@ -35,7 +35,7 @@ class OrganizationIndexEndpoint(Endpoint):
         responses={
             status.HTTP_200_OK: openapi.Response(
                 "OK", OrganizationSerializer(many=True)
-            )
+            ),
         },
     )
     def get(self, request: Request) -> Response:
@@ -54,7 +54,9 @@ class OrganizationIndexEndpoint(Endpoint):
         tags=["Organization"],
         request_body=OrganizationPayloadSerializer,
         responses={
-            status.HTTP_201_CREATED: openapi.Response("Created", OrganizationSerializer)
+            status.HTTP_201_CREATED: openapi.Response(
+                "Created", OrganizationSerializer
+            ),
         },
     )
     def post(self, request: Request) -> Response:

@@ -27,7 +27,9 @@ class CatalogDetailEndpoint(Endpoint):
             """
         ),
         tags=["Catalog"],
-        responses={status.HTTP_200_OK: openapi.Response("OK", CatalogSerializer)},
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", CatalogSerializer),
+        },
     )
     def get(
         self, request: Request, organization_id: str, volcano_id: str, catalog_id: str
@@ -60,7 +62,9 @@ class CatalogDetailEndpoint(Endpoint):
         ),
         tags=["Catalog"],
         request_body=CatalogPayloadSerializer,
-        responses={status.HTTP_200_OK: openapi.Response("OK", CatalogSerializer)},
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", CatalogSerializer),
+        },
     )
     def put(
         self, request: Request, organization_id: str, volcano_id: str, catalog_id: str
@@ -101,7 +105,9 @@ class CatalogDetailEndpoint(Endpoint):
             """
         ),
         tags=["Catalog"],
-        responses={status.HTTP_204_NO_CONTENT: openapi.Response("No Content")},
+        responses={
+            status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
+        },
     )
     def delete(
         self, request: Request, organization_id: str, volcano_id: str, catalog_id: str

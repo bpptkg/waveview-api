@@ -24,7 +24,9 @@ class EventAttachmentDetailEndpoint(Endpoint):
             """
         ),
         tags=["Event"],
-        responses={status.HTTP_204_NO_CONTENT: openapi.Response("No Content")},
+        responses={
+            status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
+        },
     )
     def delete(self, request: Request, attachment_id: str) -> Response:
         self.validate_uuid(attachment_id, "attachment_id")

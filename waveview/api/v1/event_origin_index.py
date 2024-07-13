@@ -28,7 +28,6 @@ class EventOriginIndexEndpoint(Endpoint):
         tags=["Event"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", OriginSerializer(many=True)),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def get(
@@ -63,9 +62,6 @@ class EventOriginIndexEndpoint(Endpoint):
         request_body=OriginPayloadSerializer,
         responses={
             status.HTTP_201_CREATED: openapi.Response("Created", OriginSerializer),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
         },
     )
     def post(

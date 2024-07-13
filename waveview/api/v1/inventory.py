@@ -27,7 +27,9 @@ class InventoryEndpoint(Endpoint):
             """
         ),
         tags=["Inventory"],
-        responses={status.HTTP_200_OK: openapi.Response("OK", InventorySerializer)},
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", InventorySerializer),
+        },
     )
     def get(self, request: Request, organization_id: str) -> Response:
         self.validate_uuid(organization_id, "organization_id")

@@ -28,7 +28,10 @@ class CatalogIndexEndpoint(Endpoint):
         ),
         tags=["Catalog"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", CatalogSerializer(many=True))
+            status.HTTP_200_OK: openapi.Response(
+                "OK",
+                CatalogSerializer(many=True),
+            )
         },
     )
     def get(self, request: Request, organization_id: str, volcano_id: str) -> Response:
@@ -57,7 +60,7 @@ class CatalogIndexEndpoint(Endpoint):
         tags=["Catalog"],
         request_body=CatalogPayloadSerializer,
         responses={
-            status.HTTP_201_CREATED: openapi.Response("Created", CatalogSerializer)
+            status.HTTP_201_CREATED: openapi.Response("Created", CatalogSerializer),
         },
     )
     def post(self, request: Request, organization_id: str, volcano_id: str) -> Response:

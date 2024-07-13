@@ -29,7 +29,6 @@ class ChannelDetailEndpoint(Endpoint):
         tags=["Inventory"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", ChannelSerializer),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def get(
@@ -78,8 +77,6 @@ class ChannelDetailEndpoint(Endpoint):
         request_body=ChannelPayloadSerializer,
         responses={
             status.HTTP_200_OK: openapi.Response("OK", ChannelSerializer),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
         },
     )
     def put(
@@ -137,8 +134,6 @@ class ChannelDetailEndpoint(Endpoint):
         tags=["Inventory"],
         responses={
             status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
         },
     )
     def delete(

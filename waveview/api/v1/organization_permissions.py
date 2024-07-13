@@ -32,7 +32,7 @@ class OrganizationPermissionsEndpoint(Endpoint):
         responses={
             status.HTTP_200_OK: openapi.Response(
                 "OK", PermissionChoiceSerializer(many=True)
-            )
+            ),
         },
     )
     def get(self, request: Request) -> Response:

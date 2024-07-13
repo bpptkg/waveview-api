@@ -55,7 +55,7 @@ class OrganizationMemberDetailEndpoint(Endpoint):
         tags=["Organization"],
         request_body=OrganizationMemberUpdatePayloadSerializer,
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", OrganizationMemberSerializer)
+            status.HTTP_200_OK: openapi.Response("OK", OrganizationMemberSerializer),
         },
     )
     def put(self, request: Request, organization_id: str, user_id: str) -> Response:
@@ -98,7 +98,9 @@ class OrganizationMemberDetailEndpoint(Endpoint):
             """
         ),
         tags=["Organization"],
-        responses={status.HTTP_204_NO_CONTENT: openapi.Response("No Content")},
+        responses={
+            status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
+        },
     )
     def delete(self, request: Request, organization_id: str, user_id: str) -> Response:
         self.validate_uuid(organization_id, "organization_id")

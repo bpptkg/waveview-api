@@ -26,7 +26,9 @@ class EventTypeDetailEndpoint(Endpoint):
             """
         ),
         tags=["Event Type"],
-        responses={status.HTTP_200_OK: openapi.Response("OK", EventTypeSerializer)},
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", EventTypeSerializer),
+        },
     )
     def get(
         self, request: Request, organization_id: str, event_type_id: str
@@ -60,7 +62,9 @@ class EventTypeDetailEndpoint(Endpoint):
         ),
         tags=["Event Type"],
         request_body=EventTypePayloadSerializer,
-        responses={status.HTTP_200_OK: openapi.Response("OK", EventTypeSerializer)},
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", EventTypeSerializer),
+        },
     )
     def put(
         self, request: Request, organization_id: str, event_type_id: str
@@ -98,7 +102,9 @@ class EventTypeDetailEndpoint(Endpoint):
             """
         ),
         tags=["Event Type"],
-        responses={status.HTTP_204_NO_CONTENT: openapi.Response("No Content")},
+        responses={
+            status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
+        },
     )
     def delete(
         self, request: Request, organization_id: str, event_type_id: str

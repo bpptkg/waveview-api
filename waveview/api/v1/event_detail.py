@@ -28,7 +28,6 @@ class EventDetailEndpoint(Endpoint):
         tags=["Event"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", EventSerializer),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def get(
@@ -63,8 +62,6 @@ class EventDetailEndpoint(Endpoint):
         request_body=EventPayloadSerializer,
         responses={
             status.HTTP_200_OK: openapi.Response("OK", EventSerializer),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def put(
@@ -109,7 +106,6 @@ class EventDetailEndpoint(Endpoint):
         tags=["Event"],
         responses={
             status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def delete(

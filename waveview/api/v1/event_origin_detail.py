@@ -28,7 +28,6 @@ class EventOriginDetailEndpoint(Endpoint):
         tags=["Event"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", OriginSerializer),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def get(
@@ -74,8 +73,6 @@ class EventOriginDetailEndpoint(Endpoint):
         request_body=OriginPayloadSerializer,
         responses={
             status.HTTP_200_OK: openapi.Response("OK", OriginSerializer),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
         },
     )
     def put(
@@ -131,8 +128,6 @@ class EventOriginDetailEndpoint(Endpoint):
         tags=["Event"],
         responses={
             status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
         },
     )
     def delete(

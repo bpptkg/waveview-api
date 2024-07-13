@@ -25,7 +25,6 @@ class AccountRegistrationEndpoint(Endpoint):
         request_body=RegisterUserSerializer,
         responses={
             status.HTTP_201_CREATED: openapi.Response("Created", UserSerializer),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
         },
     )
     def post(self, request: Request) -> Response:

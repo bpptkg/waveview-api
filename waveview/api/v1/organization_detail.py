@@ -34,7 +34,9 @@ class OrganizationDetailEndpoint(Endpoint):
             """
         ),
         tags=["Organization"],
-        responses={status.HTTP_200_OK: openapi.Response("OK", OrganizationSerializer)},
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", OrganizationSerializer),
+        },
     )
     def get(self, request: Request, organization_id: str) -> Response:
         self.validate_uuid(organization_id, "organization_id")
@@ -63,7 +65,9 @@ class OrganizationDetailEndpoint(Endpoint):
         ),
         tags=["Organization"],
         request_body=OrganizationPayloadSerializer,
-        responses={status.HTTP_200_OK: openapi.Response("OK", OrganizationSerializer)},
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", OrganizationSerializer),
+        },
     )
     def put(self, request: Request, organization_id: str) -> Response:
         self.validate_uuid(organization_id, "organization_id")
@@ -107,7 +111,7 @@ class OrganizationDetailEndpoint(Endpoint):
         responses={
             status.HTTP_200_OK: openapi.Response(
                 "OK", openapi.Schema(type=openapi.TYPE_OBJECT)
-            )
+            ),
         },
     )
     def delete(self, request: Request, organization_id: str) -> Response:

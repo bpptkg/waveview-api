@@ -27,8 +27,6 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         tags=["Organization"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", RoleSerializer),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def get(self, request: Request, organization_id: str, role_id: str) -> Response:
@@ -57,8 +55,6 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         request_body=RolePayloadSerializer,
         responses={
             status.HTTP_200_OK: openapi.Response("OK", RoleSerializer),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def put(self, request: Request, organization_id: str, role_id: str) -> Response:
@@ -89,8 +85,6 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         tags=["Organization"],
         responses={
             status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def delete(self, request: Request, organization_id: str, role_id: str) -> Response:

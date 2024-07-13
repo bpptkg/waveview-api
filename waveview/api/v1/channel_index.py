@@ -67,7 +67,6 @@ class ChannelIndexEndpoint(Endpoint):
         request_body=ChannelPayloadSerializer,
         responses={
             status.HTTP_201_CREATED: openapi.Response("Created", ChannelSerializer),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
         },
     )
     def post(

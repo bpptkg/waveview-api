@@ -60,8 +60,6 @@ class NetworkDetailEndpoint(Endpoint):
         request_body=NetworkPayloadSerializer,
         responses={
             status.HTTP_200_OK: openapi.Response("OK", NetworkSerializer),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
         },
     )
     def put(self, request: Request, organization_id: str, network_id: str) -> Response:
@@ -106,8 +104,6 @@ class NetworkDetailEndpoint(Endpoint):
         tags=["Inventory"],
         responses={
             status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
         },
     )
     def delete(

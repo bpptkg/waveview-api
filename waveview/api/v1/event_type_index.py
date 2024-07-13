@@ -27,7 +27,7 @@ class EventTypeIndexEndpoint(Endpoint):
         ),
         tags=["Event Type"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", EventTypeSerializer(many=True))
+            status.HTTP_200_OK: openapi.Response("OK", EventTypeSerializer(many=True)),
         },
     )
     def get(self, request: Request, organization_id: str) -> Response:
@@ -54,7 +54,7 @@ class EventTypeIndexEndpoint(Endpoint):
         tags=["Event Type"],
         request_body=EventTypePayloadSerializer,
         responses={
-            status.HTTP_201_CREATED: openapi.Response("Created", EventTypeSerializer)
+            status.HTTP_201_CREATED: openapi.Response("Created", EventTypeSerializer),
         },
     )
     def post(self, request: Request, organization_id: str) -> Response:

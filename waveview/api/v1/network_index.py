@@ -26,7 +26,9 @@ class NetworkIndexEndpoint(Endpoint):
             """
         ),
         tags=["Inventory"],
-        responses={status.HTTP_200_OK: openapi.Response("OK", NetworkSerializer)},
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", NetworkSerializer),
+        },
     )
     def get(self, request: Request, organization_id: str) -> Response:
         self.validate_uuid(organization_id, "organization_id")
@@ -53,7 +55,7 @@ class NetworkIndexEndpoint(Endpoint):
         tags=["Inventory"],
         request_body=NetworkPayloadSerializer,
         responses={
-            status.HTTP_201_CREATED: openapi.Response("Created", NetworkSerializer)
+            status.HTTP_201_CREATED: openapi.Response("Created", NetworkSerializer),
         },
     )
     def post(self, request: Request, organization_id: str) -> Response:

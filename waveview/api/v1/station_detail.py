@@ -28,7 +28,6 @@ class StationDetailEndpoint(Endpoint):
         tags=["Inventory"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", StationSerializer),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def get(
@@ -65,9 +64,6 @@ class StationDetailEndpoint(Endpoint):
         request_body=StationPayloadSerializer,
         responses={
             status.HTTP_200_OK: openapi.Response("OK", StationSerializer),
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def put(
@@ -113,8 +109,6 @@ class StationDetailEndpoint(Endpoint):
         tags=["Inventory"],
         responses={
             status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Not Found"),
         },
     )
     def delete(

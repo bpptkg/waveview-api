@@ -90,7 +90,7 @@ class EventDetailEndpoint(Endpoint):
             raise NotFound(_("Event not found."))
 
         serializer = EventPayloadSerializer(
-            event, data=request.data, context={"request": request}
+            event, data=request.data, context={"request": request}, partial=True
         )
         serializer.is_valid(raise_exception=True)
         event = serializer.save()

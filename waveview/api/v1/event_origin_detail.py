@@ -112,7 +112,7 @@ class EventOriginDetailEndpoint(Endpoint):
             raise NotFound(_("Origin not found."))
 
         serializer = OriginPayloadSerializer(
-            origin, data=request.data, context={"request": request}
+            origin, data=request.data, context={"request": request}, partial=True
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()

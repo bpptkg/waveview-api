@@ -87,7 +87,7 @@ class NetworkDetailEndpoint(Endpoint):
         except Network.DoesNotExist:
             raise NotFound(_("Network not found."))
 
-        serializer = NetworkPayloadSerializer(network, data=request.data)
+        serializer = NetworkPayloadSerializer(network, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

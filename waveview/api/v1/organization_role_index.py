@@ -64,9 +64,12 @@ class OrganizationRoleIndexEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        serializer = RolePayloadSerializer(data=request.data)
+        serializer = RolePayloadSerializer(
+            data=request.data,
+            context={"organization_id": organization_id, request: request},
+        )
         serializer.is_valid(raise_exception=True)
-        role = serializer.save(organization_id=organization_id)
+        role = serializer.save()
 
         response_serializer = RoleSerializer(role)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)

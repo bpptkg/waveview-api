@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOwnerOrReadOnly
-from waveview.organization.models import Organization
+from waveview.organization.models import Organization, Role
 from waveview.organization.serializers import RolePayloadSerializer, RoleSerializer
 
 
@@ -39,7 +39,11 @@ class OrganizationRoleDetailEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        role = organization.roles.get(id=role_id)
+        try:
+            role = organization.roles.get(id=role_id)
+        except Role.DoesNotExist:
+            raise NotFound(_("Role not found."))
+
         serializer = RoleSerializer(role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -67,8 +71,12 @@ class OrganizationRoleDetailEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        role = organization.roles.get(id=role_id)
-        serializer = RolePayloadSerializer(data=request.data)
+        try:
+            role = organization.roles.get(id=role_id)
+        except Role.DoesNotExist:
+            raise NotFound(_("Role not found."))
+
+        serializer = RolePayloadSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
         role = serializer.update(role, serializer.validated_data)
@@ -97,6 +105,10 @@ class OrganizationRoleDetailEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        role = organization.roles.get(id=role_id)
+        try:
+            role = organization.roles.get(id=role_id)
+        except Role.DoesNotExist:
+            raise NotFound(_("Role not found."))
+
         role.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

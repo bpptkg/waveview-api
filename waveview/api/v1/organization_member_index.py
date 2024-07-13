@@ -20,9 +20,10 @@ class OrganizationMemberPayloadSerializer(serializers.Serializer):
         required=True,
         help_text=_("User ID of the member to add to the organization."),
     )
-    role_id = serializers.CharField(
+    role_ids = serializers.ListField(
+        child=serializers.UUIDField(),
         required=True,
-        help_text=_("Role of the member in the organization."),
+        help_text=_("List of role IDs for the member in the organization."),
     )
     expiration_date = serializers.DateTimeField(
         required=False,
@@ -98,26 +99,30 @@ class OrganizationMemberIndexEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
-        has_permission = request.user.has_permission(
+        has_permission = is_author or request.user.has_permission(
             organization_id, PermissionType.ADD_MEMBER
         )
-        if not is_author or not has_permission:
+        if not has_permission:
             raise PermissionDenied(
                 _("You do not have permission to add members to this organization."),
             )
 
         serializer = OrganizationMemberPayloadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         data = serializer.validated_data
-        organization_member, _ = OrganizationMember.objects.get_or_create(
+        organization_member, created = OrganizationMember.objects.get_or_create(
             organization_id=organization_id,
             user_id=data["user_id"],
             defaults={
-                "role_id": data["role_id"],
                 "expiration_date": data.get("expiration_date"),
                 "inviter": request.user,
             },
         )
+        if created:
+            roles = Role.objects.filter(id__in=data["role_ids"])
+            organization_member.roles.set(roles)
         return Response(
-            OrganizationMember(organization_member).data, status=status.HTTP_200_OK
+            OrganizationMemberSerializer(organization_member).data,
+            status=status.HTTP_200_OK,
         )

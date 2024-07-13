@@ -22,10 +22,7 @@ class OrganizationRoleSerializer(serializers.Serializer):
 class OrganizationMemberSerializer(serializers.Serializer):
     id = serializers.UUIDField(help_text=_("Organization member ID."))
     user = UserSerializer()
-    role = OrganizationRoleSerializer(
-        help_text=_("Organization member role."), allow_null=True
-    )
-    email = serializers.EmailField(help_text=_("Organization member email."))
+    roles = OrganizationRoleSerializer(many=True)
     date_added = serializers.DateTimeField(
         help_text=_("Date when the user was added to the organization.")
     )

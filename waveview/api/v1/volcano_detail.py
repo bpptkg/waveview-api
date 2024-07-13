@@ -91,7 +91,7 @@ class VolcanoDetailEndpoint(Endpoint):
         except Volcano.DoesNotExist:
             raise NotFound(_("Volcano not found."))
 
-        serializer = VolcanoPayloadSerializer(volcano, data=request.data)
+        serializer = VolcanoPayloadSerializer(volcano, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         volcano = serializer.save()
         return Response(VolcanoSerializer(volcano).data, status=status.HTTP_200_OK)

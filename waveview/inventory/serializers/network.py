@@ -47,27 +47,42 @@ class NetworkWithStationsSerializer(NetworkSerializer):
 class NetworkPayloadSerializer(serializers.Serializer):
     code = serializers.CharField(help_text=_("Network code, e.g. 'VG'"))
     alternate_code = serializers.CharField(
-        help_text=_("A code used for display or association."), allow_null=True
+        help_text=_("A code used for display or association."),
+        allow_null=True,
+        required=False,
     )
     start_date = serializers.DateTimeField(
-        help_text=_("Start date of network."), allow_null=True
+        help_text=_("Start date of network."), allow_null=True, required=False
     )
     end_date = serializers.DateTimeField(
-        help_text=_("End date of network."), allow_null=True
+        help_text=_("End date of network."), allow_null=True, required=False
     )
     historical_code = serializers.CharField(
         help_text=_("A previously used code if different from the current code."),
         allow_null=True,
+        required=False,
     )
     description = serializers.CharField(
-        help_text=_("Network description."), allow_null=True
+        help_text=_("Network description."), allow_null=True, required=False
     )
-    region = serializers.CharField(help_text=_("Region of network."), allow_null=True)
+    region = serializers.CharField(
+        help_text=_("Region of network."), allow_null=True, required=False
+    )
     restricted_status = serializers.ChoiceField(
         help_text=_("Restricted status of network."),
         allow_null=True,
         choices=RestrictedStatus.choices,
+        required=False,
     )
+
+    def validate_code(self, code: str) -> str:
+        if Network.objects.filter(
+            code=code, inventory_id=self.context["inventory_id"]
+        ).exists():
+            raise serializers.ValidationError(
+                _("Network with this code already exists.")
+            )
+        return code
 
     def create(self, validated_data: dict) -> Network:
         user = self.context["request"].user

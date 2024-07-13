@@ -80,5 +80,5 @@ class NetworkIndexEndpoint(Endpoint):
             context={"request": request, "inventory_id": inventory.id},
         )
         serializer.is_valid(raise_exception=True)
-        network = serializer.save(organization=organization)
+        network = serializer.save()
         return Response(NetworkSerializer(network).data, status=status.HTTP_201_CREATED)

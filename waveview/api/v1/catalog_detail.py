@@ -80,10 +80,10 @@ class CatalogDetailEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
-        has_permission = request.user.has_permission(
+        has_permission = is_author or request.user.has_permission(
             organization, PermissionType.UPDATE_CATALOG
         )
-        if not is_author and not has_permission:
+        if not has_permission:
             raise PermissionDenied(_("You do not have permission to update catalogs."))
 
         try:
@@ -123,10 +123,10 @@ class CatalogDetailEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
-        has_permission = request.user.has_permission(
+        has_permission = is_author or request.user.has_permission(
             organization, PermissionType.DELETE_CATALOG
         )
-        if not is_author and not has_permission:
+        if not has_permission:
             raise PermissionDenied(_("You do not have permission to delete catalogs."))
 
         try:

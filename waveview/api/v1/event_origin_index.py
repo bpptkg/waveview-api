@@ -78,10 +78,10 @@ class EventOriginIndexEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
-        has_permission = request.user.has_permission(
+        has_permission = is_author or request.user.has_permission(
             organization_id, PermissionType.CREATE_EVENT
         )
-        if not is_author and not has_permission:
+        if not has_permission:
             raise PermissionDenied(_("You do not have permission to create origins."))
 
         try:

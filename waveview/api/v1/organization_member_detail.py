@@ -15,9 +15,10 @@ from waveview.organization.serializers import OrganizationMemberSerializer
 
 
 class OrganizationMemberUpdatePayloadSerializer(serializers.Serializer):
-    role_id = serializers.CharField(
-        required=True,
-        help_text=_("Role of the member in the organization."),
+    role_ids = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        help_text=_("List of role IDs the member can have in the organization."),
     )
     expiration_date = serializers.DateTimeField(
         required=False,
@@ -32,7 +33,10 @@ class OrganizationMemberUpdatePayloadSerializer(serializers.Serializer):
     def update(
         self, instance: OrganizationMember, validated_data: dict
     ) -> OrganizationMember:
-        instance.role_id = validated_data.get("role_id", instance.role_id)
+        role_ids = validated_data.get("role_ids")
+        if role_ids:
+            roles = Role.objects.filter(id__in=role_ids)
+            instance.roles.set(roles)
         instance.expiration_date = validated_data.get(
             "expiration_date", instance.expiration_date
         )
@@ -42,6 +46,37 @@ class OrganizationMemberUpdatePayloadSerializer(serializers.Serializer):
 
 class OrganizationMemberDetailEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOrganizationMember]
+
+    @swagger_auto_schema(
+        operation_id="Retrieve Organization Member",
+        operation_description=(
+            """
+            Retrieve a member in the organization. Only organization members can
+            retrieve other members in the organization.
+            """
+        ),
+        tags=["Organization"],
+        responses={
+            status.HTTP_200_OK: openapi.Response("OK", OrganizationMemberSerializer),
+        },
+    )
+    def get(self, request: Request, organization_id: str, user_id: str) -> Response:
+        self.validate_uuid(organization_id, "organization_id")
+        self.validate_uuid(user_id, "user_id")
+
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
+            raise NotFound(_("Organization does not exist."))
+        self.check_object_permissions(request, organization)
+
+        organization_member = OrganizationMember.objects.get(
+            organization_id=organization_id, user_id=user_id
+        )
+        return Response(
+            OrganizationMemberSerializer(organization_member).data,
+            status=status.HTTP_200_OK,
+        )
 
     @swagger_auto_schema(
         operation_id="Update Organization Member",
@@ -69,10 +104,10 @@ class OrganizationMemberDetailEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
-        has_permission = request.user.has_permission(
+        has_permission = is_author or request.user.has_permission(
             organization_id, PermissionType.UPDATE_MEMBER
         )
-        if not is_author or not has_permission:
+        if not has_permission:
             raise PermissionDenied(
                 _("You do not have permission to update members in this organization."),
             )
@@ -86,7 +121,8 @@ class OrganizationMemberDetailEndpoint(Endpoint):
         serializer.is_valid(raise_exception=True)
         organization_member = serializer.save()
         return Response(
-            OrganizationMember(organization_member).data, status=status.HTTP_200_OK
+            OrganizationMemberSerializer(organization_member).data,
+            status=status.HTTP_200_OK,
         )
 
     @swagger_auto_schema(
@@ -113,10 +149,10 @@ class OrganizationMemberDetailEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
-        has_permission = request.user.has_permission(
+        has_permission = is_author or request.user.has_permission(
             organization_id, PermissionType.REMOVE_MEMBER
         )
-        if not is_author or not has_permission:
+        if not has_permission:
             raise PermissionDenied(
                 _("You do not have permission to remove members in this organization."),
             )

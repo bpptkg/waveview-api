@@ -2,6 +2,7 @@ import os
 from uuid import uuid4
 
 from django.db import models
+from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 
 
@@ -13,7 +14,9 @@ class MediaPath(object):
     def __call__(self, instance: object, filename: str) -> str:
         ext = filename.split(".")[-1]
         filename = "{}.{}".format(uuid4(), ext)
-        return os.path.join(self.path, filename)
+        today = timezone.now().date()
+        path = today.strftime(self.path)
+        return os.path.join(path, filename)
 
 
 class MediaType(models.TextChoices):

@@ -87,4 +87,6 @@ class StationIndexEndpoint(Endpoint):
         serializer = StationPayloadSerializer(
             data=request.data, context={"request": request, "network_id": network.id}
         )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer.is_valid(raise_exception=True)
+        station = serializer.save(network=network)
+        return Response(StationSerializer(station).data, status=status.HTTP_201_CREATED)

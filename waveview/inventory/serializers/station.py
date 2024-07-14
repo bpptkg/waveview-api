@@ -60,40 +60,57 @@ class StationWithChannelsSerializer(StationSerializer):
 class StationPayloadSerializer(serializers.Serializer):
     code = serializers.CharField(help_text=_("Station code."))
     alternate_code = serializers.CharField(
-        help_text=_("Alternate code used for display or association."), allow_null=True
+        help_text=_("Alternate code used for display or association."),
+        allow_null=True,
+        required=False,
     )
     start_date = serializers.DateTimeField(
-        help_text=_("Start date of station."), allow_null=True
+        help_text=_("Start date of station."), allow_null=True, required=False
     )
     end_date = serializers.DateTimeField(
-        help_text=_("End date of station."), allow_null=True
+        help_text=_("End date of station."), allow_null=True, required=False
     )
     historical_code = serializers.CharField(
-        help_text=_("Historical code of station."), allow_null=True
+        help_text=_("Historical code of station."), allow_null=True, required=False
     )
     latitude = serializers.FloatField(
-        help_text=_("Station latitude, in degrees."), allow_null=True
+        help_text=_("Station latitude, in degrees."), allow_null=True, required=False
     )
     longitude = serializers.FloatField(
-        help_text=_("Station longitude, in degrees."), allow_null=True
+        help_text=_("Station longitude, in degrees."), allow_null=True, required=False
     )
     elevation = serializers.FloatField(
-        help_text=_("Station elevation, in meters."), allow_null=True
+        help_text=_("Station elevation, in meters."), allow_null=True, required=False
     )
     restricted_status = serializers.ChoiceField(
         help_text=_("Restricted status of station."),
         allow_null=True,
         choices=RestrictedStatus.choices,
+        required=False,
     )
     description = serializers.CharField(
-        help_text=_("Station description."), allow_null=True
+        help_text=_("Station description."), allow_null=True, required=False
     )
     place = serializers.CharField(
-        help_text=_("Place where the station is located."), allow_null=True
+        help_text=_("Place where the station is located."),
+        allow_null=True,
+        required=False,
     )
     country = serializers.CharField(
-        help_text=_("Country where the station is located."), allow_null=True
+        help_text=_("Country where the station is located."),
+        allow_null=True,
+        required=False,
     )
+
+    def validate_code(self, value: str) -> str:
+        code = value.upper()
+        if Station.objects.filter(
+            code=code, network_id=self.context["network_id"]
+        ).exists():
+            raise serializers.ValidationError(
+                _("Station with this code already exists")
+            )
+        return code
 
     def create(self, validated_data: dict) -> Station:
         user = self.context["request"].user

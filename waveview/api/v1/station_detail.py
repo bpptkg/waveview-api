@@ -94,7 +94,12 @@ class StationDetailEndpoint(Endpoint):
         if not has_permission:
             raise PermissionDenied(_("You do not have permission to update stations"))
 
-        serializer = StationPayloadSerializer(station, data=request.data, partial=True)
+        serializer = StationPayloadSerializer(
+            station,
+            data=request.data,
+            partial=True,
+            context={"request": request, "network_id": network_id},
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)

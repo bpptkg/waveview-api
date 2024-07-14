@@ -130,20 +130,20 @@ class ChannelSerializer(serializers.Serializer):
 class ChannelPayloadSerializer(serializers.Serializer):
     code = serializers.CharField(help_text=_("Channel code."))
     alternate_code = serializers.CharField(
-        help_text=_("Alternate code used for display or association."), allow_null=True
+        help_text=_("Alternate code used for display or association."),
+        allow_null=True,
+        required=False,
     )
     start_date = serializers.DateTimeField(
-        help_text=_("Start date of channel."), allow_null=True
+        help_text=_("Start date of channel."), allow_null=True, required=False
     )
     end_date = serializers.DateTimeField(
-        help_text=_("End date of channel."), allow_null=True
+        help_text=_("End date of channel."), allow_null=True, required=False
     )
     historical_code = serializers.CharField(
-        help_text=_("Historical code of channel."), allow_null=True
+        help_text=_("Historical code of channel."), allow_null=True, required=False
     )
-    location_code = serializers.CharField(
-        help_text=_("Location code of channel."), allow_null=True
-    )
+    location_code = serializers.CharField(help_text=_("Location code of channel."))
     latitude = serializers.FloatField(
         help_text=_(
             """
@@ -152,7 +152,6 @@ class ChannelPayloadSerializer(serializers.Serializer):
             location of the sensor.
             """
         ),
-        allow_null=True,
     )
     longitude = serializers.FloatField(
         help_text=_(
@@ -162,13 +161,12 @@ class ChannelPayloadSerializer(serializers.Serializer):
             location of the sensor.
             """
         ),
-        allow_null=True,
     )
     elevation = serializers.FloatField(
-        help_text=_("Elevation of the sensor, in meters."), allow_null=True
+        help_text=_("Elevation of the sensor, in meters."),
     )
     depth = serializers.FloatField(
-        help_text=_("Depth of the sensor, in meters."), allow_null=True
+        help_text=_("Depth of the sensor, in meters."),
     )
     restricted_status = serializers.ChoiceField(
         help_text=_("Restricted status of channel."),
@@ -242,6 +240,16 @@ class ChannelPayloadSerializer(serializers.Serializer):
         ),
         allow_null=True,
     )
+
+    def validate_code(self, value: str) -> str:
+        code = value.upper()
+        if Channel.objects.filter(
+            code=code, station_id=self.context["station_id"]
+        ).exists():
+            raise serializers.ValidationError(
+                _("Channel with this code already exists")
+            )
+        return code
 
     def create(self, validated_data: dict) -> Channel:
         user = self.context["request"].user

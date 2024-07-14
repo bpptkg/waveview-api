@@ -75,7 +75,8 @@ class NetworkPayloadSerializer(serializers.Serializer):
         required=False,
     )
 
-    def validate_code(self, code: str) -> str:
+    def validate_code(self, value: str) -> str:
+        code = value.upper()
         if Network.objects.filter(
             code=code, inventory_id=self.context["inventory_id"]
         ).exists():

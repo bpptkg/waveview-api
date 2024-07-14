@@ -12,6 +12,7 @@ from waveview.api.permissions import IsOrganizationMember
 from waveview.event.models import EventType
 from waveview.event.serializers import EventTypePayloadSerializer, EventTypeSerializer
 from waveview.organization.models import Organization
+from waveview.organization.permissions import PermissionType
 
 
 class EventTypeDetailEndpoint(Endpoint):
@@ -56,7 +57,7 @@ class EventTypeDetailEndpoint(Endpoint):
         operation_id="Update Event Type",
         operation_description=(
             """
-            Update an event type within the organization. Only organization owner
+            Update an event type within the organization. Only authorized users
             can update event types.
             """
         ),
@@ -85,13 +86,25 @@ class EventTypeDetailEndpoint(Endpoint):
         except EventType.DoesNotExist:
             raise NotFound(_("Event type not found."))
 
+        is_author = organization.author == request.user
+        has_permission = is_author or request.user.has_permission(
+            organization_id, PermissionType.MANAGE_EVENT_TYPE
+        )
+        if not has_permission:
+            raise PermissionDenied(
+                _("You do not have permission to update event types.")
+            )
+
         serializer = EventTypePayloadSerializer(
-            instance=event_type, data=request.data, context={"request": request}, partial=True
+            instance=event_type,
+            data=request.data,
+            context={"request": request, "organization_id": organization_id},
+            partial=True,
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(EventTypeSerializer(event_type).data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_id="Delete Event Type",
@@ -118,16 +131,21 @@ class EventTypeDetailEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        is_author = organization.author == request.user
-        if not is_author:
-            raise PermissionDenied(_("Only organization owner can delete event types."))
-
         try:
             event_type = EventType.objects.get(
                 organization_id=organization_id, id=event_type_id
             )
         except EventType.DoesNotExist:
             raise NotFound(_("Event type not found."))
+
+        is_author = organization.author == request.user
+        has_permission = is_author or request.user.has_permission(
+            organization_id, PermissionType.MANAGE_EVENT_TYPE
+        )
+        if not has_permission:
+            raise PermissionDenied(
+                _("You do not have permission to delete event types.")
+            )
 
         event_type.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

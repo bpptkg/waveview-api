@@ -12,6 +12,7 @@ from waveview.api.permissions import IsOrganizationMember
 from waveview.event.models import EventType
 from waveview.event.serializers import EventTypePayloadSerializer, EventTypeSerializer
 from waveview.organization.models import Organization
+from waveview.organization.permissions import PermissionType
 
 
 class EventTypeIndexEndpoint(Endpoint):
@@ -47,8 +48,8 @@ class EventTypeIndexEndpoint(Endpoint):
         operation_id="Create Event Type",
         operation_description=(
             """
-            Create a new event type within the organization. Only organization
-            owner can create event types.
+            Create a new event type within the organization. Only authorized
+            users can create event types.
             """
         ),
         tags=["Event Type"],
@@ -67,8 +68,13 @@ class EventTypeIndexEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
-        if not is_author:
-            raise PermissionDenied(_("Only organization owner can create event types."))
+        has_permission = is_author or request.user.has_permission(
+            organization_id, PermissionType.MANAGE_EVENT_TYPE
+        )
+        if not has_permission:
+            raise PermissionDenied(
+                _("You do not have permission to create event types.")
+            )
 
         serializer = EventTypePayloadSerializer(
             data=request.data,

@@ -108,9 +108,9 @@ class EventIndexEndpoint(Endpoint):
             events = events.filter(type_id=event_type_id)
 
         if ordering == OrderingType.ASC:
-            events = events.order_by("origins__time")
+            events = events.order_by("origin__time")
         elif ordering == OrderingType.DESC:
-            events = events.order_by("-origins__time")
+            events = events.order_by("-origin__time")
 
         page = self.paginate_queryset(events.distinct())
         serializer = EventSerializer(page, many=True)

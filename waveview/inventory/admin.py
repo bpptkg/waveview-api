@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from waveview.inventory.models import Channel, Inventory, Network, Station
+from waveview.inventory.models import Channel, DataSource, Inventory, Network, Station
 
 
 @admin.register(Inventory)
@@ -63,4 +63,15 @@ class ChannelAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
         "author",
+    )
+
+
+@admin.register(DataSource)
+class DataSourceAdmin(admin.ModelAdmin):
+    list_display = (
+        "inventory",
+        "source",
+        "data",
+        "created_at",
+        "updated_at",
     )

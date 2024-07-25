@@ -3,8 +3,10 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from waveview.event.models import Attachment, Event
+from waveview.event.serializers.amplitude import AmplitudeSerializer
 from waveview.event.serializers.attachment import AttachmentSerializer
 from waveview.event.serializers.event_type import EventTypeSerializer
+from waveview.event.serializers.magnitude import MagnitudeSerializer
 from waveview.event.serializers.origin import OriginSerializer
 from waveview.inventory.models import Station
 from waveview.users.serializers import UserSerializer
@@ -25,6 +27,8 @@ class EventSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(help_text=_("Event update timestamp."))
     author = UserSerializer()
     preferred_origin = OriginSerializer(allow_null=True)
+    preferred_magnitude = MagnitudeSerializer(allow_null=True)
+    preferred_amplitude = AmplitudeSerializer(allow_null=True)
 
 
 class EventPayloadSerializer(serializers.Serializer):

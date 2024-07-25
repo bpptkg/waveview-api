@@ -75,6 +75,15 @@ class Event(models.Model):
         related_name="events",
         related_query_name="event",
     )
+    station_of_first_arrival = models.ForeignKey(
+        "inventory.Station",
+        on_delete=models.SET_NULL,
+        related_name="+",
+        null=True,
+        blank=True,
+    )
+    time = models.DateTimeField(null=True, blank=True, db_index=True)
+    duration = models.FloatField(null=True, blank=True)
     type = models.ForeignKey(
         EventType,
         on_delete=models.SET_NULL,

@@ -161,3 +161,9 @@ class Channel(models.Model):
 
     def __str__(self) -> str:
         return self.code
+
+    def __repr__(self) -> str:
+        return f"<Channel: {self.code}>"
+
+    def get_datastream_id(self) -> str:
+        return f"datastream_{self.id}"

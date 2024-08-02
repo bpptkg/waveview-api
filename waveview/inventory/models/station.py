@@ -92,6 +92,9 @@ class Station(models.Model):
     def __str__(self) -> str:
         return self.code
 
+    def __repr__(self) -> str:
+        return f"<Station: {self.code}>"
+
     @property
     def channel_count(self) -> int:
         return self.channels.count()

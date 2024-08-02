@@ -76,6 +76,9 @@ class Network(models.Model):
     def __str__(self) -> str:
         return self.code
 
+    def __repr__(self) -> str:
+        return f"<Network: {self.code}>"
+
     @property
     def station_count(self) -> int:
         return self.stations.count()

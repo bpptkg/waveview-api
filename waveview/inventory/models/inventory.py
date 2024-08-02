@@ -40,6 +40,9 @@ class Inventory(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    def __repr__(self) -> str:
+        return f"<Inventory: {self.name}>"
+
     @property
     def network_count(self) -> int:
         return self.networks.count()

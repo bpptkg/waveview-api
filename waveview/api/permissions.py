@@ -1,8 +1,6 @@
 from rest_framework import permissions
 from rest_framework.request import Request
 
-from waveview.organization.models import Organization
-
 
 class NoPermission(permissions.BasePermission):
     def has_permission(self, request: Request, view: object) -> bool:
@@ -25,7 +23,7 @@ class IsSuperUser(permissions.BasePermission):
 
 class IsOrganizationMember(permissions.BasePermission):
     def has_object_permission(
-        self, request: Request, view: object, obj: Organization
+        self, request: Request, view: object, obj: object
     ) -> bool:
         return (
             obj.author == request.user or obj.members.filter(user=request.user).exists()

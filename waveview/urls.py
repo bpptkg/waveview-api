@@ -6,7 +6,6 @@ from django.urls import include, path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAdminUser
 
 swagger_info = openapi.Info(
     title="WaveView API",
@@ -19,7 +18,7 @@ swagger_info = openapi.Info(
 
 schema_view = get_schema_view(
     public=True,
-    permission_classes=[IsAdminUser],
+    permission_classes=[],
     authentication_classes=[SessionAuthentication],
 )
 

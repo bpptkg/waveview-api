@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "waveview-api"
+name = "waveview"
 version = "0.1.0"
 description = "WaveView API endpoints"
 authors = ["Indra Rudianto <indrarudianto.official@gmail.com>"]
@@ -21,7 +21,6 @@ psycopg2-binary = "^2.9.9"
 pymemcache = "^4.0.0"
 channels = {extras = ["daphne"], version = "^4.1.0"}
 obspy = "^1.4.1"
-lttbc = "^0.2.4"
 pycairo = "^1.26.0"
 django-countries = "^7.6.1"
 drf-standardized-errors = "^0.14.0"

@@ -18,10 +18,8 @@ class TimescaleSchemaEditor(DatabaseSchemaEditor):
     def create_table(self, table: str) -> None:
         self.execute(self.sql_create_model.format(table=table))
 
-    def create_hypertable(self, table: str, time_column: str) -> None:
-        self.execute(
-            self.sql_create_hypertable.format(table=table, time_column=time_column)
-        )
+    def create_hypertable(self, table: str) -> None:
+        self.execute(self.sql_create_hypertable.format(table=table, time_column="time"))
 
     def drop_table(self, table: str) -> None:
         self.execute(self.sql_drop_table.format(table=table))

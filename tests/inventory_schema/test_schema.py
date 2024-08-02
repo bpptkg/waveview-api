@@ -19,9 +19,8 @@ class TestTimescaleSchemaEditor(unittest.TestCase):
 
     def test_create_hypertable(self) -> None:
         table_name = "VG.MEPAS.00.HHN"
-        time_column = "time"
         self.schema_editor.create_table(table_name)
-        self.schema_editor.create_hypertable(table_name, time_column)
+        self.schema_editor.create_hypertable(table_name)
         is_table_created = self.schema_editor.assert_table_exists(table_name)
         self.assertTrue(is_table_created)
 

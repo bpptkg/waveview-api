@@ -166,4 +166,5 @@ class Channel(models.Model):
         return f"<Channel: {self.code}>"
 
     def get_datastream_id(self) -> str:
-        return f"datastream_{self.id}"
+        pk = self.id.hex
+        return f"datastream_{pk}"

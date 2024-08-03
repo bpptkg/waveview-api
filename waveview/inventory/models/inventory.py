@@ -46,3 +46,6 @@ class Inventory(models.Model):
     @property
     def network_count(self) -> int:
         return self.networks.count()
+
+    def get_seedlink_container_name(self) -> str:
+        return f"wv_seedlink_{self.id.hex}"

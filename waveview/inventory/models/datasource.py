@@ -1,10 +1,31 @@
 import uuid
+from dataclasses import dataclass
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-class StreamSource(models.TextChoices):
+@dataclass
+class SeedLinkData:
+    server_url: str
+
+
+@dataclass
+class ScreamData:
+    server_url: str
+
+
+@dataclass
+class ArclinkData:
+    server_url: str
+
+
+@dataclass
+class FdsnwsData:
+    server_url: str
+
+
+class DataSourceType(models.TextChoices):
     SEEDLINK = "seedlink", "Seedlink"
     SCREAM = "scream", "Scream"
     ARCLINK = "arclink", "Arclink"
@@ -24,7 +45,7 @@ class DataSource(models.Model):
         related_name="data_sources",
         related_query_name="data_source",
     )
-    source = models.CharField(max_length=50, choices=StreamSource.choices)
+    source = models.CharField(max_length=50, choices=DataSourceType.choices)
     data = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

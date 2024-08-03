@@ -2,7 +2,6 @@ import datetime
 from dataclasses import dataclass
 from typing import Literal
 
-import lttbc
 import numpy as np
 from obspy import Trace, UTCDateTime, read
 

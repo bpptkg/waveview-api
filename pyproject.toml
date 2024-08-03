@@ -25,6 +25,7 @@ pycairo = "^1.26.0"
 django-countries = "^7.6.1"
 drf-standardized-errors = "^0.14.0"
 toronado = "^0.1.0"
+docker = "^7.1.0"
 
 
 [build-system]

@@ -3,7 +3,7 @@ version: "3"
 services:
     postgres:
         image: postgres:14-alpine
-        container_name: postgres
+        container_name: wv_postgres
         restart: always
         env_file:
             - ./.env
@@ -11,25 +11,31 @@ services:
             - ./storage/db:/var/lib/postgresql/data
         ports:
             - 5432:5432
+        networks:
+            - wv_network
 
     memcached:
         image: memcached:1.6-alpine
-        container_name: memcached
+        container_name: wv_memcached
         restart: always
         expose:
             - "11211"
         entrypoint:
             - memcached
             - -m 64
+        networks:
+            - wv_network
 
     redis:
       image: redis:7.2-alpine
-      container_name: redis
+      container_name: wv_redis
       restart: always
+      networks:
+        - wv_network
 
     rabbitmq:
         image: rabbitmq:3.12-alpine
-        container_name: rabbitmq
+        container_name: wv_rabbitmq
         restart: always
         env_file:
             - ./.env
@@ -40,11 +46,12 @@ services:
             - ./storage/rabbitmq/data:/var/lib/rabbitmq/
             - ./storage/rabbitmq/log:/var/log/rabbitmq/
         networks:
-            - rabbitmq
+            - wv_network
+    
 
     app:
         build: .
-        container_name: waveview
+        container_name: wv_app
         restart: always
         env_file:
             - ./.env
@@ -58,10 +65,12 @@ services:
             - redis
             - rabbitmq
             - memcached
+        networks:
+            - wv_network
 
     nginx:
         image: nginx:1.27-alpine
-        container_name: nginx
+        container_name: wv_nginx
         restart: always
         ports:
             - 8080:80
@@ -70,10 +79,12 @@ services:
             - ./storage/:/var/www/html/
         depends_on:
             - app
+        networks:
+            - wv_network
 
     celery:
         build: .
-        container_name: celery
+        container_name: wv_celery
         restart: always
         env_file:
             - ./.env
@@ -83,10 +94,12 @@ services:
             - redis
             - rabbitmq
             - memcached
+        networks:
+            - wv_network
 
     celery-beat:
         build: .
-        container_name: celerybeat
+        container_name: wv_celerybeat
         restart: always
         env_file:
             - ./.env
@@ -96,7 +109,9 @@ services:
             - redis
             - rabbitmq
             - memcached
+        networks:
+            - wv_network
 
 networks:
-  rabbitmq:
+  wv_network:
     driver: bridge

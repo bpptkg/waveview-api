@@ -33,10 +33,33 @@ from .v1.organization_role_detail import OrganizationRoleDetailEndpoint
 from .v1.organization_role_index import OrganizationRoleIndexEndpoint
 from .v1.registration import AccountRegistrationEndpoint
 from .v1.search_user import SearchUserEndpoint
+from .v1.seedlink import (
+    SeedLinkContainerRestartEndpoint,
+    SeedLinkContainerStartEndpoint,
+    SeedLinkContainerStopEndpoint,
+)
 from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
 from .v1.volcano_index import VolcanoIndexEndpoint
+
+SERVICE_URLS = [
+    path(
+        "seedlink/start/",
+        SeedLinkContainerStartEndpoint.as_view(),
+        name="waveview-api-1-seedlink-start",
+    ),
+    path(
+        "seedlink/stop/",
+        SeedLinkContainerStopEndpoint.as_view(),
+        name="waveview-api-1-seedlink-stop",
+    ),
+    path(
+        "seedlink/restart/",
+        SeedLinkContainerRestartEndpoint.as_view(),
+        name="waveview-api-1-seedlink-restart",
+    ),
+]
 
 ORGANIZATION_URLS = [
     path(
@@ -239,6 +262,7 @@ urlpatterns = [
     path("organizations/<str:organization_id>/", include(VOLCANO_URLS)),
     path("organizations/<str:organization_id>/", include(EVENT_TYPE_URLS)),
     path("organizations/<str:organization_id>/", include(INVENTORY_URLS)),
+    path("organizations/<str:organization_id>/services/", include(SERVICE_URLS)),
     path(
         "organizations/<str:organization_id>/volcanoes/<str:volcano_id>/",
         include(CATALOG_URLS),

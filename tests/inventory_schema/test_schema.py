@@ -1,4 +1,5 @@
 import unittest
+import uuid
 
 from django.db import connection
 
@@ -10,7 +11,7 @@ class TestTimescaleSchemaEditor(unittest.TestCase):
         self.schema_editor = TimescaleSchemaEditor(connection=connection)
 
     def test_create_table(self) -> None:
-        table = "VG.MEPAS.00.HHZ"
+        table = f"datastream_{uuid.uuid4().hex}"
         self.schema_editor.create_table(table)
         is_table_created = self.schema_editor.assert_table_exists(table)
         self.assertTrue(is_table_created)
@@ -18,7 +19,7 @@ class TestTimescaleSchemaEditor(unittest.TestCase):
         self.schema_editor.drop_table(table)
 
     def test_create_hypertable(self) -> None:
-        table_name = "VG.MEPAS.00.HHN"
+        table_name = f"datastream_{uuid.uuid4().hex}"
         self.schema_editor.create_table(table_name)
         self.schema_editor.create_hypertable(table_name)
         is_table_created = self.schema_editor.assert_table_exists(table_name)
@@ -27,7 +28,7 @@ class TestTimescaleSchemaEditor(unittest.TestCase):
         self.schema_editor.drop_table(table_name)
 
     def test_drop_table(self):
-        table_name = "VG.MEPAS.00.HHE"
+        table_name = f"datastream_{uuid.uuid4().hex}"
         self.schema_editor.create_table(table_name)
         is_table_created = self.schema_editor.assert_table_exists(table_name)
         self.assertTrue(is_table_created)

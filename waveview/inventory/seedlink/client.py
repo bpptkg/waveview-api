@@ -15,11 +15,10 @@ class SeedLinkClient(EasySeedLinkClient):
 
 
 def run_seedlink(inventory_id: str) -> None:
-    try:
-        datasource = DataSource.objects.get(
-            inventory_id=inventory_id, source=DataSourceType.SEEDLINK
-        )
-    except DataSource.DoesNotExist:
+    datasource = DataSource.objects.filter(
+        inventory_id=inventory_id, source=DataSourceType.SEEDLINK
+    ).first()
+    if not datasource:
         logger.error("Seedlink data source not found.")
         return
     server_url = datasource.data.get("server_url")

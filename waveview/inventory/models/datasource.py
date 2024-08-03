@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import dataclass
 
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -49,11 +50,17 @@ class DataSource(models.Model):
     data = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = _("Data Source")
         verbose_name_plural = _("Data Sources")
-        unique_together = ("inventory", "source")
 
     def __str__(self) -> str:
         return self.source

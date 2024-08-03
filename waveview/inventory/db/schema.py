@@ -14,6 +14,7 @@ class TimescaleSchemaEditor(DatabaseSchemaEditor):
     sql_table_exists = "SELECT * FROM {table} LIMIT 1"
     sql_bulk_insert = "INSERT INTO {table} (time, value) VALUES {values}"
     sql_bulk_upsert = "INSERT INTO {table} (time, value) VALUES {values} ON CONFLICT (time) DO UPDATE SET value = EXCLUDED.value"
+    sql_table_size = "SELECT pg_total_relation_size('{table}')"
 
     def create_table(self, table: str) -> None:
         self.execute(self.sql_create_model.format(table=self.quote_name(table)))
@@ -46,3 +47,8 @@ class TimescaleSchemaEditor(DatabaseSchemaEditor):
                 values=", ".join(f"({t}, {v})" for t, v in zip(times, values)),
             )
         )
+
+    def table_size(self, table: str) -> int:
+        with self.connection.cursor() as cursor:
+            cursor.execute(self.sql_table_size.format(table=(table)))
+            return cursor.fetchone()[0]

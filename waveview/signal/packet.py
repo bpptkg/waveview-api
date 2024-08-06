@@ -1,9 +1,13 @@
-import datetime
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Literal
 
 import numpy as np
-from obspy import Trace, UTCDateTime, read
+from django.db import connection
+
+from waveview.inventory.db.query import TimescaleQuery
+from waveview.inventory.models import Channel
+from waveview.signal.stream_id import StreamIdentifier
 
 
 def pad(a: bytes, n: int) -> bytes:
@@ -44,25 +48,17 @@ class Packet:
             ]
         )
 
-
-path = "/Users/iori/Projects/testonly/MEPAS.msd"
-st = read(path)
-
-
-def get_data(start: float, end: float) -> Trace:
-    """
-    Stream1: 1 Trace(s) in Stream:
-    VG.MEPAS.00.HHZ | 2024-06-10T08:00:00.000000Z - 2024-06-12T08:00:00.000000Z | 100.0 Hz, 17280001 samples
-    """
-    starttime = UTCDateTime(start / 1000).replace(year=2024, month=6, day=11)
-    endtime = UTCDateTime(end / 1000).replace(year=2024, month=6, day=11)
-    if starttime > endtime:
-        starttime = starttime - datetime.timedelta(days=1)
-
-    ns = st.slice(starttime=starttime, endtime=endtime)
-    trace = ns[0]
-
-    return trace
+    @classmethod
+    def decode(cls: "Packet", data: bytes) -> "Packet":
+        channel_id = data[:64].decode("utf-8").strip("\0")
+        header = np.frombuffer(data[64 : 64 + 8 * 8], dtype=np.uint64)
+        start = int(header[0])
+        end = int(header[1])
+        x = np.frombuffer(
+            data[64 + 8 * 8 : 64 + 8 * 8 + 8 * header[2]], dtype=np.float64
+        )
+        y = np.frombuffer(data[64 + 8 * 8 + 8 * header[2] :], dtype=np.float64)
+        return cls(x=x, y=y, start=start, end=end, channel_id=channel_id)
 
 
 @dataclass
@@ -92,35 +88,59 @@ class FetcherData:
 
 
 class StreamFetcher:
-    def __init__(self, payload: FetcherData) -> None:
-        self.payload = payload
+    def __init__(self) -> None:
+        self.query = TimescaleQuery(connection=connection)
 
-    def fetch(self) -> bytes:
-        channel_id = self.payload.channel_id
-        start = self.payload.start
-        end = self.payload.end
-        width = self.payload.width
-        mode = self.payload.mode
-
-        trace = get_data(start, end)
-        x = np.linspace(start, end, num=len(trace.data))
-        y = trace.data
+    def fetch(self, payload: FetcherData) -> bytes:
+        channel_id = payload.channel_id
+        width = payload.width
+        mode = payload.mode
+        max_points = payload.max_points
 
         if mode == "auto":
             n_out = int(width * 2)
         elif mode == "match_width":
             n_out = int(width)
         elif mode == "max_points":
-            max_points = self.payload.max_points
-            n_out = np.min([len(y), max_points])
+            n_out = max_points
         else:
-            n_out = len(y)
+            n_out = -1
 
-        a, b = lttbc.downsample(x, y, n_out)
+        stream_id = StreamIdentifier(id=channel_id)
+        channel = stream_id.channel
+        station = stream_id.station
+        network = stream_id.network
+
+        instance = Channel.objects.filter(
+            code=channel, station__code=station, station__network__code=network
+        ).first()
+        if not instance:
+            raise ValueError(f"Channel {network}.{station}.{channel} not found.")
+        table = instance.get_datastream_id()
+        start = datetime.fromtimestamp(payload.start, timezone.utc)
+        end = datetime.fromtimestamp(payload.end, timezone.utc)
+
+        if n_out == -1:
+            data = self.query.fetch(
+                start=start,
+                end=end,
+                table=table,
+            )
+        else:
+            data = self.query.fetch_lttb(
+                start=start,
+                end=end,
+                table=table,
+                max_points=n_out,
+            )
+
+        a = np.array([x[0] for x in data])
+        b = np.array([x[1] for x in data])
+
         packet = Packet(
             channel_id=channel_id,
-            start=start,
-            end=end,
+            start=start.timestamp() * 1000,
+            end=end.timestamp() * 1000,
             x=a,
             y=b,
         )

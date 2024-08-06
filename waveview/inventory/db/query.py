@@ -7,7 +7,7 @@ class TimescaleQuery:
     sql_query_table = (
         "SELECT time, value FROM {table} WHERE time >= '{start}' AND time <= '{end}'"
     )
-    sql_query_table_lttb = "SELECT time, value FROM unnest((SELECT lttb(time, value, {max_points}) FROM {table})) WHERE time >= '{start}' AND time <= '{end}' ORDER BY time"
+    sql_query_table_lttb = "SELECT time, value FROM unnest((SELECT lttb(time, value, {max_points}) FROM {table})) WHERE time >= '{start}' AND time <= '{end}'"
 
     def __init__(self, connection: psycopg2.extensions.connection) -> None:
         self.connection = connection
@@ -44,7 +44,7 @@ class TimescaleQuery:
                     table=table,
                     start=start.isoformat(),
                     end=end.isoformat(),
-                    max_points=max_points,
+                    max_points=int(max_points),
                 )
             )
             return cursor.fetchall()

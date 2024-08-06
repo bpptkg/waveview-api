@@ -37,7 +37,7 @@ class StreamIdentifier:
             r"""
             (?P<network>\w+)\.
             (?P<station>\w+)\.
-            (?P<location>\d*)\.
+            (?P<location>\w*)\.
             (?P<channel>\w+)
         """,
             re.X,

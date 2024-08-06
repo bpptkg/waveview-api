@@ -12,8 +12,9 @@ from waveview.inventory.models.channel import Channel
 def channel_post_save(sender: Any, instance: Channel, **kwargs: Dict[str, Any]) -> None:
     schema = TimescaleSchemaEditor(connection, atomic=True)
     table = instance.get_datastream_id()
-    schema.create_table(table)
-    schema.create_hypertable(table)
+    if not schema.is_table_exists(table):
+        schema.create_table(table)
+        schema.create_hypertable(table)
 
 
 @receiver(post_delete, sender=Channel)

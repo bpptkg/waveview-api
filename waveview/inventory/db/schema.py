@@ -19,6 +19,9 @@ class TimescaleSchemaEditor(DatabaseSchemaEditor):
     sql_bulk_insert = "INSERT INTO {table} (time, value) VALUES {values}"
     sql_bulk_upsert = "INSERT INTO {table} (time, value) VALUES {values} ON CONFLICT (time) DO UPDATE SET value = EXCLUDED.value"
     sql_table_size = "SELECT pg_total_relation_size('{table}')"
+    sql_is_table_exists = (
+        "SELECT * FROM information_schema.tables WHERE table_name = '{table}'"
+    )
 
     def create_table(self, table: str) -> None:
         self.execute(self.sql_create_model.format(table=self.quote_name(table)))
@@ -64,3 +67,8 @@ class TimescaleSchemaEditor(DatabaseSchemaEditor):
         with self.connection.cursor() as cursor:
             cursor.execute(self.sql_table_size.format(table=(table)))
             return cursor.fetchone()[0]
+
+    def is_table_exists(self, table: str) -> bool:
+        with self.connection.cursor() as cursor:
+            cursor.execute(self.sql_is_table_exists.format(table=table))
+            return cursor.fetchone() is not None

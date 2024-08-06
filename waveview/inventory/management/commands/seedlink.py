@@ -2,7 +2,7 @@ from typing import Any
 
 from django.core.management.base import BaseCommand, CommandParser
 
-from waveview.inventory.seedlink.client import run_seedlink
+from waveview.inventory.seedlink.run import run_seedlink
 
 
 class Command(BaseCommand):

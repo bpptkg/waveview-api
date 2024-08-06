@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import ProgrammingError
 from django.db.backends.postgresql.schema import DatabaseSchemaEditor
 
@@ -5,11 +7,13 @@ from django.db.backends.postgresql.schema import DatabaseSchemaEditor
 class TimescaleSchemaEditor(DatabaseSchemaEditor):
     sql_create_model = (
         "CREATE TABLE {table} ("
-        "time TIMESTAMPTZ NOT NULL,"
+        "time TIMESTAMPTZ NOT NULL UNIQUE,"
         "value DOUBLE PRECISION NULL"
         ")"
     )
-    sql_create_hypertable = "SELECT create_hypertable('{table}', by_range('time'))"
+    sql_create_hypertable = (
+        "SELECT create_hypertable('{table}', by_range('time', 86400000000))"
+    )
     sql_drop_table = "DROP TABLE {table} CASCADE"
     sql_table_exists = "SELECT * FROM {table} LIMIT 1"
     sql_bulk_insert = "INSERT INTO {table} (time, value) VALUES {values}"
@@ -32,19 +36,27 @@ class TimescaleSchemaEditor(DatabaseSchemaEditor):
         except ProgrammingError:
             return False
 
-    def bulk_insert(self, table: str, times: list[float], values: list[float]) -> None:
+    def bulk_insert(
+        self, table: str, times: list[datetime], values: list[float]
+    ) -> None:
         self.execute(
             self.sql_bulk_insert.format(
                 table=self.quote_name(table),
-                values=", ".join(f"({t}, {v})" for t, v in zip(times, values)),
+                values=", ".join(
+                    f"'({t.isoformat()}', {v})" for t, v in zip(times, values)
+                ),
             )
         )
 
-    def bulk_upsert(self, table: str, times: list[float], values: list[float]) -> None:
+    def bulk_upsert(
+        self, table: str, times: list[datetime], values: list[float]
+    ) -> None:
         self.execute(
             self.sql_bulk_upsert.format(
                 table=self.quote_name(table),
-                values=", ".join(f"({t}, {v})" for t, v in zip(times, values)),
+                values=", ".join(
+                    f"('{t.isoformat()}', {v})" for t, v in zip(times, values)
+                ),
             )
         )
 

@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOwnerOrReadOnly
 from waveview.organization.models import Organization
-from waveview.organization.serializers import RolePayloadSerializer, RoleSerializer
+from waveview.organization.serializers import OrganizationRolePayloadSerializer, OrganizationRoleSerializer
 
 
 class OrganizationRoleIndexEndpoint(Endpoint):
@@ -28,7 +28,7 @@ class OrganizationRoleIndexEndpoint(Endpoint):
         ),
         tags=["Organization"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", RoleSerializer),
+            status.HTTP_200_OK: openapi.Response("OK", OrganizationRoleSerializer),
         },
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
@@ -38,7 +38,7 @@ class OrganizationRoleIndexEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        serializer = RoleSerializer(organization.roles, many=True)
+        serializer = OrganizationRoleSerializer(organization.organization_roles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -50,9 +50,9 @@ class OrganizationRoleIndexEndpoint(Endpoint):
             """
         ),
         tags=["Organization"],
-        request_body=RolePayloadSerializer,
+        request_body=OrganizationRolePayloadSerializer,
         responses={
-            status.HTTP_201_CREATED: openapi.Response("Created", RoleSerializer),
+            status.HTTP_201_CREATED: openapi.Response("Created", OrganizationRoleSerializer),
         },
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
@@ -62,12 +62,12 @@ class OrganizationRoleIndexEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        serializer = RolePayloadSerializer(
+        serializer = OrganizationRolePayloadSerializer(
             data=request.data,
             context={"organization_id": organization_id, request: request},
         )
         serializer.is_valid(raise_exception=True)
         role = serializer.save()
 
-        response_serializer = RoleSerializer(role)
+        response_serializer = OrganizationRoleSerializer(role)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)

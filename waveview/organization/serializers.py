@@ -3,7 +3,10 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from waveview.inventory.models import Inventory
-from waveview.organization.models import Organization, Role
+from waveview.organization.models import (
+    Organization,
+    OrganizationRole,
+)
 from waveview.organization.permissions import PermissionType
 from waveview.users.serializers import UserSerializer
 
@@ -102,18 +105,7 @@ class OrganizationPayloadSerializer(serializers.Serializer):
         return instance
 
 
-class RoleSerializer(serializers.Serializer):
-    id = serializers.UUIDField(help_text=_("Organization role ID."))
-    slug = serializers.SlugField(help_text=_("Organization role slug."))
-    name = serializers.CharField(help_text=_("Organization role name."))
-    description = serializers.CharField(help_text=_("Organization role description."))
-    permissions = serializers.ListField(
-        help_text=_("List of permissions for the organization role.")
-    )
-    order = serializers.IntegerField(help_text=_("Order of the organization role."))
-
-
-class RolePayloadSerializer(serializers.Serializer):
+class OrganizationRolePayloadSerializer(serializers.Serializer):
     slug = serializers.SlugField(help_text=_("Organization role slug."))
     name = serializers.CharField(help_text=_("Organization role name."))
     description = serializers.CharField(help_text=_("Organization role description."))
@@ -124,17 +116,29 @@ class RolePayloadSerializer(serializers.Serializer):
     order = serializers.IntegerField(help_text=_("Order of the organization role."))
 
     def validate_slug(self, value: str) -> str:
-        if Role.objects.filter(slug=value).exists():
-            raise serializers.ValidationError(_("Role with this slug already exists."))
+        if OrganizationRole.objects.filter(slug=value).exists():
+            raise serializers.ValidationError(
+                _("OrganizationRole with this slug already exists.")
+            )
         return value
 
-    def create(self, validated_data: dict) -> Role:
+    def create(self, validated_data: dict) -> OrganizationRole:
         organization_id = self.context["organization_id"]
-        role = Role.objects.create(organization_id=organization_id, **validated_data)
+        role = OrganizationRole.objects.create(
+            organization_id=organization_id, **validated_data
+        )
         return role
 
-    def update(self, instance: Role, validated_data: dict) -> Role:
+    def update(
+        self, instance: OrganizationRole, validated_data: dict
+    ) -> OrganizationRole:
         for key, value in validated_data.items():
             setattr(instance, key, value)
         instance.save()
         return instance
+
+
+class OrganizationSettingsSerializer(serializers.Serializer):
+    id = serializers.UUIDField(help_text=_("ID."))
+    organization_id = serializers.UUIDField(help_text=_("Organization ID."))
+    data = serializers.JSONField(help_text=_("Data."))

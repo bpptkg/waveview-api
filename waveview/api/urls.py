@@ -31,6 +31,7 @@ from .v1.organization_member_index import OrganizationMemberIndexEndpoint
 from .v1.organization_permissions import OrganizationPermissionsEndpoint
 from .v1.organization_role_detail import OrganizationRoleDetailEndpoint
 from .v1.organization_role_index import OrganizationRoleIndexEndpoint
+from .v1.organization_settings_index import OrganizationSettingsIndexEndpoint
 from .v1.registration import AccountRegistrationEndpoint
 from .v1.search_user import SearchUserEndpoint
 from .v1.seedlink import (
@@ -96,6 +97,11 @@ ORGANIZATION_URLS = [
         "<uuid:organization_id>/roles/<uuid:role_id>/",
         OrganizationRoleDetailEndpoint.as_view(),
         name="waveview-api-1-organization-role-detail",
+    ),
+    path(
+        "<uuid:organization_id>/settings/",
+        OrganizationSettingsIndexEndpoint.as_view(),
+        name="waveview-api-1-organization-settings",
     ),
 ]
 

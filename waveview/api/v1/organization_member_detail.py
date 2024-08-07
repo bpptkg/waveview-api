@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.organization.models import Organization, OrganizationMember, Role
+from waveview.organization.models import Organization, OrganizationMember, OrganizationRole
 from waveview.organization.permissions import PermissionType
 from waveview.organization.serializers import OrganizationMemberSerializer
 
@@ -28,7 +28,7 @@ class OrganizationMemberUpdatePayloadSerializer(serializers.Serializer):
     )
 
     def validate_role_id(self, value: str) -> str:
-        if not Role.objects.filter(id=value).exists():
+        if not OrganizationRole.objects.filter(id=value).exists():
             raise serializers.ValidationError(_("Role does not exist."))
         return value
 
@@ -37,7 +37,7 @@ class OrganizationMemberUpdatePayloadSerializer(serializers.Serializer):
     ) -> OrganizationMember:
         role_ids = validated_data.get("role_ids")
         if role_ids:
-            roles = Role.objects.filter(id__in=role_ids)
+            roles = OrganizationRole.objects.filter(id__in=role_ids)
             instance.roles.set(roles)
         instance.expiration_date = validated_data.get(
             "expiration_date", instance.expiration_date

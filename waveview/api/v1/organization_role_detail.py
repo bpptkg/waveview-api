@@ -11,8 +11,8 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOwnerOrReadOnly
-from waveview.organization.models import Organization, Role
-from waveview.organization.serializers import RolePayloadSerializer, RoleSerializer
+from waveview.organization.models import Organization, OrganizationRole
+from waveview.organization.serializers import OrganizationRolePayloadSerializer, OrganizationRoleSerializer
 
 
 class OrganizationRoleDetailEndpoint(Endpoint):
@@ -28,7 +28,7 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         ),
         tags=["Organization"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", RoleSerializer),
+            status.HTTP_200_OK: openapi.Response("OK", OrganizationRoleSerializer),
         },
     )
     def get(self, request: Request, organization_id: UUID, role_id: UUID) -> Response:
@@ -39,11 +39,11 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         try:
-            role = organization.roles.get(id=role_id)
-        except Role.DoesNotExist:
+            role = organization.organization_roles.get(id=role_id)
+        except OrganizationRole.DoesNotExist:
             raise NotFound(_("Role not found."))
 
-        serializer = RoleSerializer(role)
+        serializer = OrganizationRoleSerializer(role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -55,9 +55,9 @@ class OrganizationRoleDetailEndpoint(Endpoint):
             """
         ),
         tags=["Organization"],
-        request_body=RolePayloadSerializer,
+        request_body=OrganizationRolePayloadSerializer,
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", RoleSerializer),
+            status.HTTP_200_OK: openapi.Response("OK", OrganizationRoleSerializer),
         },
     )
     def put(self, request: Request, organization_id: UUID, role_id: UUID) -> Response:
@@ -68,15 +68,15 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         try:
-            role = organization.roles.get(id=role_id)
-        except Role.DoesNotExist:
+            role = organization.organization_roles.get(id=role_id)
+        except OrganizationRole.DoesNotExist:
             raise NotFound(_("Role not found."))
 
-        serializer = RolePayloadSerializer(data=request.data, partial=True)
+        serializer = OrganizationRolePayloadSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
         role = serializer.update(role, serializer.validated_data)
-        return Response(RoleSerializer(role).data, status=status.HTTP_200_OK)
+        return Response(OrganizationRoleSerializer(role).data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_id="Delete Organization Role",
@@ -101,8 +101,8 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         try:
-            role = organization.roles.get(id=role_id)
-        except Role.DoesNotExist:
+            role = organization.organization_roles.get(id=role_id)
+        except OrganizationRole.DoesNotExist:
             raise NotFound(_("Role not found."))
 
         role.delete()

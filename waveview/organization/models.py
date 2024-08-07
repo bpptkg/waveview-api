@@ -25,7 +25,7 @@ class OrganizationMember(models.Model):
         on_delete=models.CASCADE,
     )
     roles = models.ManyToManyField(
-        "Role", blank=True, related_name="organization_members"
+        "OrganizationRole", blank=True, related_name="organization_members"
     )
     date_added = models.DateTimeField(auto_now_add=True)
     expiration_date = models.DateTimeField(null=True, blank=True)
@@ -88,14 +88,14 @@ class Organization(models.Model):
         return self.memberships.count()
 
 
-class Role(models.Model):
+class OrganizationRole(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(
         "Organization",
         null=True,
         blank=False,
-        related_name="roles",
-        related_query_name="role",
+        related_name="organization_roles",
+        related_query_name="organization_role",
         on_delete=models.CASCADE,
     )
     slug = models.SlugField(max_length=150, null=False, blank=False)
@@ -111,9 +111,26 @@ class Role(models.Model):
     is_default = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = _("role")
-        verbose_name_plural = _("roles")
+        verbose_name = _("organization role")
+        verbose_name_plural = _("organization roles")
         unique_together = ("organization", "slug")
 
     def __str__(self) -> str:
         return self.name
+
+
+class OrganizationSettings(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.OneToOneField(
+        "Organization",
+        on_delete=models.CASCADE,
+        related_name="organization_settings",
+        related_query_name="organization_setting",
+    )
+    data = models.JSONField(default=dict, help_text=_("Setting data."))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("organization settings")
+        verbose_name_plural = _("organization settings")

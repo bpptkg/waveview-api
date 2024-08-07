@@ -3,7 +3,8 @@ from django.contrib import admin
 from waveview.organization.models import (
     Organization,
     OrganizationMember,
-    Role,
+    OrganizationRole,
+    OrganizationSettings,
 )
 
 
@@ -37,8 +38,8 @@ class OrganizationMemberAdmin(admin.ModelAdmin):
     search_fields = ("organization",)
 
 
-@admin.register(Role)
-class RoleAdmin(admin.ModelAdmin):
+@admin.register(OrganizationRole)
+class OrganizationRoleAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "slug",
@@ -48,3 +49,11 @@ class RoleAdmin(admin.ModelAdmin):
         "organization",
     )
     search_fields = ("name",)
+
+
+@admin.register(OrganizationSettings)
+class OrganizationSettingsAdmin(admin.ModelAdmin):
+    list_display = (
+        "organization",
+        "data",
+    )

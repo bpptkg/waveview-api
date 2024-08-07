@@ -7,4 +7,4 @@ class InventoryConfig(AppConfig):
     verbose_name = "Inventory"
 
     def ready(self) -> None:
-        import waveview.inventory.signals  # noqa: F401
+        import waveview.inventory.signals  # noqa

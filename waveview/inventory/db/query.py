@@ -14,7 +14,7 @@ class TimescaleQuery:
 
     def fetch(
         self, start: datetime | int, end: datetime | int, table: str
-    ) -> list[tuple[float, float]]:
+    ) -> list[tuple[datetime, float]]:
         if isinstance(start, int):
             start = datetime.fromtimestamp(start)
         if isinstance(end, int):
@@ -32,7 +32,7 @@ class TimescaleQuery:
 
     def fetch_lttb(
         self, start: datetime | int, end: datetime | int, table: str, max_points: int
-    ) -> list[tuple[float, float]]:
+    ) -> list[tuple[datetime, float]]:
         if isinstance(start, int):
             start = datetime.fromtimestamp(start)
         if isinstance(end, int):

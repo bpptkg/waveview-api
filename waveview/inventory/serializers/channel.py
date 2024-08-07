@@ -125,6 +125,7 @@ class ChannelSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(help_text=_("Channel creation date."))
     updated_at = serializers.DateTimeField(help_text=_("Channel last update date."))
     author_id = serializers.UUIDField(help_text=_("Channel author ID."))
+    stream_id = serializers.CharField(help_text=_("Stream ID."))
 
 
 class ChannelPayloadSerializer(serializers.Serializer):
@@ -240,7 +241,6 @@ class ChannelPayloadSerializer(serializers.Serializer):
         ),
         allow_null=True,
     )
-    stream_id = serializers.CharField(help_text=_("Stream ID."))
 
     def validate_code(self, value: str) -> str:
         code = value.upper()

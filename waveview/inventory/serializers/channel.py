@@ -240,6 +240,7 @@ class ChannelPayloadSerializer(serializers.Serializer):
         ),
         allow_null=True,
     )
+    stream_id = serializers.CharField(help_text=_("Stream ID."))
 
     def validate_code(self, value: str) -> str:
         code = value.upper()

@@ -168,3 +168,14 @@ class Channel(models.Model):
     def get_datastream_id(self) -> str:
         pk = self.id.hex
         return f"datastream_{pk}"
+
+    @property
+    def stream_id(self) -> str:
+        network = self.station.network.code
+        station = self.station.code
+        location = self.location_code
+        if location is None:
+            location = ""
+        channel = self.code
+        sid = f"{network}.{station}.{location}.{channel}"
+        return sid

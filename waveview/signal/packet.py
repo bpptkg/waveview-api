@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Literal
@@ -8,6 +9,9 @@ from django.db import connection
 from waveview.inventory.db.query import TimescaleQuery
 from waveview.inventory.models import Channel
 from waveview.signal.stream_id import StreamIdentifier
+from waveview.utils import timestamp
+
+logger = logging.getLogger(__name__)
 
 
 def pad(a: bytes, n: int) -> bytes:
@@ -111,14 +115,25 @@ class StreamFetcher:
         station = stream_id.station
         network = stream_id.network
 
+        start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
+        end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
+
+        empty_packet = Packet(
+            channel_id=channel_id,
+            start=timestamp.to_milliseconds(start),
+            end=timestamp.to_milliseconds(end),
+            x=np.array([]),
+            y=np.array([]),
+        )
+
         instance = Channel.objects.filter(
             code=channel, station__code=station, station__network__code=network
         ).first()
         if not instance:
-            raise ValueError(f"Channel {network}.{station}.{channel} not found.")
+            logger.debug(f"Channel {channel_id} not found.")
+            return empty_packet.encode()
+
         table = instance.get_datastream_id()
-        start = datetime.fromtimestamp(payload.start, timezone.utc)
-        end = datetime.fromtimestamp(payload.end, timezone.utc)
 
         if n_out == -1:
             data = self.query.fetch(

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -29,10 +31,7 @@ class OrganizationRoleDetailEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK", RoleSerializer),
         },
     )
-    def get(self, request: Request, organization_id: str, role_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(role_id, "role_id")
-
+    def get(self, request: Request, organization_id: UUID, role_id: UUID) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -61,10 +60,7 @@ class OrganizationRoleDetailEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK", RoleSerializer),
         },
     )
-    def put(self, request: Request, organization_id: str, role_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(role_id, "role_id")
-
+    def put(self, request: Request, organization_id: UUID, role_id: UUID) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -95,10 +91,9 @@ class OrganizationRoleDetailEndpoint(Endpoint):
             status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
         },
     )
-    def delete(self, request: Request, organization_id: str, role_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(role_id, "role_id")
-
+    def delete(
+        self, request: Request, organization_id: UUID, role_id: UUID
+    ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
@@ -58,9 +60,7 @@ class OrganizationMemberIndexEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK", OrganizationMemberSerializer),
         },
     )
-    def get(self, request: Request, organization_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-
+    def get(self, request: Request, organization_id: UUID) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -89,9 +89,7 @@ class OrganizationMemberIndexEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK", OrganizationMemberSerializer),
         },
     )
-    def post(self, request: Request, organization_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-
+    def post(self, request: Request, organization_id: UUID) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -33,16 +35,11 @@ class EventOriginDetailEndpoint(Endpoint):
     def get(
         self,
         request: Request,
-        organization_id: str,
-        catalog_id: str,
-        event_id: str,
-        origin_id: str,
+        organization_id: UUID,
+        catalog_id: UUID,
+        event_id: UUID,
+        origin_id: UUID,
     ) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(catalog_id, "catalog_id")
-        self.validate_uuid(event_id, "event_id")
-        self.validate_uuid(origin_id, "origin_id")
-
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -78,16 +75,11 @@ class EventOriginDetailEndpoint(Endpoint):
     def put(
         self,
         request: Request,
-        organization_id: str,
-        catalog_id: str,
-        event_id: str,
-        origin_id: str,
+        organization_id: UUID,
+        catalog_id: UUID,
+        event_id: UUID,
+        origin_id: UUID,
     ) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(catalog_id, "catalog_id")
-        self.validate_uuid(event_id, "event_id")
-        self.validate_uuid(origin_id, "origin_id")
-
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -133,16 +125,11 @@ class EventOriginDetailEndpoint(Endpoint):
     def delete(
         self,
         request: Request,
-        organization_id: str,
-        catalog_id: str,
-        event_id: str,
-        origin_id: str,
+        organization_id: UUID,
+        catalog_id: UUID,
+        event_id: UUID,
+        origin_id: UUID,
     ) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(catalog_id, "catalog_id")
-        self.validate_uuid(event_id, "event_id")
-        self.validate_uuid(origin_id, "origin_id")
-
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:

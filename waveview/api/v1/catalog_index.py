@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -34,10 +36,9 @@ class CatalogIndexEndpoint(Endpoint):
             )
         },
     )
-    def get(self, request: Request, organization_id: str, volcano_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(volcano_id, "volcano_id")
-
+    def get(
+        self, request: Request, organization_id: UUID, volcano_id: UUID
+    ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -63,10 +64,9 @@ class CatalogIndexEndpoint(Endpoint):
             status.HTTP_201_CREATED: openapi.Response("Created", CatalogSerializer),
         },
     )
-    def post(self, request: Request, organization_id: str, volcano_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(volcano_id, "volcano_id")
-
+    def post(
+        self, request: Request, organization_id: UUID, volcano_id: UUID
+    ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:

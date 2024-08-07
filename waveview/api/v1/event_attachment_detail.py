@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -28,9 +30,7 @@ class EventAttachmentDetailEndpoint(Endpoint):
             status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
         },
     )
-    def delete(self, request: Request, attachment_id: str) -> Response:
-        self.validate_uuid(attachment_id, "attachment_id")
-
+    def delete(self, request: Request, attachment_id: UUID) -> Response:
         try:
             attachment = Attachment.objects.get(id=attachment_id)
         except Attachment.DoesNotExist:

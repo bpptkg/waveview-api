@@ -73,27 +73,27 @@ ORGANIZATION_URLS = [
         name="waveview-api-1-organization-permissions",
     ),
     path(
-        "<str:organization_id>/",
+        "<uuid:organization_id>/",
         OrganizationDetailEndpoint.as_view(),
         name="waveview-api-1-organization-detail",
     ),
     path(
-        "<str:organization_id>/members/",
+        "<uuid:organization_id>/members/",
         OrganizationMemberIndexEndpoint.as_view(),
         name="waveview-api-1-organization-member-index",
     ),
     path(
-        "<str:organization_id>/members/<str:user_id>/",
+        "<uuid:organization_id>/members/<uuid:user_id>/",
         OrganizationMemberDetailEndpoint.as_view(),
         name="waveview-api-1-organization-member-detail",
     ),
     path(
-        "<str:organization_id>/roles/",
+        "<uuid:organization_id>/roles/",
         OrganizationRoleIndexEndpoint.as_view(),
         name="waveview-api-1-organization-role-index",
     ),
     path(
-        "<str:organization_id>/roles/<str:role_id>/",
+        "<uuid:organization_id>/roles/<uuid:role_id>/",
         OrganizationRoleDetailEndpoint.as_view(),
         name="waveview-api-1-organization-role-detail",
     ),
@@ -106,7 +106,7 @@ VOLCANO_URLS = [
         name="waveview-api-1-volcano-index",
     ),
     path(
-        "volcanoes/<str:volcano_id>/",
+        "volcanoes/<uuid:volcano_id>/",
         VolcanoDetailEndpoint.as_view(),
         name="waveview-api-1-volcano-detail",
     ),
@@ -119,7 +119,7 @@ CATALOG_URLS = [
         name="waveview-api-1-catalog-index",
     ),
     path(
-        "catalogs/<str:catalog_id>/",
+        "catalogs/<uuid:catalog_id>/",
         CatalogDetailEndpoint.as_view(),
         name="waveview-api-1-catalog-detail",
     ),
@@ -132,7 +132,7 @@ EVENT_URLS = [
         name="waveview-api-1-event-index",
     ),
     path(
-        "events/<str:event_id>/",
+        "events/<uuid:event_id>/",
         EventDetailEndpoint.as_view(),
         name="waveview-api-1-event-detail",
     ),
@@ -145,7 +145,7 @@ EVENT_ATTACHMENT_URLS = [
         name="waveview-api-1-event-attachment",
     ),
     path(
-        "<str:attachment_id>/",
+        "<uuid:attachment_id>/",
         EventAttachmentDetailEndpoint.as_view(),
         name="waveview-api-1-event-attachment-detail",
     ),
@@ -158,7 +158,7 @@ EVENT_ORIGIN_URLS = [
         name="waveview-api-1-event-origin-index",
     ),
     path(
-        "origins/<str:origin_id>/",
+        "origins/<uuid:origin_id>/",
         EventOriginDetailEndpoint.as_view(),
         name="waveview-api-1-event-origin-detail",
     ),
@@ -171,7 +171,7 @@ EVENT_TYPE_URLS = [
         name="waveview-api-1-event-type-index",
     ),
     path(
-        "event-types/<str:event_type_id>/",
+        "event-types/<uuid:event_type_id>/",
         EventTypeDetailEndpoint.as_view(),
         name="waveview-api-1-event-type-detail",
     ),
@@ -189,27 +189,27 @@ INVENTORY_URLS = [
         name="waveview-api-1-inventory-network-index",
     ),
     path(
-        "inventory/networks/<str:network_id>/",
+        "inventory/networks/<uuid:network_id>/",
         NetworkDetailEndpoint.as_view(),
         name="waveview-api-1-inventory-network-detail",
     ),
     path(
-        "inventory/networks/<str:network_id>/stations/",
+        "inventory/networks/<uuid:network_id>/stations/",
         StationIndexEndpoint.as_view(),
         name="waveview-api-1-inventory-station-index",
     ),
     path(
-        "inventory/networks/<str:network_id>/stations/<str:station_id>/",
+        "inventory/networks/<uuid:network_id>/stations/<uuid:station_id>/",
         StationDetailEndpoint.as_view(),
         name="waveview-api-1-inventory-station-detail",
     ),
     path(
-        "inventory/networks/<str:network_id>/stations/<str:station_id>/channels/",
+        "inventory/networks/<uuid:network_id>/stations/<uuid:station_id>/channels/",
         ChannelIndexEndpoint.as_view(),
         name="waveview-api-1-inventory-channel-index",
     ),
     path(
-        "inventory/networks/<str:network_id>/stations/<str:station_id>/channels/<str:channel_id>/",
+        "inventory/networks/<uuid:network_id>/stations/<uuid:station_id>/channels/<uuid:channel_id>/",
         ChannelDetailEndpoint.as_view(),
         name="waveview-api-1-inventory-channel-detail",
     ),
@@ -259,20 +259,20 @@ AUTH_URLS = [
 
 urlpatterns = [
     path("organizations/", include(ORGANIZATION_URLS)),
-    path("organizations/<str:organization_id>/", include(VOLCANO_URLS)),
-    path("organizations/<str:organization_id>/", include(EVENT_TYPE_URLS)),
-    path("organizations/<str:organization_id>/", include(INVENTORY_URLS)),
-    path("organizations/<str:organization_id>/services/", include(SERVICE_URLS)),
+    path("organizations/<uuid:organization_id>/", include(VOLCANO_URLS)),
+    path("organizations/<uuid:organization_id>/", include(EVENT_TYPE_URLS)),
+    path("organizations/<uuid:organization_id>/", include(INVENTORY_URLS)),
+    path("organizations/<uuid:organization_id>/services/", include(SERVICE_URLS)),
     path(
-        "organizations/<str:organization_id>/volcanoes/<str:volcano_id>/",
+        "organizations/<uuid:organization_id>/volcanoes/<uuid:volcano_id>/",
         include(CATALOG_URLS),
     ),
     path(
-        "organizations/<str:organization_id>/catalogs/<str:catalog_id>/",
+        "organizations/<uuid:organization_id>/catalogs/<uuid:catalog_id>/",
         include(EVENT_URLS),
     ),
     path(
-        "organizations/<str:organization_id>/catalogs/<str:catalog_id>/events/<str:event_id>/",
+        "organizations/<uuid:organization_id>/catalogs/<uuid:catalog_id>/events/<uuid:event_id>/",
         include(EVENT_ORIGIN_URLS),
     ),
     path("event-attachments/", include(EVENT_ATTACHMENT_URLS)),

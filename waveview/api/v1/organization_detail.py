@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -38,9 +40,7 @@ class OrganizationDetailEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK", OrganizationSerializer),
         },
     )
-    def get(self, request: Request, organization_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-
+    def get(self, request: Request, organization_id: UUID) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -69,9 +69,7 @@ class OrganizationDetailEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK", OrganizationSerializer),
         },
     )
-    def put(self, request: Request, organization_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-
+    def put(self, request: Request, organization_id: UUID) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -114,9 +112,7 @@ class OrganizationDetailEndpoint(Endpoint):
             ),
         },
     )
-    def delete(self, request: Request, organization_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-
+    def delete(self, request: Request, organization_id: UUID) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:

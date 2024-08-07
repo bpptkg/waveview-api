@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -34,16 +36,11 @@ class ChannelDetailEndpoint(Endpoint):
     def get(
         self,
         request: Request,
-        organization_id: str,
-        network_id: str,
-        station_id: str,
-        channel_id: str,
+        organization_id: UUID,
+        network_id: UUID,
+        station_id: UUID,
+        channel_id: UUID,
     ) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(network_id, "network_id")
-        self.validate_uuid(station_id, "station_id")
-        self.validate_uuid(channel_id, "channel_id")
-
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -82,16 +79,11 @@ class ChannelDetailEndpoint(Endpoint):
     def put(
         self,
         request: Request,
-        organization_id: str,
-        network_id: str,
-        station_id: str,
-        channel_id: str,
+        organization_id: UUID,
+        network_id: UUID,
+        station_id: UUID,
+        channel_id: UUID,
     ) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(network_id, "network_id")
-        self.validate_uuid(station_id, "station_id")
-        self.validate_uuid(channel_id, "channel_id")
-
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -144,16 +136,11 @@ class ChannelDetailEndpoint(Endpoint):
     def delete(
         self,
         request: Request,
-        organization_id: str,
-        network_id: str,
-        station_id: str,
-        channel_id: str,
+        organization_id: UUID,
+        network_id: UUID,
+        station_id: UUID,
+        channel_id: UUID,
     ) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(network_id, "network_id")
-        self.validate_uuid(station_id, "station_id")
-        self.validate_uuid(channel_id, "channel_id")
-
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:

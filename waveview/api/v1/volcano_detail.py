@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -31,10 +33,9 @@ class VolcanoDetailEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK", VolcanoSerializer),
         },
     )
-    def get(self, request: Request, organization_id: str, volcano_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(volcano_id, "volcano_id")
-
+    def get(
+        self, request: Request, organization_id: UUID, volcano_id: UUID
+    ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -65,10 +66,9 @@ class VolcanoDetailEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK", VolcanoSerializer),
         },
     )
-    def put(self, request: Request, organization_id: str, volcano_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(volcano_id, "volcano_id")
-
+    def put(
+        self, request: Request, organization_id: UUID, volcano_id: UUID
+    ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -123,11 +123,8 @@ class VolcanoDetailEndpoint(Endpoint):
         },
     )
     def delete(
-        self, request: Request, organization_id: str, volcano_id: str
+        self, request: Request, organization_id: UUID, volcano_id: UUID
     ) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(volcano_id, "volcano_id")
-
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:

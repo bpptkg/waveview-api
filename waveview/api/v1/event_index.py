@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
@@ -74,10 +76,9 @@ class EventIndexEndpoint(Endpoint):
             ),
         ],
     )
-    def get(self, request: Request, organization_id: str, catalog_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(catalog_id, "catalog_id")
-
+    def get(
+        self, request: Request, organization_id: UUID, catalog_id: UUID
+    ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
@@ -129,10 +130,9 @@ class EventIndexEndpoint(Endpoint):
             status.HTTP_201_CREATED: openapi.Response("Created", EventSerializer),
         },
     )
-    def post(self, request: Request, organization_id: str, catalog_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-        self.validate_uuid(catalog_id, "catalog_id")
-
+    def post(
+        self, request: Request, organization_id: UUID, catalog_id: UUID
+    ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:

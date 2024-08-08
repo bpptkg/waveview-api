@@ -142,8 +142,8 @@ class StreamFetcher:
                 max_points=n_out,
             )
 
-        a = np.array([x[0] for x in data])
-        b = np.array([x[1] for x in data])
+        a = np.array([timestamp.to_milliseconds(x[0]) for x in data], dtype=np.float64)
+        b = np.array([x[1] for x in data], dtype=np.float64)
 
         packet = Packet(
             channel_id=channel_id,

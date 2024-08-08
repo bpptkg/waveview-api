@@ -30,6 +30,8 @@ class SeedLinkClient(EasySeedLinkClient):
 
     def _on_data(self, packet: SLPacket) -> None:
         trace: Trace = packet.get_trace()
+        if self.debug:
+            logger.info(f"Received packet: {trace}")
         times, values = prepare(trace)
         network: str = trace.stats.network
         station: str = trace.stats.station
@@ -46,7 +48,7 @@ class SeedLinkClient(EasySeedLinkClient):
         self.schema.bulk_upsert(table, times, values)
 
 
-def run_seedlink(inventory_id: str) -> None:
+def run_seedlink(inventory_id: str, debug: bool = False) -> None:
     datasource = DataSource.objects.filter(
         inventory_id=inventory_id, source=DataSourceType.SEEDLINK
     ).first()

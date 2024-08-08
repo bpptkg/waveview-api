@@ -29,7 +29,9 @@ class EasySeedLinkClient:
     An easy-to-use SeedLink client.
     """
 
-    def __init__(self, server_url: str, autoconnect: bool = True) -> None:
+    def __init__(
+        self, server_url: str, autoconnect: bool = True, debug: bool = False
+    ) -> None:
         # Allow for sloppy server URLs (e.g. 'geofon.gfz-potsdam.de:18000).
         # (According to RFC 1808 the net_path segment needs to start with '//'
         # and this is expected by the urlparse function, so it is silently
@@ -49,6 +51,7 @@ class EasySeedLinkClient:
 
         self.server_hostname = parsed_url.hostname
         self.server_port = parsed_url.port or 18000
+        self.debug = debug
 
         self.conn = SeedLinkConnection()
         self.conn.statefile = str(STATE_FILE)

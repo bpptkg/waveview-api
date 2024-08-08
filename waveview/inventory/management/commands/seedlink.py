@@ -10,7 +10,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("inventory_id", type=str, help="Inventory ID")
+        parser.add_argument("--debug", action="store_true", help="Debug mode.")
 
     def handle(self, *args: Any, **options: Any) -> None:
         inventory_id = options["inventory_id"]
-        run_seedlink(inventory_id)
+        debug = options["debug"]
+        run_seedlink(inventory_id, debug=debug)

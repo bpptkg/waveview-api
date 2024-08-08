@@ -8,13 +8,13 @@ from waveview.volcano.models import Volcano
 
 
 @receiver(post_save, sender=Volcano)
-def volcano_post_save(sender: Any, volcano: Volcano, **kwargs: Dict[str, Any]) -> None:
-    if Catalog.objects.filter(volcano_id=volcano.id).exists():
+def volcano_post_save(sender: Any, instance: Volcano, **kwargs: Dict[str, Any]) -> None:
+    if Catalog.objects.filter(volcano_id=instance.id).exists():
         return
     Catalog.objects.create(
-        volcano_id=volcano.id,
-        name=volcano.name,
-        description=f"Default catalog for {volcano.name}.",
+        volcano=instance,
+        name=instance.name,
+        description=f"Default catalog for {instance.name}.",
         is_default=True,
-        author=volcano.author,
+        author=instance.author,
     )

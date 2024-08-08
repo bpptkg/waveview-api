@@ -126,6 +126,8 @@ class ChannelSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(help_text=_("Channel last update date."))
     author_id = serializers.UUIDField(help_text=_("Channel author ID."))
     stream_id = serializers.CharField(help_text=_("Stream ID."))
+    network_station_code = serializers.CharField(help_text=_("Network station code."))
+    station_channel_code = serializers.CharField(help_text=_("Station channel code."))
 
 
 class ChannelPayloadSerializer(serializers.Serializer):

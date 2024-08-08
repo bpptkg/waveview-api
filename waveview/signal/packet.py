@@ -121,7 +121,7 @@ class StreamFetcher:
         )
 
         try:
-            channel = Channel.objects.get(channel_id=channel_id)
+            channel = Channel.objects.get(id=channel_id)
         except Channel.DoesNotExist:
             logger.debug(f"Channel {channel_id} not found.")
             return empty_packet.encode()

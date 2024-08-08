@@ -179,3 +179,15 @@ class Channel(models.Model):
         channel = self.code
         sid = f"{network}.{station}.{location}.{channel}"
         return sid
+
+    @property
+    def network_station_code(self) -> str:
+        network = self.station.network.code
+        station = self.station.code
+        return f"{network}.{station}"
+
+    @property
+    def station_channel_code(self) -> str:
+        station = self.station.code
+        channel = self.code
+        return f"{station}.{channel}"

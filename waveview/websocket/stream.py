@@ -1,8 +1,12 @@
+import logging
+
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 from waveview.signal.packet import FetcherData, StreamFetcher
 from waveview.websocket.base import WebSocketRequest
+
+logger = logging.getLogger(__name__)
 
 
 class StreamConsumer(AsyncWebsocketConsumer):
@@ -18,6 +22,9 @@ class StreamConsumer(AsyncWebsocketConsumer):
         raw = request.data
 
         payload = FetcherData.parse_raw(raw)
+        if not payload.channel_id:
+            return
+
         fetcher = StreamFetcher()
         data = await database_sync_to_async(fetcher.fetch)(payload)
 

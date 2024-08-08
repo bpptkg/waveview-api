@@ -6,7 +6,6 @@ from waveview.volcano.models import Volcano, VolcanoMedia
 @admin.register(Volcano)
 class VolcanoAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "name",
         "elevation",
         "location",
@@ -22,7 +21,6 @@ class VolcanoAdmin(admin.ModelAdmin):
 @admin.register(VolcanoMedia)
 class VolcanoMediaAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "volcano",
         "file",
         "name",

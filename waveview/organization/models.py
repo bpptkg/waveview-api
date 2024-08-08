@@ -134,3 +134,6 @@ class OrganizationSettings(models.Model):
     class Meta:
         verbose_name = _("organization settings")
         verbose_name_plural = _("organization settings")
+
+    def __str__(self) -> str:
+        return self.organization.name

@@ -55,5 +55,5 @@ class OrganizationRoleAdmin(admin.ModelAdmin):
 class OrganizationSettingsAdmin(admin.ModelAdmin):
     list_display = (
         "organization",
-        "data",
+        "updated_at",
     )

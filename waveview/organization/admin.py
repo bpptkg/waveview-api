@@ -11,7 +11,6 @@ from waveview.organization.models import (
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "slug",
         "name",
         "email",
@@ -28,7 +27,6 @@ class OrganizationAdmin(admin.ModelAdmin):
 @admin.register(OrganizationMember)
 class OrganizationMemberAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "organization",
         "user",
         "date_added",
@@ -41,7 +39,6 @@ class OrganizationMemberAdmin(admin.ModelAdmin):
 @admin.register(OrganizationRole)
 class OrganizationRoleAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "slug",
         "name",
         "permissions",

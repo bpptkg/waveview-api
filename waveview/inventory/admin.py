@@ -50,6 +50,7 @@ class StationAdmin(admin.ModelAdmin):
 @admin.register(Channel)
 class ChannelAdmin(admin.ModelAdmin):
     list_display = (
+        "network",
         "station",
         "code",
         "start_date",
@@ -64,6 +65,9 @@ class ChannelAdmin(admin.ModelAdmin):
         "updated_at",
         "author",
     )
+
+    def network(self, obj: Channel) -> str:
+        return obj.station.network.code
 
 
 @admin.register(DataSource)

@@ -8,7 +8,6 @@ from django.db import connection
 
 from waveview.inventory.db.query import TimescaleQuery
 from waveview.inventory.models import Channel
-from waveview.signal.stream_id import StreamIdentifier
 from waveview.utils import timestamp
 
 logger = logging.getLogger(__name__)
@@ -110,11 +109,6 @@ class StreamFetcher:
         else:
             n_out = -1
 
-        stream_id = StreamIdentifier(id=channel_id)
-        channel = stream_id.channel
-        station = stream_id.station
-        network = stream_id.network
-
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
 
@@ -126,14 +120,13 @@ class StreamFetcher:
             y=np.array([]),
         )
 
-        instance = Channel.objects.filter(
-            code=channel, station__code=station, station__network__code=network
-        ).first()
-        if not instance:
+        try:
+            channel = Channel.objects.get(channel_id=channel_id)
+        except Channel.DoesNotExist:
             logger.debug(f"Channel {channel_id} not found.")
             return empty_packet.encode()
 
-        table = instance.get_datastream_id()
+        table = channel.get_datastream_id()
 
         if n_out == -1:
             data = self.query.fetch(

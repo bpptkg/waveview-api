@@ -106,6 +106,7 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
 
         empty_packet = Packet(
+            request_id=request_id,
             channel_id=channel_id,
             start=timestamp.to_milliseconds(start),
             end=timestamp.to_milliseconds(end),

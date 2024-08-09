@@ -1,14 +1,7 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Literal
 
 import numpy as np
-from django.db import connection
-
-from waveview.inventory.db.query import TimescaleQuery
-from waveview.inventory.models import Channel
-from waveview.utils import timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +19,11 @@ class Packet:
     start: int
     end: int
     channel_id: str
+    request_id: str
 
     def encode(self) -> bytes:
         channel_id = pad(self.channel_id.encode("utf-8"), 64)
+        request_id = pad(self.request_id.encode("utf-8"), 64)
         header = np.array(
             [
                 int(self.start),
@@ -44,6 +39,7 @@ class Packet:
         )
         return b"".join(
             [
+                request_id,
                 channel_id,
                 header.tobytes(),
                 self.x.tobytes(),
@@ -62,94 +58,3 @@ class Packet:
         )
         y = np.frombuffer(data[64 + 8 * 8 + 8 * header[2] :], dtype=np.float64)
         return cls(x=x, y=y, start=start, end=end, channel_id=channel_id)
-
-
-@dataclass
-class FetcherData:
-    channel_id: str
-    start: float
-    end: float
-    mode: Literal[
-        "match_width",
-        "max_points",
-        "none",
-        "auto",
-    ]
-    width: float
-    max_points: int
-
-    @classmethod
-    def parse_raw(cls, raw: dict) -> "FetcherData":
-        return cls(
-            channel_id=raw["channelId"],
-            start=raw["start"],
-            end=raw["end"],
-            mode=raw["mode"],
-            width=raw.get("width", 0),
-            max_points=raw.get("max_points", 0),
-        )
-
-
-class StreamFetcher:
-    def __init__(self) -> None:
-        self.query = TimescaleQuery(connection=connection)
-
-    def fetch(self, payload: FetcherData) -> bytes:
-        channel_id = payload.channel_id
-        width = payload.width
-        mode = payload.mode
-        max_points = payload.max_points
-
-        if mode == "auto":
-            n_out = int(width * 2)
-        elif mode == "match_width":
-            n_out = int(width)
-        elif mode == "max_points":
-            n_out = max_points
-        else:
-            n_out = -1
-
-        start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
-        end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
-
-        empty_packet = Packet(
-            channel_id=channel_id,
-            start=timestamp.to_milliseconds(start),
-            end=timestamp.to_milliseconds(end),
-            x=np.array([]),
-            y=np.array([]),
-        )
-
-        try:
-            channel = Channel.objects.get(id=channel_id)
-        except Channel.DoesNotExist:
-            logger.debug(f"Channel {channel_id} not found.")
-            return empty_packet.encode()
-
-        table = channel.get_datastream_id()
-
-        if n_out == -1:
-            data = self.query.fetch(
-                start=start,
-                end=end,
-                table=table,
-            )
-        else:
-            data = self.query.fetch_lttb(
-                start=start,
-                end=end,
-                table=table,
-                max_points=n_out,
-            )
-
-        a = np.array([timestamp.to_milliseconds(x[0]) for x in data], dtype=np.float64)
-        b = np.array([x[1] for x in data], dtype=np.float64)
-
-        packet = Packet(
-            channel_id=channel_id,
-            start=start.timestamp() * 1000,
-            end=end.timestamp() * 1000,
-            x=a,
-            y=b,
-        )
-        return packet.encode()

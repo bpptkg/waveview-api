@@ -150,4 +150,4 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
 
 
 def get_fetcher() -> BaseStreamFetcher:
-    return DummyStreamFetcher()
+    return TimescaleStreamFetcher()

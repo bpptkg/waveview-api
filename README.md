@@ -1,3 +1,11 @@
 # WaveView API
 
-TODO
+WaveView backend API endpoints.
+
+## Copyright
+
+Copyright (c) 2024-present WaveView Developers
+
+## License
+
+MIT

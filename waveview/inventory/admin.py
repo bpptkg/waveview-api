@@ -65,6 +65,7 @@ class ChannelAdmin(admin.ModelAdmin):
         "updated_at",
         "author",
     )
+    ordering = ("station", "code")
 
     def network(self, obj: Channel) -> str:
         return obj.station.network.code

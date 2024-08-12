@@ -11,9 +11,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
-from waveview.api.pagination import StrictPageNumberPagination
+from waveview.api.pagination import FlexiblePageNumberPagination
 from waveview.api.permissions import IsOrganizationMember
-from waveview.event.models import Event, Origin
+from waveview.event.models import Event
 from waveview.event.serializers import EventPayloadSerializer, EventSerializer
 from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
@@ -28,6 +28,7 @@ class ParamSerializer(serializers.Serializer):
     start = serializers.DateTimeField(required=False)
     end = serializers.DateTimeField(required=False)
     event_type_id = serializers.UUIDField(required=False)
+    event_type = serializers.CharField(required=False)
     ordering = serializers.ChoiceField(
         required=False, choices=OrderingType.choices, default=OrderingType.DESC
     )
@@ -35,7 +36,7 @@ class ParamSerializer(serializers.Serializer):
 
 class EventIndexEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOrganizationMember]
-    pagination_class = StrictPageNumberPagination
+    pagination_class = FlexiblePageNumberPagination
 
     @swagger_auto_schema(
         operation_id="List Events",
@@ -64,7 +65,13 @@ class EventIndexEndpoint(Endpoint):
             openapi.Parameter(
                 "event_type_id",
                 openapi.IN_QUERY,
-                description="Event type ID.",
+                description="Filter event by its type ID.",
+                type=openapi.TYPE_STRING,
+            ),
+            openapi.Parameter(
+                "event_type",
+                openapi.IN_QUERY,
+                description="Filter event by its type code.",
                 type=openapi.TYPE_STRING,
             ),
             openapi.Parameter(
@@ -85,37 +92,43 @@ class EventIndexEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
+        param = ParamSerializer(data=request.query_params)
+        param.is_valid(raise_exception=True)
+        start = param.validated_data.get("start")
+        end = param.validated_data.get("end")
+        event_type_id = param.validated_data.get("event_type_id")
+        event_type = param.validated_data.get("event_type")
+        ordering = param.validated_data.get("ordering")
+
         events = (
             Event.objects.filter(catalog_id=catalog_id)
             .select_related("type")
             .prefetch_related("origins", "magnitudes", "amplitudes", "attachments")
         )
 
-        param = ParamSerializer(data=request.query_params)
-        param.is_valid(raise_exception=True)
-        start = param.validated_data.get("start")
-        end = param.validated_data.get("end")
-        event_type_id = param.validated_data.get("event_type_id")
-        ordering = param.validated_data.get("ordering")
-
-        if start or end:
-            origin_ids = Origin.objects.filter(
-                **{"time__gte": start} if start else {},
-                **{"time__lte": end} if end else {}
-            ).values_list("id", flat=True)
-            events = events.filter(origins__id__in=origin_ids)
+        if start:
+            events = events.filter(time__gte=start)
+        if end:
+            events = events.filter(time__lte=end)
 
         if event_type_id:
-            events = events.filter(type_id=event_type_id)
+            events = events.filter(type__id=event_type_id)
+        elif event_type:
+            events = events.filter(type__code=event_type)
 
         if ordering == OrderingType.ASC:
-            events = events.order_by("origin__time")
+            events = events.order_by("time")
         elif ordering == OrderingType.DESC:
-            events = events.order_by("-origin__time")
+            events = events.order_by("-time")
 
-        page = self.paginate_queryset(events.distinct())
-        serializer = EventSerializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
+        queryset = events.distinct()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = EventSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = EventSerializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_id="Create Event",

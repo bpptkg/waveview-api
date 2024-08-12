@@ -28,6 +28,7 @@ class Volcano(models.Model):
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
+    is_default = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = _("volcano")

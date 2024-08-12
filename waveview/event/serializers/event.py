@@ -21,7 +21,11 @@ class EventSerializer(serializers.Serializer):
     time = serializers.DateTimeField(help_text=_("Time of the event."))
     duration = serializers.FloatField(help_text=_("Duration of the event in seconds."))
     type = EventTypeSerializer()
+    type_certainty = serializers.CharField(help_text=_("Event type certainty."))
     note = serializers.CharField(help_text=_("Event note."))
+    method = serializers.CharField(help_text=_("Event method."))
+    evaluation_mode = serializers.CharField(help_text=_("Event evaluation mode."))
+    evaluation_status = serializers.CharField(help_text=_("Event evaluation status."))
     attachments = AttachmentSerializer(many=True)
     created_at = serializers.DateTimeField(help_text=_("Event creation timestamp."))
     updated_at = serializers.DateTimeField(help_text=_("Event update timestamp."))
@@ -39,6 +43,9 @@ class EventPayloadSerializer(serializers.Serializer):
     duration = serializers.FloatField(help_text=_("Duration of the event in seconds."))
     type_id = serializers.UUIDField(help_text=_("Event type ID."))
     note = serializers.CharField(help_text=_("Event note."))
+    method = serializers.CharField(help_text=_("Event method."))
+    evaluation_mode = serializers.CharField(help_text=_("Event evaluation mode."))
+    evaluation_status = serializers.CharField(help_text=_("Event evaluation status."))
     attachment_ids = serializers.ListField(
         child=serializers.UUIDField(), help_text=_("Attachment IDs.")
     )
@@ -54,6 +61,9 @@ class EventPayloadSerializer(serializers.Serializer):
         type_id = validated_data["type_id"]
         note = validated_data["note"]
         attachment_ids = validated_data["attachment_ids"]
+        method = validated_data["method"]
+        evaluation_mode = validated_data["evaluation_mode"]
+        evaluation_status = validated_data["evaluation_status"]
 
         if not Station.objects.filter(id=station_of_fist_arrival_id).exists():
             raise serializers.ValidationError(
@@ -68,6 +78,9 @@ class EventPayloadSerializer(serializers.Serializer):
             type_id=type_id,
             note=note,
             author=user,
+            method=method,
+            evaluation_mode=evaluation_mode,
+            evaluation_status=evaluation_status,
         )
         Attachment.objects.filter(id__in=attachment_ids).update(event=event)
         return event

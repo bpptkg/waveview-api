@@ -29,6 +29,9 @@ class VolcanoSerializer(serializers.Serializer):
         help_text=_("Date when volcano was last updated.")
     )
     author = UserSerializer(help_text=_("Author of the volcano."))
+    is_default = serializers.BooleanField(
+        help_text=_("Whether the volcano is the default one.")
+    )
 
 
 class VolcanoPayloadSerializer(serializers.Serializer):

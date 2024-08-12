@@ -9,6 +9,7 @@ from waveview.utils.media import MediaType
 
 class AttachmentSerializer(serializers.Serializer):
     id = serializers.UUIDField(help_text=_("Attachment ID."))
+    event_id = serializers.UUIDField(help_text=_("Event ID."))
     media_type = serializers.ChoiceField(
         help_text=_("Attachment media type."), choices=MediaType.values
     )

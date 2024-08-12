@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from django.conf import settings
 from django.db import models
@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from waveview.event.header import EventTypeCertainty
 from waveview.event.models.catalog import Catalog
 from waveview.utils.media import MediaPath, MediaType
+from waveview.event.header import EvaluationMode, EvaluationStatus
 
 if TYPE_CHECKING:
     from waveview.event.models.magnitude import Amplitude, Magnitude
@@ -31,8 +32,9 @@ class EventType(models.Model):
     code = models.CharField(max_length=50, db_index=True)
     name = models.CharField(max_length=150, null=True, blank=True)
     description = models.TextField(null=True, blank=True, default="")
-    color_light = models.CharField(max_length=50, null=True, blank=True)
-    color_dark = models.CharField(max_length=50, null=True, blank=True)
+    color = models.CharField(max_length=32, null=True, blank=True)
+    color_light = models.CharField(max_length=32, null=True, blank=True)
+    color_dark = models.CharField(max_length=32, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(
@@ -54,13 +56,7 @@ class EventType(models.Model):
 
 class Event(models.Model):
     """
-    The class Event describes a seismic event. An event is usually associated
-    with one or more origins, which contain information about focal time and
-    geographical location of the event. Multiple origins can cover automatic and
-    manual locations, a set of location from different agencies, locations
-    generated with different location programs and earth models, etc.
-    Furthermore, an event is usually associated with one or more magnitudes, and
-    with one or more focal mechanism determinations.
+    The class Event describes a seismic event.
     """
 
     origins: QuerySet["Origin"]
@@ -78,7 +74,6 @@ class Event(models.Model):
     station_of_first_arrival = models.ForeignKey(
         "inventory.Station",
         on_delete=models.SET_NULL,
-        related_name="+",
         null=True,
         blank=True,
     )
@@ -96,6 +91,19 @@ class Event(models.Model):
         max_length=255, null=True, blank=True, choices=EventTypeCertainty.choices
     )
     note = models.TextField(null=True, blank=True, default="")
+    method = models.CharField(max_length=255, null=True, blank=True)
+    evaluation_mode = models.CharField(
+        max_length=255,
+        choices=EvaluationMode.choices,
+        null=True,
+        blank=True,
+    )
+    evaluation_status = models.CharField(
+        max_length=255,
+        choices=EvaluationStatus.choices,
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(
@@ -103,6 +111,8 @@ class Event(models.Model):
         on_delete=models.CASCADE,
         related_name="events",
         related_query_name="event",
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -110,15 +120,15 @@ class Event(models.Model):
         verbose_name_plural = _("Events")
 
     def __str__(self) -> str:
-        return self.type.name
+        return str(self.type)
 
-    def preferred_origin(self) -> "Origin":
+    def preferred_origin(self) -> Optional["Origin"]:
         return self.origins.filter(is_preferred=True).first()
 
-    def preferred_magnitude(self) -> "Magnitude":
+    def preferred_magnitude(self) -> Optional["Magnitude"]:
         return self.magnitudes.filter(is_preferred=True).first()
 
-    def preferred_amplitude(self) -> "Amplitude":
+    def preferred_amplitude(self) -> Optional["Amplitude"]:
         return self.amplitudes.filter(is_preferred=True).first()
 
 

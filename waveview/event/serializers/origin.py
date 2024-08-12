@@ -26,6 +26,7 @@ class OriginSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(help_text=_("Origin created at."))
     updated_at = serializers.DateTimeField(help_text=_("Origin updated at."))
     author_id = serializers.UUIDField(help_text=_("Author ID."))
+    is_preferred = serializers.BooleanField(help_text=_("Is preferred origin."))
 
 
 class OriginPayloadSerializer(serializers.Serializer):

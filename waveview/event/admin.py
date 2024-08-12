@@ -16,7 +16,6 @@ from waveview.event.models import (
 @admin.register(Catalog)
 class CatalogAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "volcano",
         "name",
         "description",
@@ -30,7 +29,6 @@ class CatalogAdmin(admin.ModelAdmin):
 @admin.register(EventType)
 class EventTypeAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "organization",
         "code",
         "name",
@@ -45,19 +43,20 @@ class EventTypeAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "catalog",
+        "time",
+        "duration",
         "type",
         "author",
         "created_at",
         "updated_at",
     )
+    ordering = ("-time",)
 
 
 @admin.register(Attachment)
 class AttachmentAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "event",
         "media_type",
         "name",
@@ -69,7 +68,6 @@ class AttachmentAdmin(admin.ModelAdmin):
 @admin.register(Origin)
 class OriginAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "event",
         "time",
         "latitude",
@@ -79,6 +77,7 @@ class OriginAdmin(admin.ModelAdmin):
         "earth_model",
         "evaluation_mode",
         "evaluation_status",
+        "is_preferred",
         "author",
         "created_at",
         "updated_at",
@@ -88,7 +87,6 @@ class OriginAdmin(admin.ModelAdmin):
 @admin.register(Magnitude)
 class MagnitudeAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "event",
         "magnitude",
         "type",
@@ -106,7 +104,6 @@ class MagnitudeAdmin(admin.ModelAdmin):
 @admin.register(Amplitude)
 class AmplitudeAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "event",
         "amplitude",
         "type",
@@ -129,7 +126,6 @@ class AmplitudeAdmin(admin.ModelAdmin):
 @admin.register(StationMagnitude)
 class StationMagnitudeAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "amplitude",
         "magnitude",
         "type",
@@ -143,7 +139,6 @@ class StationMagnitudeAdmin(admin.ModelAdmin):
 @admin.register(StationMagnitudeContribution)
 class StationMagnitudeContributionAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "magnitude",
         "station_magnitude",
         "residual",

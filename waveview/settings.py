@@ -38,6 +38,7 @@ PROJECT_APPS = [
     "waveview.organization",
     "waveview.volcano",
     "waveview.inventory",
+    "waveview.picker",
     "waveview.event",
 ]
 

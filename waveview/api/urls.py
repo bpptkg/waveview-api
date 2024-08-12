@@ -32,6 +32,7 @@ from .v1.organization_permissions import OrganizationPermissionsEndpoint
 from .v1.organization_role_detail import OrganizationRoleDetailEndpoint
 from .v1.organization_role_index import OrganizationRoleIndexEndpoint
 from .v1.organization_settings_index import OrganizationSettingsIndexEndpoint
+from .v1.picker_config_index import PickerConfigIndexEndpoint
 from .v1.registration import AccountRegistrationEndpoint
 from .v1.search_user import SearchUserEndpoint
 from .v1.seedlink import (
@@ -221,6 +222,13 @@ INVENTORY_URLS = [
     ),
 ]
 
+PICKER_URLS = [
+    path(
+        "picker-config/",
+        PickerConfigIndexEndpoint.as_view(),
+        name="waveview-api-1-picker-config-index",
+    ),
+]
 
 ACCOUNT_URLS = [
     path(
@@ -268,6 +276,7 @@ urlpatterns = [
     path("organizations/<uuid:organization_id>/", include(VOLCANO_URLS)),
     path("organizations/<uuid:organization_id>/", include(EVENT_TYPE_URLS)),
     path("organizations/<uuid:organization_id>/", include(INVENTORY_URLS)),
+    path("organizations/<uuid:organization_id>/", include(PICKER_URLS)),
     path("organizations/<uuid:organization_id>/services/", include(SERVICE_URLS)),
     path(
         "organizations/<uuid:organization_id>/volcanoes/<uuid:volcano_id>/",

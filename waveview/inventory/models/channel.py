@@ -160,7 +160,7 @@ class Channel(models.Model):
         verbose_name_plural = _("channels")
 
     def __str__(self) -> str:
-        return self.code
+        return f"{self.station.code}.{self.code}"
 
     def __repr__(self) -> str:
         return f"<Channel: {self.code}>"

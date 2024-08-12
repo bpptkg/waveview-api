@@ -34,7 +34,7 @@ class PickerConfig(models.Model):
         verbose_name_plural = _("picker configs")
 
     def __str__(self) -> str:
-        return f"{self.organization.name} Picker Config"
+        return f"{self.organization.name} {self.name}"
 
 
 class HelicorderConfig(models.Model):

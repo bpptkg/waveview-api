@@ -46,7 +46,7 @@ class EventDetailEndpoint(Endpoint):
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
 
-        serializer = EventSerializer(event)
+        serializer = EventSerializer(event, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -88,7 +88,10 @@ class EventDetailEndpoint(Endpoint):
         )
         serializer.is_valid(raise_exception=True)
         event = serializer.save()
-        return Response(EventSerializer(event).data, status=status.HTTP_200_OK)
+        return Response(
+            EventSerializer(event, context={"request": request}).data,
+            status=status.HTTP_200_OK,
+        )
 
     @swagger_auto_schema(
         operation_id="Delete Event",

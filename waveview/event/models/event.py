@@ -126,7 +126,7 @@ class Event(models.Model):
         verbose_name_plural = _("Events")
 
     def __str__(self) -> str:
-        return str(self.type)
+        return f"Event: {self.id}"
 
     def preferred_origin(self) -> Optional["Origin"]:
         return self.origins.filter(is_preferred=True).first()

@@ -6,10 +6,8 @@ from waveview.event.header import AmplitudeCategory, EvaluationMode
 
 class AmplitudeSerializer(serializers.Serializer):
     id = serializers.UUIDField(help_text=_("Amplitude ID."))
-    magnitude_id = serializers.UUIDField(help_text=_("Magnitude ID."))
     amplitude = serializers.FloatField(help_text=_("Amplitude value."))
     type = serializers.CharField(help_text=_("Amplitude type."))
-    period = serializers.FloatField(help_text=_("Amplitude period."))
     category = serializers.ChoiceField(
         help_text=_("Amplitude category."), choices=AmplitudeCategory.choices
     )
@@ -22,6 +20,7 @@ class AmplitudeSerializer(serializers.Serializer):
     end = serializers.FloatField(
         help_text=_("Duration of time interval after reference point in time window.")
     )
+    duration = serializers.FloatField(help_text=_("Amplitude period."))
     snr = serializers.FloatField(help_text=_("Signal-to-noise ratio."))
     unit = serializers.CharField(help_text=_("Amplitude unit."))
     waveform_id = serializers.UUIDField(help_text=_("Waveform ID."))

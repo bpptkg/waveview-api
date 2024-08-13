@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.event.models import Event
-from waveview.event.serializers import EventPayloadSerializer, EventSerializer
+from waveview.event.serializers import EventDetailSerializer, EventPayloadSerializer
 from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 
@@ -29,7 +29,7 @@ class EventDetailEndpoint(Endpoint):
         ),
         tags=["Event"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", EventSerializer),
+            status.HTTP_200_OK: openapi.Response("OK", EventDetailSerializer),
         },
     )
     def get(
@@ -46,7 +46,7 @@ class EventDetailEndpoint(Endpoint):
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
 
-        serializer = EventSerializer(event, context={"request": request})
+        serializer = EventDetailSerializer(event, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -59,7 +59,7 @@ class EventDetailEndpoint(Endpoint):
         tags=["Event"],
         request_body=EventPayloadSerializer,
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", EventSerializer),
+            status.HTTP_200_OK: openapi.Response("OK", EventDetailSerializer),
         },
     )
     def put(
@@ -89,7 +89,7 @@ class EventDetailEndpoint(Endpoint):
         serializer.is_valid(raise_exception=True)
         event = serializer.save()
         return Response(
-            EventSerializer(event, context={"request": request}).data,
+            EventDetailSerializer(event, context={"request": request}).data,
             status=status.HTTP_200_OK,
         )
 

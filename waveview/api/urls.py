@@ -14,6 +14,7 @@ from .v1.channel_detail import ChannelDetailEndpoint
 from .v1.channel_index import ChannelIndexEndpoint
 from .v1.event_attachment_detail import EventAttachmentDetailEndpoint
 from .v1.event_attachment_index import EventAttachmentUploadEndpoint
+from .v1.event_bookmark import BookmarkEventEndpoint
 from .v1.event_detail import EventDetailEndpoint
 from .v1.event_index import EventIndexEndpoint
 from .v1.event_origin_detail import EventOriginDetailEndpoint
@@ -142,6 +143,11 @@ EVENT_URLS = [
         "events/<uuid:event_id>/",
         EventDetailEndpoint.as_view(),
         name="waveview-api-1-event-detail",
+    ),
+    path(
+        "events/<uuid:event_id>/bookmark/",
+        BookmarkEventEndpoint.as_view(),
+        name="waveview-api-1-event-bookmark",
     ),
 ]
 

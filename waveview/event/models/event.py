@@ -114,6 +114,12 @@ class Event(models.Model):
         null=True,
         blank=True,
     )
+    bookmarked_by = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="bookmarked_events",
+        related_query_name="bookmarked_event",
+        blank=True,
+    )
 
     class Meta:
         verbose_name = _("Event")

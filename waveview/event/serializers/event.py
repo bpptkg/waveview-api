@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from waveview.event.models import Attachment, Event
@@ -26,13 +27,27 @@ class EventSerializer(serializers.Serializer):
     method = serializers.CharField(help_text=_("Event method."))
     evaluation_mode = serializers.CharField(help_text=_("Event evaluation mode."))
     evaluation_status = serializers.CharField(help_text=_("Event evaluation status."))
-    attachments = AttachmentSerializer(many=True)
     created_at = serializers.DateTimeField(help_text=_("Event creation timestamp."))
     updated_at = serializers.DateTimeField(help_text=_("Event update timestamp."))
     author = UserSerializer()
     preferred_origin = OriginSerializer(allow_null=True)
     preferred_magnitude = MagnitudeSerializer(allow_null=True)
     preferred_amplitude = AmplitudeSerializer(allow_null=True)
+    is_bookmarked = serializers.SerializerMethodField(
+        help_text=_("True if bookmarked.")
+    )
+
+    @swagger_serializer_method(serializer_or_field=serializers.BooleanField)
+    def get_is_bookmarked(self, obj: Event) -> bool:
+        user = self.context["request"].user
+        return obj.bookmarked_by.filter(id=user.id).exists()
+
+
+class EventDetailSerializer(EventSerializer):
+    attachments = AttachmentSerializer(many=True)
+    amplitudes = AmplitudeSerializer(many=True)
+    magnitudes = MagnitudeSerializer(many=True)
+    origins = OriginSerializer(many=True)
 
 
 class EventPayloadSerializer(serializers.Serializer):

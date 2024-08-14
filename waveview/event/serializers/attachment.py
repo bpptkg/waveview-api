@@ -14,6 +14,9 @@ class AttachmentSerializer(serializers.Serializer):
         help_text=_("Attachment media type."), choices=MediaType.values
     )
     file = serializers.FileField(help_text=_("Attachment file."))
+    thumbnail = serializers.ImageField(
+        help_text=_("Attachment thumbnail."), allow_null=True
+    )
     name = serializers.CharField(help_text=_("Attachment name."))
     size = serializers.IntegerField(help_text=_("Attachment size in bytes."))
     uploaded_at = serializers.DateTimeField(help_text=_("Attachment upload timestamp."))

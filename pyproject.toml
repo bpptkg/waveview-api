@@ -25,6 +25,7 @@ django-countries = "^7.6.1"
 drf-standardized-errors = "^0.14.0"
 toronado = "^0.1.0"
 docker = "^7.1.0"
+moviepy = "^1.0.3"
 
 
 [build-system]

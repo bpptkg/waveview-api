@@ -3,7 +3,8 @@ from typing import Any, Dict
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from waveview.event.models import Catalog
+from waveview.event.models import Attachment, Catalog
+from waveview.utils.media import MediaType
 from waveview.volcano.models import Volcano
 
 
@@ -18,3 +19,14 @@ def volcano_post_save(sender: Any, instance: Volcano, **kwargs: Dict[str, Any]) 
         is_default=True,
         author=instance.author,
     )
+
+
+@receiver(post_save, sender=Attachment)
+def attachment_post_save(
+    sender: Any, instance: Attachment, **kwargs: Dict[str, Any]
+) -> None:
+    if (
+        instance.media_type in [MediaType.PHOTO, MediaType.VIDEO]
+        and not instance.thumbnail
+    ):
+        instance.generate_thumbnail()

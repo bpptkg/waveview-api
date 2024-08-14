@@ -261,7 +261,7 @@ AUTH_URLS = [
         name="waveview-api-1-auth-token",
     ),
     path(
-        "token/blacklist",
+        "token/blacklist/",
         TokenBlacklistEndpoint.as_view(),
         name="waveview-api-1-auth-token",
     ),

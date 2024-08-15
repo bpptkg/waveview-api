@@ -26,5 +26,5 @@ class IsOrganizationMember(permissions.BasePermission):
         self, request: Request, view: object, obj: object
     ) -> bool:
         return (
-            obj.author == request.user or obj.members.filter(user=request.user).exists()
+            obj.author == request.user or obj.memberships.filter(user=request.user).exists()
         )

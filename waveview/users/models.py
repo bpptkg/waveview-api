@@ -133,6 +133,8 @@ class User(AbstractBaseUser, PermissionsMixin):
             organization_id=organization_id
         ).values_list("roles__permissions", flat=True)
         for role_permissions in user_roles:
+            if role_permissions is None:
+                continue
             if permission in role_permissions:
                 return True
         return False

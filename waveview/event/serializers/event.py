@@ -51,13 +51,15 @@ class EventDetailSerializer(EventSerializer):
 
 
 class EventPayloadSerializer(serializers.Serializer):
-    station_of_fist_arrival_id = serializers.UUIDField(
+    station_of_first_arrival_id = serializers.UUIDField(
         help_text=_("Station of the first arrival ID.")
     )
     time = serializers.DateTimeField(help_text=_("Time of the event."))
     duration = serializers.FloatField(help_text=_("Duration of the event in seconds."))
     type_id = serializers.UUIDField(help_text=_("Event type ID."))
-    note = serializers.CharField(help_text=_("Event note."))
+    note = serializers.CharField(
+        help_text=_("Event note."), allow_blank=True, default=""
+    )
     method = serializers.CharField(help_text=_("Event method."))
     evaluation_mode = serializers.CharField(help_text=_("Event evaluation mode."))
     evaluation_status = serializers.CharField(help_text=_("Event evaluation status."))
@@ -70,7 +72,7 @@ class EventPayloadSerializer(serializers.Serializer):
         user = self.context["request"].user
         catalog_id = self.context["catalog_id"]
 
-        station_of_fist_arrival_id = validated_data["station_of_fist_arrival_id"]
+        station_of_first_arrival_id = validated_data["station_of_first_arrival_id"]
         time = validated_data["time"]
         duration = validated_data["duration"]
         type_id = validated_data["type_id"]
@@ -80,14 +82,14 @@ class EventPayloadSerializer(serializers.Serializer):
         evaluation_mode = validated_data["evaluation_mode"]
         evaluation_status = validated_data["evaluation_status"]
 
-        if not Station.objects.filter(id=station_of_fist_arrival_id).exists():
+        if not Station.objects.filter(id=station_of_first_arrival_id).exists():
             raise serializers.ValidationError(
-                {"station_of_fist_arrival_id": _("Station does not exist.")}
+                {"station_of_first_arrival_id": _("Station does not exist.")}
             )
 
         event = Event.objects.create(
             catalog_id=catalog_id,
-            station_of_first_arrival_id=station_of_fist_arrival_id,
+            station_of_first_arrival_id=station_of_first_arrival_id,
             time=time,
             duration=duration,
             type_id=type_id,

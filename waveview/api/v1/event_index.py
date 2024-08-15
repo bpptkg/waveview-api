@@ -164,4 +164,7 @@ class EventIndexEndpoint(Endpoint):
         )
         serializer.is_valid(raise_exception=True)
         event = serializer.save(catalog_id=catalog_id, author=request.user)
-        return Response(EventSerializer(event).data, status=status.HTTP_201_CREATED)
+        return Response(
+            EventSerializer(event, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )

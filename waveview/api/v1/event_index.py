@@ -14,7 +14,11 @@ from waveview.api.base import Endpoint
 from waveview.api.pagination import FlexiblePageNumberPagination
 from waveview.api.permissions import IsOrganizationMember
 from waveview.event.models import Event
-from waveview.event.serializers import EventPayloadSerializer, EventSerializer
+from waveview.event.serializers import (
+    EventDetailSerializer,
+    EventPayloadSerializer,
+    EventSerializer,
+)
 from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 
@@ -165,6 +169,6 @@ class EventIndexEndpoint(Endpoint):
         serializer.is_valid(raise_exception=True)
         event = serializer.save(catalog_id=catalog_id, author=request.user)
         return Response(
-            EventSerializer(event, context={"request": request}).data,
+            EventDetailSerializer(event, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )

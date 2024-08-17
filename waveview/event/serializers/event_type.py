@@ -11,6 +11,7 @@ class EventTypeSerializer(serializers.Serializer):
     code = serializers.CharField(help_text=_("Event type code."))
     name = serializers.CharField(help_text=_("Event type name."))
     description = serializers.CharField(help_text=_("Event type description."))
+    color = serializers.CharField(help_text=_("Event type default color."))
     color_light = serializers.CharField(help_text=_("Event type light color."))
     color_dark = serializers.CharField(help_text=_("Event type dark color."))
     created_at = serializers.DateTimeField(

@@ -1,13 +1,14 @@
 from django.contrib import admin
 
 from waveview.event.models import (
+    Amplitude,
+    Attachment,
     Catalog,
     Event,
     EventType,
-    Attachment,
-    Origin,
     Magnitude,
-    Amplitude,
+    Origin,
+    SeismicityConfig,
     StationMagnitude,
     StationMagnitudeContribution,
 )
@@ -144,3 +145,15 @@ class StationMagnitudeContributionAdmin(admin.ModelAdmin):
         "residual",
         "weight",
     )
+
+
+@admin.register(SeismicityConfig)
+class SeismicityConfigAdmin(admin.ModelAdmin):
+    list_display = (
+        "organization",
+        "type",
+        "order",
+        "created_at",
+        "updated_at",
+    )
+    ordering = ("order",)

@@ -1,4 +1,10 @@
-from .catalog import Catalog  # noqa
-from .event import Attachment, Event, EventType  # noqa
-from .origin import Origin  # noqa
-from .magnitude import Magnitude, Amplitude, StationMagnitude, StationMagnitudeContribution  # noqa
+from .catalog import Catalog
+from .event import Attachment, Event, EventType
+from .magnitude import (
+    Amplitude,
+    Magnitude,
+    StationMagnitude,
+    StationMagnitudeContribution,
+)
+from .origin import Origin
+from .seismicity import SeismicityConfig

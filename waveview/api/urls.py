@@ -1,6 +1,7 @@
 from django.urls import include, path, re_path
 
 from .v1.account import AccountEndpoint
+from .v1.analytics.seismicity import SeismicityEndpoint
 from .v1.auth import (
     TokenBlacklistEndpoint,
     TokenObtainPairEndpoint,
@@ -45,6 +46,14 @@ from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
 from .v1.volcano_index import VolcanoIndexEndpoint
+
+ANALYTICS_URLS = [
+    path(
+        "seismicity/",
+        SeismicityEndpoint.as_view(),
+        name="waveview-api-1-analytics-seismicity",
+    ),
+]
 
 SERVICE_URLS = [
     path(
@@ -135,17 +144,17 @@ CATALOG_URLS = [
 
 EVENT_URLS = [
     path(
-        "events/",
+        "",
         EventIndexEndpoint.as_view(),
         name="waveview-api-1-event-index",
     ),
     path(
-        "events/<uuid:event_id>/",
+        "<uuid:event_id>/",
         EventDetailEndpoint.as_view(),
         name="waveview-api-1-event-detail",
     ),
     path(
-        "events/<uuid:event_id>/bookmark/",
+        "<uuid:event_id>/bookmark/",
         BookmarkEventEndpoint.as_view(),
         name="waveview-api-1-event-bookmark",
     ),
@@ -289,8 +298,12 @@ urlpatterns = [
         include(CATALOG_URLS),
     ),
     path(
-        "organizations/<uuid:organization_id>/catalogs/<uuid:catalog_id>/",
+        "organizations/<uuid:organization_id>/catalogs/<uuid:catalog_id>/events/",
         include(EVENT_URLS),
+    ),
+    path(
+        "organizations/<uuid:organization_id>/catalogs/<uuid:catalog_id>/analytics/",
+        include(ANALYTICS_URLS),
     ),
     path(
         "organizations/<uuid:organization_id>/catalogs/<uuid:catalog_id>/events/<uuid:event_id>/",

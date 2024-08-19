@@ -128,12 +128,15 @@ class SeismicityEndpoint(Endpoint):
                 .order_by("order")
                 .values_list("type", flat=True)
             )
-            order_conditions = [
-                When(id=type_id, then=pos) for pos, type_id in enumerate(type_ids)
-            ]
-            types = EventType.objects.filter(id__in=type_ids).order_by(
-                Case(*order_conditions)
-            )
+            if not type_ids:
+                types = []
+            else:
+                order_conditions = [
+                    When(id=type_id, then=pos) for pos, type_id in enumerate(type_ids)
+                ]
+                types = EventType.objects.filter(id__in=type_ids).order_by(
+                    Case(*order_conditions)
+                )
 
         result: list[ResultItem] = []
 

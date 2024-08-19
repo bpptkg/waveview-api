@@ -2,7 +2,7 @@ from typing import TypedDict
 from uuid import UUID
 
 from django.db import models
-from django.db.models import Count
+from django.db.models import Case, Count, When
 from django.db.models.functions import TruncDay, TruncHour
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
@@ -128,7 +128,12 @@ class SeismicityEndpoint(Endpoint):
                 .order_by("order")
                 .values_list("type", flat=True)
             )
-            types = EventType.objects.filter(id__in=type_ids)
+            order_conditions = [
+                When(id=type_id, then=pos) for pos, type_id in enumerate(type_ids)
+            ]
+            types = EventType.objects.filter(id__in=type_ids).order_by(
+                Case(*order_conditions)
+            )
 
         result: list[ResultItem] = []
 

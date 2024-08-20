@@ -62,7 +62,7 @@ class SeismicityEndpoint(Endpoint):
         ),
         tags=["Analytics"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", SeismicityGroupByDaySerializer),
+            status.HTTP_200_OK: openapi.Response("OK", SeismicityGroupByDaySerializer(many=True)),
         },
         manual_parameters=[
             openapi.Parameter(

@@ -26,6 +26,7 @@ drf-standardized-errors = "^0.14.0"
 toronado = "^0.1.0"
 docker = "^7.1.0"
 moviepy = "^1.0.3"
+pandas = "^2.2.2"
 
 
 [build-system]

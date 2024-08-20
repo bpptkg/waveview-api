@@ -1,6 +1,8 @@
+from datetime import datetime, timedelta
 from typing import TypedDict
 from uuid import UUID
 
+import pandas as pd
 from django.db import models
 from django.db.models import Case, Count, When
 from django.db.models.functions import TruncDay, TruncHour
@@ -25,7 +27,7 @@ from waveview.organization.models import Organization
 
 
 class CountItem(TypedDict):
-    timestamp: str
+    timestamp: datetime
     count: int
 
 
@@ -46,6 +48,34 @@ class ParamSerializer(serializers.Serializer):
         required=False, choices=GroupByType.choices, default=GroupByType.DAY
     )
     event_types = CommaSeparatedListField(required=False)
+    fill_gaps = serializers.BooleanField(required=False, default=False)
+
+
+def fill_data_gaps(
+    data: list[CountItem], start: datetime, end: datetime, group_by: str
+) -> list[CountItem]:
+    if group_by == GroupByType.HOUR:
+        start = start.replace(minute=0, second=0, microsecond=0)
+        end = end.replace(minute=0, second=0, microsecond=0)
+        step = timedelta(hours=1)
+    elif group_by == GroupByType.DAY:
+        start = start.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = end.replace(hour=0, minute=0, second=0, microsecond=0)
+        step = timedelta(days=1)
+    else:
+        raise ValueError("Invalid group by type.")
+
+    new_index = pd.date_range(start=start, end=end, freq=step)
+    if len(data) == 0:
+        df = pd.DataFrame(columns=["timestamp", "count"])
+    else:
+        df = pd.DataFrame(data)
+
+    df.set_index("timestamp", inplace=True)
+    df = df.reindex(new_index, fill_value=0)
+    df.reset_index(inplace=True)
+    df.rename(columns={"index": "timestamp"}, inplace=True)
+    return df.to_dict(orient="records")
 
 
 class SeismicityEndpoint(Endpoint):
@@ -62,7 +92,9 @@ class SeismicityEndpoint(Endpoint):
         ),
         tags=["Analytics"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", SeismicityGroupByDaySerializer(many=True)),
+            status.HTTP_200_OK: openapi.Response(
+                "OK", SeismicityGroupByDaySerializer(many=True)
+            ),
         },
         manual_parameters=[
             openapi.Parameter(
@@ -95,6 +127,15 @@ class SeismicityEndpoint(Endpoint):
                 ),
                 type=openapi.TYPE_STRING,
             ),
+            openapi.Parameter(
+                "fill_gaps",
+                openapi.IN_QUERY,
+                description=(
+                    "Fill gaps in the data. It will fill missing data with 0 and "
+                    "return a continuous time series. Default is False."
+                ),
+                type=openapi.TYPE_BOOLEAN,
+            ),
         ],
     )
     def get(
@@ -117,6 +158,7 @@ class SeismicityEndpoint(Endpoint):
         end = params.validated_data.get("end")
         group_by = params.validated_data.get("group_by")
         event_types = params.validated_data.get("event_types")
+        fill_gaps = params.validated_data.get("fill_gaps")
 
         if event_types:
             types = EventType.objects.filter(
@@ -160,7 +202,20 @@ class SeismicityEndpoint(Endpoint):
                     .annotate(count=Count("id"))
                 ).order_by("timestamp")
 
-            result.append({"event_type": event_type, "data": list(seismicity)})
+            if fill_gaps:
+                data = fill_data_gaps(
+                    [
+                        {"timestamp": item["timestamp"], "count": item["count"]}
+                        for item in seismicity
+                    ],
+                    start,
+                    end,
+                    group_by,
+                )
+            else:
+                data = list(seismicity)
+
+            result.append({"event_type": event_type, "data": data})
 
         if group_by == GroupByType.HOUR:
             serializer = SeismicityGroupByHourSerializer(

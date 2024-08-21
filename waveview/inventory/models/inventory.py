@@ -6,6 +6,8 @@ from django.db import models
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
+from waveview.utils.media import MediaPath
+
 if TYPE_CHECKING:
     from waveview.inventory.models.network import Network
 
@@ -23,6 +25,7 @@ class Inventory(models.Model):
     )
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True, default="")
+    file = models.FileField(upload_to=MediaPath("inventories/"), null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(

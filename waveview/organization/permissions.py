@@ -24,5 +24,6 @@ class PermissionType(models.TextChoices):
     DELETE_EVENT = "event:delete", _("Delete Event")
 
     MANAGE_EVENT_TYPE = "event_type:manage", _("Manage Event Type")
-
     MANAGE_INVENTORY = "inventory:manage", _("Manage Inventory")
+
+    ACCESS_ADMIN_PANEL = "admin:access", _("Access Admin Panel")

@@ -31,6 +31,8 @@ PREREQUISITE_APPS = [
     "corsheaders",
     "drf_yasg",
     "drf_standardized_errors",
+    "rest_framework_simplejwt.token_blacklist",
+    "phonenumber_field",
 ]
 
 PROJECT_APPS = [

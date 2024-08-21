@@ -18,6 +18,12 @@ class PickerConfig(models.Model):
         related_name="picker_configs",
         on_delete=models.CASCADE,
     )
+    volcano = models.ForeignKey(
+        "volcano.Volcano",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=255, null=True, blank=True)
     is_preferred = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

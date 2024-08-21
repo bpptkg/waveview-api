@@ -43,6 +43,7 @@ class HelicorderConfigSerializer(serializers.Serializer):
 class PickerConfigSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True, help_text=_("Picker config ID."))
     organization_id = serializers.UUIDField(help_text=_("Organization ID."))
+    volcano_id = serializers.UUIDField(required=False, help_text=_("Volcano ID."))
     name = serializers.CharField(max_length=255, help_text=_("Picker config name."))
     created_at = serializers.DateTimeField(
         read_only=True, help_text=_("Picker config creation datetime.")

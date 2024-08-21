@@ -9,12 +9,16 @@ from waveview.users.models import User
 class UserSerializer(serializers.Serializer):
     id = serializers.UUIDField(help_text=_("User ID."))
     username = serializers.CharField(help_text=_("Username."))
-    email = serializers.EmailField(help_text=_("User email."))
     name = serializers.CharField(help_text=_("User name."), allow_blank=True)
-    date_joined = serializers.DateTimeField(help_text=_("Date when user fist joined."))
     avatar = serializers.ImageField(
         help_text=_("User avatar image URL."), allow_null=True
     )
+
+
+class UserDetailSerializer(UserSerializer):
+    email = serializers.EmailField(help_text=_("User email."))
+    phone_number = serializers.CharField(help_text=_("User phone number."))
+    date_joined = serializers.DateTimeField(help_text=_("Date when user fist joined."))
     bio = serializers.CharField(
         help_text=_("User biography description."), allow_blank=True
     )

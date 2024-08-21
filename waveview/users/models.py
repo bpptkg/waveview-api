@@ -11,6 +11,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from phonenumber_field.modelfields import PhoneNumberField
 
 from waveview.utils.media import MediaPath
 
@@ -76,6 +77,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True,
         default="",
         help_text="User name.",
+    )
+    phone_number = PhoneNumberField(
+        verbose_name=_("phone number"),
+        blank=True,
+        null=True,
+        help_text=_("User phone number."),
     )
     is_staff = models.BooleanField(
         verbose_name=_("staff status"),

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from waveview.volcano.models import Volcano, VolcanoMedia
+from waveview.volcano.models import DigitalElevationModel, Volcano, VolcanoMedia
 
 
 @admin.register(Volcano)
@@ -28,4 +28,16 @@ class VolcanoMediaAdmin(admin.ModelAdmin):
         "media_type",
         "uploaded_at",
         "author",
+    )
+
+
+@admin.register(DigitalElevationModel)
+class DigitalElevationModelAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "file",
+        "type",
+        "uploaded_at",
+        "author",
+        "is_default",
     )

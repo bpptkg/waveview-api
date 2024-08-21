@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
+from waveview.inventory.models import Inventory
 from waveview.inventory.serializers import InventorySerializer
 from waveview.organization.models import Organization
 
@@ -40,6 +41,10 @@ class InventoryEndpoint(Endpoint):
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
 
-        inventory = organization.inventory
+        try:
+            inventory = Inventory.objects.get(organization=organization)
+        except Inventory.DoesNotExist:
+            raise NotFound(_("Inventory not found."))
+
         serializer = InventorySerializer(inventory)
         return Response(serializer.data, status=status.HTTP_200_OK)

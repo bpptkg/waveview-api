@@ -1,5 +1,8 @@
+from django.utils import timezone
 from rest_framework import permissions
 from rest_framework.request import Request
+
+from waveview.organization.models import Organization
 
 
 class NoPermission(permissions.BasePermission):
@@ -23,8 +26,11 @@ class IsSuperUser(permissions.BasePermission):
 
 class IsOrganizationMember(permissions.BasePermission):
     def has_object_permission(
-        self, request: Request, view: object, obj: object
+        self, request: Request, view: object, obj: Organization
     ) -> bool:
-        return (
-            obj.author == request.user or obj.memberships.filter(user=request.user).exists()
-        )
+        is_author = obj.author == request.user
+        is_member = obj.members.filter(id=request.user.id).exists()
+        has_expired = obj.memberships.filter(
+            user=request.user, expiration_date__lt=timezone.now()
+        ).exists()
+        return is_author or (is_member and not has_expired)

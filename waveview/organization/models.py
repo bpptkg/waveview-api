@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from phonenumber_field.modelfields import PhoneNumberField
 
 from waveview.utils.media import MediaPath
 
@@ -55,6 +56,9 @@ class Organization(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField(null=True, blank=True)
     description = models.TextField(null=True, blank=True, default="")
+    phone_number = PhoneNumberField(null=True, blank=True)
+    fax_number = PhoneNumberField(null=True, blank=True)
+    mobile_number = PhoneNumberField(null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     address = models.TextField(null=True, blank=True, default="")
     avatar = models.ImageField(

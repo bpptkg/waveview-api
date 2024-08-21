@@ -3,10 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from waveview.inventory.models import Inventory
-from waveview.organization.models import (
-    Organization,
-    OrganizationRole,
-)
+from waveview.organization.models import Organization, OrganizationRole
 from waveview.organization.permissions import PermissionType
 from waveview.users.serializers import UserSerializer
 
@@ -40,6 +37,15 @@ class OrganizationSerializer(serializers.Serializer):
     slug = serializers.SlugField(help_text=_("Organization slug."))
     name = serializers.CharField(help_text=_("Organization name."))
     email = serializers.EmailField(help_text=_("Organization email."))
+    phone_number = serializers.CharField(
+        help_text=_("Organization phone number."), allow_blank=True
+    )
+    fax_number = serializers.CharField(
+        help_text=_("Organization fax number."), allow_blank=True
+    )
+    mobile_number = serializers.CharField(
+        help_text=_("Organization mobile number."), allow_blank=True
+    )
     description = serializers.CharField(
         help_text=_("Organization description."), allow_blank=True
     )

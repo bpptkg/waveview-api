@@ -24,6 +24,7 @@ from waveview.event.serializers import (
     SeismicityGroupByHourSerializer,
 )
 from waveview.organization.models import Organization
+from waveview.volcano.models import Volcano
 
 
 class CountItem(TypedDict):
@@ -122,7 +123,7 @@ class SeismicityEndpoint(Endpoint):
                 "event_types",
                 openapi.IN_QUERY,
                 description=(
-                    "Event types to filter in comma separated list. "
+                    "Event type codes to filter in comma separated list. "
                     "If not provided, default configuration will be used."
                 ),
                 type=openapi.TYPE_STRING,
@@ -139,7 +140,11 @@ class SeismicityEndpoint(Endpoint):
         ],
     )
     def get(
-        self, request: Request, organization_id: UUID, catalog_id: UUID
+        self,
+        request: Request,
+        organization_id: UUID,
+        volcano_id: UUID,
+        catalog_id: UUID,
     ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
@@ -148,7 +153,12 @@ class SeismicityEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         try:
-            catalog = Catalog.objects.get(id=catalog_id)
+            volcano = Volcano.objects.get(id=volcano_id)
+        except Volcano.DoesNotExist:
+            raise NotFound(_("Volcano not found."))
+
+        try:
+            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
         except Catalog.DoesNotExist:
             raise NotFound(_("Catalog not found."))
 

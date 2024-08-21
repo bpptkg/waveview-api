@@ -11,8 +11,9 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.event.models import Event
+from waveview.event.models import Catalog, Event
 from waveview.organization.models import Organization
+from waveview.volcano.models import Volcano
 
 
 class BookmarkEventSerializer(serializers.Serializer):
@@ -36,7 +37,12 @@ class BookmarkEventEndpoint(Endpoint):
         },
     )
     def post(
-        self, request: Request, organization_id: UUID, catalog_id: UUID, event_id: UUID
+        self,
+        request: Request,
+        organization_id: UUID,
+        volcano_id: UUID,
+        catalog_id: UUID,
+        event_id: UUID,
     ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
@@ -45,7 +51,17 @@ class BookmarkEventEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         try:
-            event = Event.objects.get(catalog_id=catalog_id, id=event_id)
+            volcano = Volcano.objects.get(id=volcano_id)
+        except Volcano.DoesNotExist:
+            raise NotFound(_("Volcano not found."))
+
+        try:
+            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
+        except Catalog.DoesNotExist:
+            raise NotFound(_("Catalog not found."))
+
+        try:
+            event = Event.objects.get(catalog=catalog, id=event_id)
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
 

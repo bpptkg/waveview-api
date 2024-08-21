@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.pagination import FlexiblePageNumberPagination
 from waveview.api.permissions import IsOrganizationMember
-from waveview.event.models import Event
+from waveview.event.models import Event, Catalog
 from waveview.event.serializers import (
     EventDetailSerializer,
     EventPayloadSerializer,
@@ -21,6 +21,7 @@ from waveview.event.serializers import (
 )
 from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
+from waveview.volcano.models import Volcano
 
 
 class OrderingType(models.TextChoices):
@@ -88,13 +89,27 @@ class EventIndexEndpoint(Endpoint):
         ],
     )
     def get(
-        self, request: Request, organization_id: UUID, catalog_id: UUID
+        self,
+        request: Request,
+        organization_id: UUID,
+        volcano_id: UUID,
+        catalog_id: UUID,
     ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
+
+        try:
+            volcano = Volcano.objects.get(id=volcano_id)
+        except Volcano.DoesNotExist:
+            raise NotFound(_("Volcano not found."))
+
+        try:
+            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
+        except Catalog.DoesNotExist:
+            raise NotFound(_("Catalog not found."))
 
         param = ParamSerializer(data=request.query_params)
         param.is_valid(raise_exception=True)
@@ -105,7 +120,7 @@ class EventIndexEndpoint(Endpoint):
         ordering = param.validated_data.get("ordering")
 
         events = (
-            Event.objects.filter(catalog_id=catalog_id)
+            Event.objects.filter(catalog=catalog)
             .select_related("type")
             .prefetch_related("origins", "magnitudes", "amplitudes", "attachments")
         )
@@ -148,13 +163,27 @@ class EventIndexEndpoint(Endpoint):
         },
     )
     def post(
-        self, request: Request, organization_id: UUID, catalog_id: UUID
+        self,
+        request: Request,
+        organization_id: UUID,
+        volcano_id: UUID,
+        catalog_id: UUID,
     ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
+
+        try:
+            volcano = Volcano.objects.get(id=volcano_id)
+        except Volcano.DoesNotExist:
+            raise NotFound(_("Volcano not found."))
+
+        try:
+            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
+        except Catalog.DoesNotExist:
+            raise NotFound(_("Catalog not found."))
 
         is_author = organization.author == request.user
         has_permission = is_author or request.user.has_permission(
@@ -164,10 +193,10 @@ class EventIndexEndpoint(Endpoint):
             raise PermissionDenied(_("You do not have permission to create events."))
 
         serializer = EventPayloadSerializer(
-            data=request.data, context={"request": request, "catalog_id": catalog_id}
+            data=request.data, context={"request": request, "catalog_id": catalog.id}
         )
         serializer.is_valid(raise_exception=True)
-        event = serializer.save(catalog_id=catalog_id, author=request.user)
+        event = serializer.save()
         return Response(
             EventDetailSerializer(event, context={"request": request}).data,
             status=status.HTTP_201_CREATED,

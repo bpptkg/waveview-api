@@ -11,10 +11,11 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.event.models import Event
+from waveview.event.models import Catalog, Event
 from waveview.event.serializers import EventDetailSerializer, EventPayloadSerializer
 from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
+from waveview.volcano.models import Volcano
 
 
 class EventDetailEndpoint(Endpoint):
@@ -33,7 +34,12 @@ class EventDetailEndpoint(Endpoint):
         },
     )
     def get(
-        self, request: Request, organization_id: UUID, catalog_id: UUID, event_id: UUID
+        self,
+        request: Request,
+        organization_id: UUID,
+        volcano_id: UUID,
+        catalog_id: UUID,
+        event_id: UUID,
     ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
@@ -42,7 +48,17 @@ class EventDetailEndpoint(Endpoint):
         self.check_object_permissions(request, organization)
 
         try:
-            event = Event.objects.get(catalog_id=catalog_id, id=event_id)
+            volcano = Volcano.objects.get(id=volcano_id)
+        except Volcano.DoesNotExist:
+            raise NotFound(_("Volcano not found."))
+
+        try:
+            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
+        except Catalog.DoesNotExist:
+            raise NotFound(_("Catalog not found."))
+
+        try:
+            event = Event.objects.get(catalog=catalog, id=event_id)
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
 
@@ -63,13 +79,28 @@ class EventDetailEndpoint(Endpoint):
         },
     )
     def put(
-        self, request: Request, organization_id: UUID, catalog_id: UUID, event_id: UUID
+        self,
+        request: Request,
+        organization_id: UUID,
+        volcano_id: UUID,
+        catalog_id: UUID,
+        event_id: UUID,
     ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
+
+        try:
+            volcano = Volcano.objects.get(id=volcano_id)
+        except Volcano.DoesNotExist:
+            raise NotFound(_("Volcano not found."))
+
+        try:
+            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
+        except Catalog.DoesNotExist:
+            raise NotFound(_("Catalog not found."))
 
         is_author = organization.author == request.user
         has_permission = is_author or request.user.has_permission(
@@ -79,7 +110,7 @@ class EventDetailEndpoint(Endpoint):
             raise PermissionDenied(_("You do not have permission to update events."))
 
         try:
-            event = Event.objects.get(catalog_id=catalog_id, id=event_id)
+            event = Event.objects.get(catalog=catalog, id=event_id)
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
 
@@ -106,13 +137,28 @@ class EventDetailEndpoint(Endpoint):
         },
     )
     def delete(
-        self, request: Request, organization_id: UUID, catalog_id: UUID, event_id: UUID
+        self,
+        request: Request,
+        organization_id: UUID,
+        volcano_id: UUID,
+        catalog_id: UUID,
+        event_id: UUID,
     ) -> Response:
         try:
             organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
             raise NotFound(_("Organization not found."))
         self.check_object_permissions(request, organization)
+
+        try:
+            volcano = Volcano.objects.get(id=volcano_id)
+        except Volcano.DoesNotExist:
+            raise NotFound(_("Volcano not found."))
+
+        try:
+            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
+        except Catalog.DoesNotExist:
+            raise NotFound(_("Catalog not found."))
 
         is_author = organization.author == request.user
         has_permission = is_author or request.user.has_permission(
@@ -122,7 +168,7 @@ class EventDetailEndpoint(Endpoint):
             raise PermissionDenied(_("You do not have permission to delete events."))
 
         try:
-            event = Event.objects.get(catalog_id=catalog_id, id=event_id)
+            event = Event.objects.get(catalog=catalog, id=event_id)
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
 

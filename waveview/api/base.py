@@ -4,6 +4,7 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.authentication import BaseAuthentication, SessionAuthentication
+from rest_framework.exceptions import NotFound
 from rest_framework.pagination import BasePagination
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
@@ -11,7 +12,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from waveview.api.permissions import NoPermission
+from waveview.event.models import Catalog, Event
+from waveview.organization.models import Organization
 from waveview.utils.uuid import is_valid_uuid
+from waveview.volcano.models import Volcano
 
 DEFAULT_AUTHENTICATION = [JWTAuthentication, SessionAuthentication]
 
@@ -58,3 +62,27 @@ class Endpoint(APIView):
         if not is_valid_uuid(value):
             raise serializers.ValidationError({field: _("Invalid UUID format.")})
         return value
+
+    def get_organization(self, organization_id: str) -> Organization:
+        try:
+            return Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
+            raise NotFound(_("Organization not found."))
+
+    def get_volcano(self, organization: Organization, volcano_id: str) -> Volcano:
+        try:
+            return Volcano.objects.get(organization=organization, id=volcano_id)
+        except Volcano.DoesNotExist:
+            raise NotFound(_("Volcano not found."))
+
+    def get_catalog(self, volcano: Volcano, catalog_id: str) -> Catalog:
+        try:
+            return Catalog.objects.get(volcano=volcano, id=catalog_id)
+        except Catalog.DoesNotExist:
+            raise NotFound(_("Catalog not found."))
+
+    def get_event(self, catalog: Catalog, event_id: str) -> Event:
+        try:
+            return Event.objects.get(catalog=catalog, id=event_id)
+        except Event.DoesNotExist:
+            raise NotFound(_("Event not found."))

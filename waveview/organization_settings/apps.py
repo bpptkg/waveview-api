@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class PickerConfig(AppConfig):
+class OrganizationSettingsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "waveview.picker"
+    name = "waveview.organization_settings"

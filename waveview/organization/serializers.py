@@ -142,9 +142,3 @@ class OrganizationRolePayloadSerializer(serializers.Serializer):
             setattr(instance, key, value)
         instance.save()
         return instance
-
-
-class OrganizationSettingsSerializer(serializers.Serializer):
-    id = serializers.UUIDField(help_text=_("ID."))
-    organization_id = serializers.UUIDField(help_text=_("Organization ID."))
-    data = serializers.JSONField(help_text=_("Data."))

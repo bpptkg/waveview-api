@@ -121,23 +121,3 @@ class OrganizationRole(models.Model):
 
     def __str__(self) -> str:
         return self.name
-
-
-class OrganizationSettings(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.OneToOneField(
-        "Organization",
-        on_delete=models.CASCADE,
-        related_name="organization_settings",
-        related_query_name="organization_setting",
-    )
-    data = models.JSONField(default=dict, help_text=_("Setting data."))
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = _("organization settings")
-        verbose_name_plural = _("organization settings")
-
-    def __str__(self) -> str:
-        return self.organization.name

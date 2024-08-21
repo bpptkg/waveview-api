@@ -69,3 +69,88 @@ class VolcanoPayloadSerializer(serializers.Serializer):
             setattr(instance, key, value)
         instance.save()
         return instance
+
+
+class XYZGridSerializer(serializers.Serializer):
+    name = serializers.CharField(help_text=_("Grid name."))
+    nx = serializers.IntegerField(help_text=_("Number of x coordinates."))
+    ny = serializers.IntegerField(help_text=_("Number of y coordinates."))
+    x_min = serializers.FloatField(help_text=_("Minimum x coordinate."))
+    x_max = serializers.FloatField(help_text=_("Maximum x coordinate."))
+    y_min = serializers.FloatField(help_text=_("Minimum y coordinate."))
+    y_max = serializers.FloatField(help_text=_("Maximum y coordinate."))
+    z_min = serializers.FloatField(help_text=_("Minimum z coordinate."))
+    z_max = serializers.FloatField(help_text=_("Maximum z coordinate."))
+    grid = serializers.JSONField(
+        help_text=_(
+            """
+            Grid with x, y, and z coordinates. The grid is a list of tuples where
+            each tuple contains the x, y, and z coordinates respectively.
+            """
+        )
+    )
+
+
+class DEMXYZSerializer(serializers.Serializer):
+    id = serializers.UUIDField(help_text=_("DEM ID."))
+    volcano_id = serializers.UUIDField(help_text=_("Volcano ID."))
+    name = serializers.CharField(help_text=_("DEM name."))
+    utm_zone = serializers.CharField(help_text=_("UTM zone."))
+    zone_number = serializers.IntegerField(help_text=_("Zone number."))
+    zone_letter = serializers.CharField(help_text=_("Zone letter."))
+    is_northern = serializers.BooleanField(help_text=_("Northern hemisphere."))
+    x_min = serializers.FloatField(
+        help_text=_(
+            """
+            User-defined minimum x coordinate. This is the minimum x coordinate
+            that the user wants to display.
+            """
+        ),
+        allow_null=True,
+    )
+    x_max = serializers.FloatField(
+        help_text=_(
+            """
+            User-defined maximum x coordinate. This is the maximum x coordinate
+            that the user wants to display.
+            """
+        ),
+        allow_null=True,
+    )
+    y_min = serializers.FloatField(
+        help_text=_(
+            """
+            User-defined minimum y coordinate. This is the minimum y coordinate
+            that the user wants to display.
+            """
+        ),
+        allow_null=True,
+    )
+    y_max = serializers.FloatField(
+        help_text=_(
+            """
+            User-defined maximum y coordinate. This is the maximum y coordinate
+            that the user wants to display.
+            """
+        ),
+        allow_null=True,
+    )
+    z_min = serializers.FloatField(
+        help_text=_(
+            """
+            User-defined minimum z coordinate. This is the minimum z coordinate
+            that the user wants to display.
+            """
+        ),
+        allow_null=True,
+    )
+    z_max = serializers.FloatField(
+        help_text=_(
+            """
+            User-defined maximum z coordinate. This is the maximum z coordinate
+            that the user wants to display.
+            """
+        ),
+        allow_null=True,
+    )
+    data = XYZGridSerializer(help_text=_("DEM grid data."))

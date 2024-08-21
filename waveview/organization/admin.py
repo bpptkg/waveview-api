@@ -4,7 +4,6 @@ from waveview.organization.models import (
     Organization,
     OrganizationMember,
     OrganizationRole,
-    OrganizationSettings,
 )
 
 
@@ -46,11 +45,3 @@ class OrganizationRoleAdmin(admin.ModelAdmin):
         "organization",
     )
     search_fields = ("name",)
-
-
-@admin.register(OrganizationSettings)
-class OrganizationSettingsAdmin(admin.ModelAdmin):
-    list_display = (
-        "organization",
-        "updated_at",
-    )

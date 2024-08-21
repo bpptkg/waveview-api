@@ -6,6 +6,8 @@ from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
 from waveview.utils.media import MediaPath, MediaType
+from waveview.volcano.geo.adapter import DEMDataReader
+from waveview.volcano.geo.types import XYZGrid
 
 
 class Volcano(models.Model):
@@ -106,3 +108,17 @@ class DigitalElevationModel(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def zone_number(self) -> int:
+        return int(self.utm_zone[:-1])
+
+    def zone_letter(self) -> str:
+        return self.utm_zone[-1]
+
+    def is_northen(self) -> bool:
+        return self.zone_letter() >= "N"
+
+    @property
+    def data(self) -> XYZGrid:
+        reader = DEMDataReader(self.type)
+        return reader.read(self.file.path)

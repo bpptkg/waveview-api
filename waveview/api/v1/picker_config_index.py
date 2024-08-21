@@ -11,10 +11,8 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.organization.models import Organization
-from waveview.picker.models import PickerConfig
-from waveview.picker.serializers import PickerConfigSerializer
-from waveview.volcano.models import Volcano
+from waveview.organization_settings.models import PickerConfig
+from waveview.organization_settings.serializers import PickerConfigSerializer
 
 
 class PickerConfigIndexEndpoint(Endpoint):
@@ -30,7 +28,7 @@ class PickerConfigIndexEndpoint(Endpoint):
             configs.
             """
         ),
-        tags=["Picker"],
+        tags=["Organization Settings"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", PickerConfigSerializer),
         },
@@ -38,16 +36,9 @@ class PickerConfigIndexEndpoint(Endpoint):
     def get(
         self, request: Request, organization_id: UUID, volcano_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
-
-        try:
-            volcano = Volcano.objects.get(id=volcano_id)
-        except Volcano.DoesNotExist:
-            raise NotFound(_("Volcano not found."))
+        volcano = self.get_volcano(organization, volcano_id)
 
         try:
             config = PickerConfig.objects.filter(

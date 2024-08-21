@@ -1,10 +1,11 @@
 from django.contrib import admin
 
-from waveview.picker.models import (
+from waveview.organization_settings.models import (
     HelicorderConfig,
     PickerConfig,
     SeismogramConfig,
     SeismogramStationConfig,
+    HypocenterConfig,
 )
 
 
@@ -12,7 +13,9 @@ from waveview.picker.models import (
 class PickerConfigAdmin(admin.ModelAdmin):
     list_display = (
         "organization",
+        "volcano",
         "name",
+        "is_preferred",
         "created_at",
         "updated_at",
     )
@@ -50,3 +53,15 @@ class SeismogramStationConfigAdmin(admin.ModelAdmin):
 
     def picker_config(self, obj: SeismogramStationConfig) -> PickerConfig:
         return obj.seismogram_config.picker_config
+
+
+@admin.register(HypocenterConfig)
+class HypocenterConfigAdmin(admin.ModelAdmin):
+    list_display = (
+        "organization",
+        "volcano",
+        "name",
+        "is_preferred",
+        "created_at",
+        "updated_at",
+    )

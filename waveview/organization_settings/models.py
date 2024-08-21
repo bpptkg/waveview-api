@@ -115,3 +115,40 @@ class SeismogramStationConfig(models.Model):
 
     def __str__(self) -> str:
         return f"{self.seismogram_config.picker_config.organization.name} Seismogram Station Config"
+
+
+class HypocenterConfig(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        "organization.Organization",
+        related_name="hypocenter_configs",
+        on_delete=models.CASCADE,
+    )
+    volcano = models.ForeignKey(
+        "volcano.Volcano",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    name = models.CharField(max_length=255, null=True, blank=True)
+    is_preferred = models.BooleanField(default=False)
+    event_types = models.ManyToManyField(
+        "event.EventType",
+        related_name="hypocenter_configs",
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = _("hypocenter config")
+        verbose_name_plural = _("hypocenter configs")
+
+    def __str__(self) -> str:
+        return f"{self.organization.name} {self.name}"

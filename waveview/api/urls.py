@@ -1,6 +1,7 @@
 from django.urls import include, path, re_path
 
 from .v1.account import AccountEndpoint
+from .v1.analytics.hypocenter import HypocenterEndpoint
 from .v1.analytics.seismicity import SeismicityEndpoint
 from .v1.auth import (
     TokenBlacklistEndpoint,
@@ -13,6 +14,7 @@ from .v1.catalog_index import CatalogIndexEndpoint
 from .v1.catchall import CatchallEndpoint
 from .v1.channel_detail import ChannelDetailEndpoint
 from .v1.channel_index import ChannelIndexEndpoint
+from .v1.demxyz import DEMXYZEndpoint
 from .v1.event_attachment_detail import EventAttachmentDetailEndpoint
 from .v1.event_attachment_index import EventAttachmentUploadEndpoint
 from .v1.event_bookmark import BookmarkEventEndpoint
@@ -33,7 +35,6 @@ from .v1.organization_member_index import OrganizationMemberIndexEndpoint
 from .v1.organization_permissions import OrganizationPermissionsEndpoint
 from .v1.organization_role_detail import OrganizationRoleDetailEndpoint
 from .v1.organization_role_index import OrganizationRoleIndexEndpoint
-from .v1.organization_settings_index import OrganizationSettingsIndexEndpoint
 from .v1.picker_config_index import PickerConfigIndexEndpoint
 from .v1.registration import AccountRegistrationEndpoint
 from .v1.search_user import SearchUserEndpoint
@@ -53,7 +54,131 @@ ANALYTICS_URLS = [
         SeismicityEndpoint.as_view(),
         name="waveview-api-1-analytics-seismicity",
     ),
+    path(
+        "hypocenter/",
+        HypocenterEndpoint.as_view(),
+        name="waveview-api-1-analytics-hypocenter",
+    ),
 ]
+
+
+EVENT_ORIGIN_URLS = [
+    path(
+        "",
+        EventOriginIndexEndpoint.as_view(),
+        name="waveview-api-1-event-origin-index",
+    ),
+    path(
+        "<uuid:origin_id>/",
+        EventOriginDetailEndpoint.as_view(),
+        name="waveview-api-1-event-origin-detail",
+    ),
+]
+
+EVENT_URLS = [
+    path(
+        "",
+        EventIndexEndpoint.as_view(),
+        name="waveview-api-1-event-index",
+    ),
+    path(
+        "<uuid:event_id>/",
+        EventDetailEndpoint.as_view(),
+        name="waveview-api-1-event-detail",
+    ),
+    path(
+        "<uuid:event_id>/bookmark/",
+        BookmarkEventEndpoint.as_view(),
+        name="waveview-api-1-event-bookmark",
+    ),
+    path(
+        "<uuid:event_id>/origin/",
+        include(EVENT_ORIGIN_URLS),
+    ),
+]
+
+
+CATALOG_URLS = [
+    path(
+        "",
+        CatalogIndexEndpoint.as_view(),
+        name="waveview-api-1-catalog-index",
+    ),
+    path(
+        "<uuid:catalog_id>/",
+        CatalogDetailEndpoint.as_view(),
+        name="waveview-api-1-catalog-detail",
+    ),
+    path(
+        "<uuid:catalog_id>/events/",
+        include(EVENT_URLS),
+    ),
+    path(
+        "<uuid:catalog_id>/analytics/",
+        include(ANALYTICS_URLS),
+    ),
+]
+
+
+EVENT_TYPE_URLS = [
+    path(
+        "",
+        EventTypeIndexEndpoint.as_view(),
+        name="waveview-api-1-event-type-index",
+    ),
+    path(
+        "<uuid:event_type_id>/",
+        EventTypeDetailEndpoint.as_view(),
+        name="waveview-api-1-event-type-detail",
+    ),
+]
+
+PICKER_CONFIG_URLS = [
+    path(
+        "",
+        PickerConfigIndexEndpoint.as_view(),
+        name="waveview-api-1-picker-config-index",
+    ),
+]
+
+INVENTORY_URLS = [
+    path(
+        "",
+        InventoryEndpoint.as_view(),
+        name="waveview-api-1-inventory-detail",
+    ),
+    path(
+        "networks/",
+        NetworkIndexEndpoint.as_view(),
+        name="waveview-api-1-inventory-network-index",
+    ),
+    path(
+        "networks/<uuid:network_id>/",
+        NetworkDetailEndpoint.as_view(),
+        name="waveview-api-1-inventory-network-detail",
+    ),
+    path(
+        "networks/<uuid:network_id>/stations/",
+        StationIndexEndpoint.as_view(),
+        name="waveview-api-1-inventory-station-index",
+    ),
+    path(
+        "networks/<uuid:network_id>/stations/<uuid:station_id>/",
+        StationDetailEndpoint.as_view(),
+        name="waveview-api-1-inventory-station-detail",
+    ),
+    path(
+        "networks/<uuid:network_id>/stations/<uuid:station_id>/channels/",
+        ChannelIndexEndpoint.as_view(),
+        name="waveview-api-1-inventory-channel-index",
+    ),
+    path(
+        "networks/<uuid:network_id>/stations/<uuid:station_id>/channels/<uuid:channel_id>/",
+        ChannelDetailEndpoint.as_view(),
+        name="waveview-api-1-inventory-channel-detail",
+    ),
+]
+
 
 SERVICE_URLS = [
     path(
@@ -70,6 +195,33 @@ SERVICE_URLS = [
         "seedlink/restart/",
         SeedLinkContainerRestartEndpoint.as_view(),
         name="waveview-api-1-seedlink-restart",
+    ),
+]
+
+
+VOLCANO_URLS = [
+    path(
+        "",
+        VolcanoIndexEndpoint.as_view(),
+        name="waveview-api-1-volcano-index",
+    ),
+    path(
+        "<uuid:volcano_id>/",
+        VolcanoDetailEndpoint.as_view(),
+        name="waveview-api-1-volcano-detail",
+    ),
+    path(
+        "<uuid:volcano_id>/demxyz/",
+        DEMXYZEndpoint.as_view(),
+        name="waveview-api-1-volcano-demxyz",
+    ),
+    path(
+        "<uuid:volcano_id>/catalogs/",
+        include(CATALOG_URLS),
+    ),
+    path(
+        "<uuid:volcano_id>/picker-config/",
+        include(PICKER_CONFIG_URLS),
     ),
 ]
 
@@ -110,55 +262,23 @@ ORGANIZATION_URLS = [
         name="waveview-api-1-organization-role-detail",
     ),
     path(
-        "<uuid:organization_id>/settings/",
-        OrganizationSettingsIndexEndpoint.as_view(),
-        name="waveview-api-1-organization-settings",
+        "<uuid:organization_id>/volcanoes/",
+        include(VOLCANO_URLS),
+    ),
+    path(
+        "<uuid:organization_id>/event-types/",
+        include(EVENT_TYPE_URLS),
+    ),
+    path(
+        "<uuid:organization_id>/inventory/",
+        include(INVENTORY_URLS),
+    ),
+    path(
+        "<uuid:organization_id>/services/",
+        include(SERVICE_URLS),
     ),
 ]
 
-VOLCANO_URLS = [
-    path(
-        "volcanoes/",
-        VolcanoIndexEndpoint.as_view(),
-        name="waveview-api-1-volcano-index",
-    ),
-    path(
-        "volcanoes/<uuid:volcano_id>/",
-        VolcanoDetailEndpoint.as_view(),
-        name="waveview-api-1-volcano-detail",
-    ),
-]
-
-CATALOG_URLS = [
-    path(
-        "catalogs/",
-        CatalogIndexEndpoint.as_view(),
-        name="waveview-api-1-catalog-index",
-    ),
-    path(
-        "catalogs/<uuid:catalog_id>/",
-        CatalogDetailEndpoint.as_view(),
-        name="waveview-api-1-catalog-detail",
-    ),
-]
-
-EVENT_URLS = [
-    path(
-        "",
-        EventIndexEndpoint.as_view(),
-        name="waveview-api-1-event-index",
-    ),
-    path(
-        "<uuid:event_id>/",
-        EventDetailEndpoint.as_view(),
-        name="waveview-api-1-event-detail",
-    ),
-    path(
-        "<uuid:event_id>/bookmark/",
-        BookmarkEventEndpoint.as_view(),
-        name="waveview-api-1-event-bookmark",
-    ),
-]
 
 EVENT_ATTACHMENT_URLS = [
     path(
@@ -173,77 +293,6 @@ EVENT_ATTACHMENT_URLS = [
     ),
 ]
 
-EVENT_ORIGIN_URLS = [
-    path(
-        "origins/",
-        EventOriginIndexEndpoint.as_view(),
-        name="waveview-api-1-event-origin-index",
-    ),
-    path(
-        "origins/<uuid:origin_id>/",
-        EventOriginDetailEndpoint.as_view(),
-        name="waveview-api-1-event-origin-detail",
-    ),
-]
-
-EVENT_TYPE_URLS = [
-    path(
-        "event-types/",
-        EventTypeIndexEndpoint.as_view(),
-        name="waveview-api-1-event-type-index",
-    ),
-    path(
-        "event-types/<uuid:event_type_id>/",
-        EventTypeDetailEndpoint.as_view(),
-        name="waveview-api-1-event-type-detail",
-    ),
-]
-
-INVENTORY_URLS = [
-    path(
-        "inventory/",
-        InventoryEndpoint.as_view(),
-        name="waveview-api-1-inventory-detail",
-    ),
-    path(
-        "inventory/networks/",
-        NetworkIndexEndpoint.as_view(),
-        name="waveview-api-1-inventory-network-index",
-    ),
-    path(
-        "inventory/networks/<uuid:network_id>/",
-        NetworkDetailEndpoint.as_view(),
-        name="waveview-api-1-inventory-network-detail",
-    ),
-    path(
-        "inventory/networks/<uuid:network_id>/stations/",
-        StationIndexEndpoint.as_view(),
-        name="waveview-api-1-inventory-station-index",
-    ),
-    path(
-        "inventory/networks/<uuid:network_id>/stations/<uuid:station_id>/",
-        StationDetailEndpoint.as_view(),
-        name="waveview-api-1-inventory-station-detail",
-    ),
-    path(
-        "inventory/networks/<uuid:network_id>/stations/<uuid:station_id>/channels/",
-        ChannelIndexEndpoint.as_view(),
-        name="waveview-api-1-inventory-channel-index",
-    ),
-    path(
-        "inventory/networks/<uuid:network_id>/stations/<uuid:station_id>/channels/<uuid:channel_id>/",
-        ChannelDetailEndpoint.as_view(),
-        name="waveview-api-1-inventory-channel-detail",
-    ),
-]
-
-PICKER_URLS = [
-    path(
-        "picker-config/",
-        PickerConfigIndexEndpoint.as_view(),
-        name="waveview-api-1-picker-config-index",
-    ),
-]
 
 ACCOUNT_URLS = [
     path(
@@ -288,27 +337,6 @@ AUTH_URLS = [
 
 urlpatterns = [
     path("organizations/", include(ORGANIZATION_URLS)),
-    path("organizations/<uuid:organization_id>/", include(VOLCANO_URLS)),
-    path("organizations/<uuid:organization_id>/", include(EVENT_TYPE_URLS)),
-    path("organizations/<uuid:organization_id>/", include(INVENTORY_URLS)),
-    path("organizations/<uuid:organization_id>/", include(PICKER_URLS)),
-    path("organizations/<uuid:organization_id>/services/", include(SERVICE_URLS)),
-    path(
-        "organizations/<uuid:organization_id>/volcanoes/<uuid:volcano_id>/",
-        include(CATALOG_URLS),
-    ),
-    path(
-        "organizations/<uuid:organization_id>/catalogs/<uuid:catalog_id>/events/",
-        include(EVENT_URLS),
-    ),
-    path(
-        "organizations/<uuid:organization_id>/catalogs/<uuid:catalog_id>/analytics/",
-        include(ANALYTICS_URLS),
-    ),
-    path(
-        "organizations/<uuid:organization_id>/catalogs/<uuid:catalog_id>/events/<uuid:event_id>/",
-        include(EVENT_ORIGIN_URLS),
-    ),
     path("event-attachments/", include(EVENT_ATTACHMENT_URLS)),
     path("account/", include(ACCOUNT_URLS)),
     path("auth/", include(AUTH_URLS)),

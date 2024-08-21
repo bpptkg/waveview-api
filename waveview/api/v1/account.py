@@ -6,7 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
-from waveview.users.serializers import UserSerializer, UserUpdatePayloadSerializer
+from waveview.users.serializers import UserDetailSerializer, UserUpdatePayloadSerializer
 
 
 class AccountEndpoint(Endpoint):
@@ -20,10 +20,10 @@ class AccountEndpoint(Endpoint):
             """
         ),
         tags=["Account"],
-        responses={status.HTTP_200_OK: openapi.Response("OK", UserSerializer)},
+        responses={status.HTTP_200_OK: openapi.Response("OK", UserDetailSerializer)},
     )
     def get(self, request: Request) -> Response:
-        serializer = UserSerializer(request.user, context={"request": request})
+        serializer = UserDetailSerializer(request.user, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -35,7 +35,7 @@ class AccountEndpoint(Endpoint):
         ),
         tags=["Account"],
         request_body=UserUpdatePayloadSerializer,
-        responses={status.HTTP_200_OK: openapi.Response("OK", UserSerializer)},
+        responses={status.HTTP_200_OK: openapi.Response("OK", UserDetailSerializer)},
     )
     def put(self, request: Request) -> Response:
         serializer = UserUpdatePayloadSerializer(

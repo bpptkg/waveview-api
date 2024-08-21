@@ -27,6 +27,8 @@ toronado = "^0.1.0"
 docker = "^7.1.0"
 moviepy = "^1.0.3"
 pandas = "^2.2.2"
+django-phonenumber-field = "^8.0.0"
+phonenumbers = "^8.13.43"
 
 
 [build-system]

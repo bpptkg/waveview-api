@@ -34,12 +34,24 @@ class EventType(models.Model):
         related_name="event_types",
         related_query_name="event_type",
     )
-    code = models.CharField(max_length=50, db_index=True)
-    name = models.CharField(max_length=150, null=True, blank=True)
-    description = models.TextField(null=True, blank=True, default="")
-    color = models.CharField(max_length=32, null=True, blank=True)
-    color_light = models.CharField(max_length=32, null=True, blank=True)
-    color_dark = models.CharField(max_length=32, null=True, blank=True)
+    code = models.CharField(
+        max_length=50, db_index=True, help_text=_("Event type code.")
+    )
+    name = models.CharField(
+        max_length=150, null=True, blank=True, help_text=_("Event type name.")
+    )
+    description = models.TextField(
+        null=True, blank=True, default="", help_text=_("Event type description.")
+    )
+    color = models.CharField(
+        max_length=32, null=True, blank=True, help_text=_("Event type default color.")
+    )
+    color_light = models.CharField(
+        max_length=32, null=True, blank=True, help_text=_("Event type light color.")
+    )
+    color_dark = models.CharField(
+        max_length=32, null=True, blank=True, help_text=_("Event type dark color.")
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(
@@ -75,15 +87,19 @@ class Event(models.Model):
         on_delete=models.CASCADE,
         related_name="events",
         related_query_name="event",
+        help_text=_("Catalog to which the event belongs."),
     )
     station_of_first_arrival = models.ForeignKey(
         "inventory.Station",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        help_text=_("Station of first arrival."),
     )
-    time = models.DateTimeField(null=True, blank=True, db_index=True)
-    duration = models.FloatField(null=True, blank=True)
+    time = models.DateTimeField(
+        null=True, blank=True, db_index=True, help_text=_("Event time.")
+    )
+    duration = models.FloatField(null=True, blank=True, help_text=_("Event duration."))
     type = models.ForeignKey(
         EventType,
         on_delete=models.SET_NULL,
@@ -91,23 +107,38 @@ class Event(models.Model):
         related_query_name="event",
         null=True,
         blank=True,
+        help_text=_("Event type."),
     )
     type_certainty = models.CharField(
-        max_length=255, null=True, blank=True, choices=EventTypeCertainty.choices
+        max_length=255,
+        null=True,
+        blank=True,
+        choices=EventTypeCertainty.choices,
+        help_text=_("Event type certainty."),
     )
-    note = models.TextField(null=True, blank=True, default="")
-    method = models.CharField(max_length=255, null=True, blank=True)
+    note = models.TextField(
+        null=True, blank=True, default="", help_text=_("Additional event information.")
+    )
+    method = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("Method used to determine the event."),
+    )
     evaluation_mode = models.CharField(
         max_length=255,
         choices=EvaluationMode.choices,
         null=True,
         blank=True,
+        help_text=_("Evaluation mode of the event."),
     )
     evaluation_status = models.CharField(
         max_length=255,
         choices=EvaluationStatus.choices,
         null=True,
         blank=True,
+        help_text=_("Evaluation status of the event."),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

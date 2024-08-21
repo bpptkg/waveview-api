@@ -18,7 +18,12 @@ class SeismicityConfig(models.Model):
         null=True,
         blank=True,
     )
-    order = models.IntegerField(default=0, null=False, blank=False)
+    order = models.IntegerField(
+        default=0,
+        null=False,
+        blank=False,
+        help_text=_("Order of the seismicity config in the list."),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

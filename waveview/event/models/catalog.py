@@ -26,9 +26,13 @@ class Catalog(models.Model):
         related_name="catalogs",
         related_query_name="catalog",
     )
-    name = models.CharField(max_length=200)
-    description = models.TextField(null=True, blank=True, default="")
-    is_default = models.BooleanField(default=False)
+    name = models.CharField(max_length=200, help_text=_("Catalog name."))
+    description = models.TextField(
+        null=True, blank=True, default="", help_text=_("Catalog description.")
+    )
+    is_default = models.BooleanField(
+        default=False, help_text=_("Whether the catalog is the default for volcano.")
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(

@@ -16,12 +16,36 @@ class Origin(models.Model):
         related_name="origins",
         related_query_name="origin",
     )
-    time = models.DateTimeField(db_index=True)
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
-    depth = models.FloatField(null=True, blank=True)
-    method = models.CharField(max_length=255, null=True, blank=True)
-    earth_model = models.CharField(max_length=255, null=True, blank=True)
+    time = models.DateTimeField(
+        db_index=True, null=True, blank=True, help_text=_("Origin time.")
+    )
+    latitude = models.FloatField(null=True, blank=True, help_text=_("Origin latitude."))
+    latitude_uncertainty = models.FloatField(
+        null=True, blank=True, help_text=_("Origin latitude uncertainty.")
+    )
+    longitude = models.FloatField(
+        null=True, blank=True, help_text=_("Origin longitude.")
+    )
+    longitude_uncertainty = models.FloatField(
+        null=True, blank=True, help_text=_("Origin longitude uncertainty.")
+    )
+    depth = models.FloatField(null=True, blank=True, help_text=_("Origin depth."))
+    depth_uncertainty = models.FloatField(
+        null=True, blank=True, help_text=_("Origin depth uncertainty.")
+    )
+    method = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("Method used to determine the origin."),
+    )
+    earth_model = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text=_("Earth model used to determine the origin."),
+    )
     evaluation_mode = models.CharField(
         max_length=255,
         choices=EvaluationMode.choices,

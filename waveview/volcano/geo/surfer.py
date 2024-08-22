@@ -50,10 +50,10 @@ class SurferGridReader:
         latitude = np.linspace(ymin, ymax, nrows)
         elev = np.array(result)
 
-        grid = []
+        xyz = []
         for i in range(nrows):
             for j in range(ncols):
-                grid.append((longitude[j], latitude[i], elev[i][j]))
+                xyz.append((longitude[j], latitude[i], elev[i][j]))
 
         return XYZGrid(
             name=name,
@@ -65,5 +65,5 @@ class SurferGridReader:
             y_max=ymax,
             z_min=zmin,
             z_max=zmax,
-            grid=grid,
+            xyz=xyz,
         )

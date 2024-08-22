@@ -81,14 +81,14 @@ class DigitalElevationModel(models.Model):
         related_query_name="digital_elevation_model",
     )
     file = models.FileField(upload_to=MediaPath("digital-elevation-models"))
-    type = models.CharField(max_length=50, null=True, blank=True)
+    type = models.CharField(max_length=50)
     name = models.CharField(max_length=200, null=True, blank=True)
     size = models.PositiveBigIntegerField(null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
-    utm_zone = models.CharField(max_length=10, null=True, blank=True)
+    utm_zone = models.CharField(max_length=10, null=True)
     x_min = models.FloatField(null=True, blank=True)
     x_max = models.FloatField(null=True, blank=True)
     y_min = models.FloatField(null=True, blank=True)
@@ -107,18 +107,23 @@ class DigitalElevationModel(models.Model):
         verbose_name_plural = _("digital elevation models")
 
     def __str__(self) -> str:
+        if not self.name:
+            return self.file.name
         return self.name
 
+    @property
     def zone_number(self) -> int:
         return int(self.utm_zone[:-1])
 
+    @property
     def zone_letter(self) -> str:
         return self.utm_zone[-1]
 
-    def is_northen(self) -> bool:
-        return self.zone_letter() >= "N"
+    @property
+    def is_northern(self) -> bool:
+        return self.zone_letter >= "N"
 
     @property
-    def data(self) -> XYZGrid:
+    def grid(self) -> XYZGrid:
         reader = DEMDataReader(self.type)
         return reader.read(self.file.path)

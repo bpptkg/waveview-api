@@ -16,7 +16,7 @@ class XYZGrid:
     y_max: float
     z_min: float
     z_max: float
-    grid: list[tuple[float, float, float]]
+    xyz: list[tuple[float, float, float]]
 
     def to_dict(self) -> dict:
         return asdict(self)

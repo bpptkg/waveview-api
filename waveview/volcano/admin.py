@@ -22,7 +22,6 @@ class VolcanoAdmin(admin.ModelAdmin):
 class VolcanoMediaAdmin(admin.ModelAdmin):
     list_display = (
         "volcano",
-        "file",
         "name",
         "size",
         "media_type",
@@ -35,8 +34,8 @@ class VolcanoMediaAdmin(admin.ModelAdmin):
 class DigitalElevationModelAdmin(admin.ModelAdmin):
     list_display = (
         "name",
-        "file",
         "type",
+        "utm_zone",
         "uploaded_at",
         "author",
         "is_default",

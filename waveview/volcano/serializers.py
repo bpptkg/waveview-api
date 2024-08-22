@@ -81,7 +81,7 @@ class XYZGridSerializer(serializers.Serializer):
     y_max = serializers.FloatField(help_text=_("Maximum y coordinate."))
     z_min = serializers.FloatField(help_text=_("Minimum z coordinate."))
     z_max = serializers.FloatField(help_text=_("Maximum z coordinate."))
-    grid = serializers.JSONField(
+    xyz = serializers.JSONField(
         help_text=_(
             """
             Grid with x, y, and z coordinates. The grid is a list of tuples where
@@ -153,4 +153,4 @@ class DEMXYZSerializer(serializers.Serializer):
         ),
         allow_null=True,
     )
-    data = XYZGridSerializer(help_text=_("DEM grid data."))
+    grid = XYZGridSerializer(help_text=_("DEM grid data."))

@@ -162,7 +162,7 @@ class Event(models.Model):
         verbose_name_plural = _("Events")
 
     def __str__(self) -> str:
-        return f"Event: {self.id}"
+        return str(self.time.isoformat())
 
     def preferred_origin(self) -> Optional["Origin"]:
         return self.origins.filter(is_preferred=True).first()

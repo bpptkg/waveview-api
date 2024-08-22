@@ -96,14 +96,14 @@ class HypocenterEndpoint(Endpoint):
         method = params.validated_data.get("method")
         event_types = params.validated_data.get("event_types")
 
-        queryset = Event.objects.select_related(
-            "event_types", "origins", "magnitudes"
-        ).filter(catalog=catalog, time__gte=start, time__lte=end)
+        queryset = (
+            Event.objects.select_related("type", "catalog")
+            .prefetch_related("origins", "magnitudes")
+            .filter(catalog=catalog, time__gte=start, time__lte=end)
+        )
         if method:
             origins = Origin.objects.filter(method_iexact=method)
             queryset = queryset.filter(origin__in=origins)
-        else:
-            queryset = queryset.filter(origin__is_preferred=True)
 
         if event_types:
             types = EventType.objects.filter(
@@ -134,10 +134,16 @@ class HypocenterEndpoint(Endpoint):
             .values(
                 "id",
                 "event_type",
+                "time",
+                "duration",
+                "origin_id",
                 "latitude",
+                "latitude_uncertainty",
                 "longitude",
+                "longitude_uncertainty",
                 "depth",
-                "magnitude",
+                "depth_uncertainty",
+                "magnitude_value",
                 "magnitude_type",
             )
         )

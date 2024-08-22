@@ -18,6 +18,7 @@ class HypocenterOriginSerializer(serializers.Serializer):
     depth_uncertainty = serializers.FloatField(help_text=_("Hypocenter depth error."))
     magnitude_value = serializers.FloatField(help_text=_("Event magnitude."))
     magnitude_type = serializers.CharField(help_text=_("Magnitude type."))
+    origin_method = serializers.CharField(help_text=_("Hypocenter calculation method."))
 
 
 class HypocenterSerializer(serializers.Serializer):

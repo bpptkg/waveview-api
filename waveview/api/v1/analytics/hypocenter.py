@@ -130,6 +130,7 @@ class HypocenterEndpoint(Endpoint):
                 depth_uncertainty=F("origin__depth_uncertainty"),
                 magnitude_value=F("magnitude__magnitude"),
                 magnitude_type=F("magnitude__type"),
+                origin_method=F("origin__method"),
             )
             .values(
                 "id",
@@ -145,6 +146,7 @@ class HypocenterEndpoint(Endpoint):
                 "depth_uncertainty",
                 "magnitude_value",
                 "magnitude_type",
+                "origin_method",
             )
         )
         methods = list(Origin.objects.values_list("method", flat=True).distinct())

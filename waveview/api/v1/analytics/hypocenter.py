@@ -102,7 +102,7 @@ class HypocenterEndpoint(Endpoint):
             .filter(catalog=catalog, time__gte=start, time__lte=end)
         )
         if method:
-            origins = Origin.objects.filter(method_iexact=method)
+            origins = Origin.objects.filter(method__iexact=method)
             queryset = queryset.filter(origin__in=origins)
 
         if event_types:
@@ -147,11 +147,7 @@ class HypocenterEndpoint(Endpoint):
                 "magnitude_type",
             )
         )
-        methods = list(
-            Origin.objects.filter(event__in=queryset)
-            .values_list("method", flat=True)
-            .distinct()
-        )
+        methods = list(Origin.objects.values_list("method", flat=True).distinct())
         serializer = HypocenterSerializer(
             {"methods": methods, "hypocenters": hypocenters}
         )

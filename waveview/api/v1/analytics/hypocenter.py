@@ -149,6 +149,10 @@ class HypocenterEndpoint(Endpoint):
         )
         methods = list(Origin.objects.values_list("method", flat=True).distinct())
         serializer = HypocenterSerializer(
-            {"methods": methods, "hypocenters": hypocenters}
+            {
+                "methods": methods,
+                "hypocenters": hypocenters,
+                "event_types": [t.code for t in types],
+            }
         )
         return Response(serializer.data, status=status.HTTP_200_OK)

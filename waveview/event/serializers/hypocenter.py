@@ -30,6 +30,15 @@ class HypocenterSerializer(serializers.Serializer):
             """
         ),
     )
+    event_types = serializers.ListField(
+        child=serializers.CharField(),
+        help_text=_(
+            """
+            List of event types. It can be used to filter hypocenters by event
+            type.
+            """
+        ),
+    )
     hypocenters = HypocenterOriginSerializer(
         many=True, help_text=_("Hypocenter origins.")
     )

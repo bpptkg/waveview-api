@@ -81,14 +81,14 @@ class DigitalElevationModel(models.Model):
         related_query_name="digital_elevation_model",
     )
     file = models.FileField(upload_to=MediaPath("digital-elevation-models"))
-    type = models.CharField(max_length=50)
+    type = models.CharField(max_length=50, null=True, blank=True)
     name = models.CharField(max_length=200, null=True, blank=True)
     size = models.PositiveBigIntegerField(null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
-    utm_zone = models.CharField(max_length=10, null=True)
+    utm_zone = models.CharField(max_length=10, null=True, blank=True)
     x_min = models.FloatField(null=True, blank=True)
     x_max = models.FloatField(null=True, blank=True)
     y_min = models.FloatField(null=True, blank=True)

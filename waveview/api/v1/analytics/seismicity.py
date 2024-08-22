@@ -18,13 +18,12 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.api.serializers import CommaSeparatedListField
-from waveview.event.models import Catalog, Event, EventType, SeismicityConfig
+from waveview.event.models import Event, EventType
 from waveview.event.serializers import (
     SeismicityGroupByDaySerializer,
     SeismicityGroupByHourSerializer,
 )
-from waveview.organization.models import Organization
-from waveview.volcano.models import Volcano
+from waveview.organization_settings.models import SeismicityConfig
 
 
 class CountItem(TypedDict):
@@ -146,21 +145,10 @@ class SeismicityEndpoint(Endpoint):
         volcano_id: UUID,
         catalog_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
-
-        try:
-            volcano = Volcano.objects.get(id=volcano_id)
-        except Volcano.DoesNotExist:
-            raise NotFound(_("Volcano not found."))
-
-        try:
-            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
+        volcano = self.get_volcano(organization, volcano_id)
+        catalog = self.get_catalog(volcano, catalog_id)
 
         params = ParamSerializer(data=request.query_params)
         params.is_valid(raise_exception=True)
@@ -176,7 +164,9 @@ class SeismicityEndpoint(Endpoint):
             )
         else:
             type_ids = (
-                SeismicityConfig.objects.filter(organization=organization)
+                SeismicityConfig.objects.filter(
+                    organization=organization, volcano=volcano
+                )
                 .order_by("order")
                 .values_list("type", flat=True)
             )

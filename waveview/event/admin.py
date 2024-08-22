@@ -8,7 +8,6 @@ from waveview.event.models import (
     EventType,
     Magnitude,
     Origin,
-    SeismicityConfig,
     StationMagnitude,
     StationMagnitudeContribution,
 )
@@ -145,15 +144,3 @@ class StationMagnitudeContributionAdmin(admin.ModelAdmin):
         "residual",
         "weight",
     )
-
-
-@admin.register(SeismicityConfig)
-class SeismicityConfigAdmin(admin.ModelAdmin):
-    list_display = (
-        "organization",
-        "type",
-        "order",
-        "created_at",
-        "updated_at",
-    )
-    ordering = ("order",)

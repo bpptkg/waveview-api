@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from waveview.event.models.event import EventType
+
 
 class SeismogramComponent(models.TextChoices):
     Z = "Z", _("Vertical")
@@ -152,3 +154,42 @@ class HypocenterConfig(models.Model):
 
     def __str__(self) -> str:
         return f"{self.organization.name} {self.name}"
+
+
+class SeismicityConfig(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        "organization.Organization",
+        on_delete=models.CASCADE,
+    )
+    volcano = models.ForeignKey(
+        "volcano.Volcano",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    type = models.ForeignKey(
+        EventType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    order = models.IntegerField(
+        default=0,
+        null=False,
+        blank=False,
+        help_text=_("Order of the seismicity config in the list."),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("seismicity config")
+        verbose_name_plural = _("seismicity configs")
+        unique_together = ("organization", "type")
+
+    def __str__(self) -> str:
+        return f"SeismicityConfig: {self.id}"
+
+    def __repr__(self) -> str:
+        return f"<SeismicityConfig: {self.id}>"

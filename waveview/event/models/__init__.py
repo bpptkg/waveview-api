@@ -7,4 +7,3 @@ from .magnitude import (
     StationMagnitudeContribution,
 )
 from .origin import Origin
-from .seismicity import SeismicityConfig

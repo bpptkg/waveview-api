@@ -2,10 +2,11 @@ from django.contrib import admin
 
 from waveview.organization_settings.models import (
     HelicorderConfig,
+    HypocenterConfig,
     PickerConfig,
+    SeismicityConfig,
     SeismogramConfig,
     SeismogramStationConfig,
-    HypocenterConfig,
 )
 
 
@@ -65,3 +66,15 @@ class HypocenterConfigAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+
+@admin.register(SeismicityConfig)
+class SeismicityConfigAdmin(admin.ModelAdmin):
+    list_display = (
+        "organization",
+        "type",
+        "order",
+        "created_at",
+        "updated_at",
+    )
+    ordering = ("order",)

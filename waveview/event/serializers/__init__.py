@@ -8,9 +8,4 @@ from .event import EventDetailSerializer, EventPayloadSerializer, EventSerialize
 from .event_type import EventTypePayloadSerializer, EventTypeSerializer
 from .hypocenter import HypocenterSerializer
 from .origin import OriginPayloadSerializer, OriginSerializer
-from .seismicity import (
-    SeismicityConfigPayloadSerializer,
-    SeismicityConfigSerializer,
-    SeismicityGroupByDaySerializer,
-    SeismicityGroupByHourSerializer,
-)
+from .seismicity import SeismicityGroupByDaySerializer, SeismicityGroupByHourSerializer

@@ -1,6 +1,7 @@
 import re
 
 from django.utils.translation import gettext_lazy as _
+from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 
 from waveview.users.models import User
@@ -37,6 +38,12 @@ class UserUpdatePayloadSerializer(serializers.Serializer):
     )
     bio = serializers.CharField(
         help_text=_("User biography description."), allow_blank=True, required=False
+    )
+    email = serializers.EmailField(
+        help_text=_("User email."), allow_blank=True, required=False
+    )
+    phone_number = PhoneNumberField(
+        help_text=_("User phone number."), allow_blank=True, required=False
     )
 
     def update(self, instance: User, validated_data: dict) -> User:

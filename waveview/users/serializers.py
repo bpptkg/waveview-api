@@ -1,7 +1,10 @@
 import re
+from io import BytesIO
 
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.serializerfields import PhoneNumberField
+from PIL import Image
 from rest_framework import serializers
 
 from waveview.users.models import User
@@ -45,6 +48,30 @@ class UserUpdatePayloadSerializer(serializers.Serializer):
     phone_number = PhoneNumberField(
         help_text=_("User phone number."), allow_blank=True, required=False
     )
+
+    def validate_avatar(self, value: InMemoryUploadedFile) -> InMemoryUploadedFile:
+        if value:
+            if value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError(_("Avatar file too large."))
+            try:
+                image = Image.open(value)
+            except Exception:
+                raise serializers.ValidationError(_("Invalid image file."))
+
+            if image.mode in ("RGBA", "LA"):
+                background = Image.new("RGB", image.size, (255, 255, 255))
+                background.paste(image, mask=image.split()[3])
+                image = background
+            elif image.mode != "RGB":
+                image = image.convert("RGB")
+
+            output = BytesIO()
+            image.save(output, format="JPEG", quality=85)
+            output.seek(0)
+            value = InMemoryUploadedFile(
+                output, "ImageField", value.name, "image/jpeg", output.tell(), None
+            )
+        return value
 
     def update(self, instance: User, validated_data: dict) -> User:
         for key, value in validated_data.items():

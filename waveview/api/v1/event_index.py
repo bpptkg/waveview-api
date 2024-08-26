@@ -13,7 +13,8 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.pagination import FlexiblePageNumberPagination
 from waveview.api.permissions import IsOrganizationMember
-from waveview.event.models import Event, Catalog
+from waveview.api.serializers import CommaSeparatedListField
+from waveview.event.models import Catalog, Event
 from waveview.event.serializers import (
     EventDetailSerializer,
     EventPayloadSerializer,
@@ -32,8 +33,7 @@ class OrderingType(models.TextChoices):
 class ParamSerializer(serializers.Serializer):
     start = serializers.DateTimeField(required=False)
     end = serializers.DateTimeField(required=False)
-    event_type_id = serializers.UUIDField(required=False)
-    event_type = serializers.CharField(required=False)
+    event_types = CommaSeparatedListField(required=False)
     ordering = serializers.ChoiceField(
         required=False, choices=OrderingType.choices, default=OrderingType.DESC
     )
@@ -68,15 +68,9 @@ class EventIndexEndpoint(Endpoint):
                 type=openapi.TYPE_STRING,
             ),
             openapi.Parameter(
-                "event_type_id",
+                "event_types",
                 openapi.IN_QUERY,
-                description="Filter event by its type ID.",
-                type=openapi.TYPE_STRING,
-            ),
-            openapi.Parameter(
-                "event_type",
-                openapi.IN_QUERY,
-                description="Filter event by its type code.",
+                description="Filter event by its type code. Multiple values are separated by comma.",
                 type=openapi.TYPE_STRING,
             ),
             openapi.Parameter(
@@ -115,8 +109,7 @@ class EventIndexEndpoint(Endpoint):
         param.is_valid(raise_exception=True)
         start = param.validated_data.get("start")
         end = param.validated_data.get("end")
-        event_type_id = param.validated_data.get("event_type_id")
-        event_type = param.validated_data.get("event_type")
+        event_types = param.validated_data.get("event_types")
         ordering = param.validated_data.get("ordering")
 
         events = (
@@ -130,10 +123,8 @@ class EventIndexEndpoint(Endpoint):
         if end:
             events = events.filter(time__lte=end)
 
-        if event_type_id:
-            events = events.filter(type__id=event_type_id)
-        elif event_type:
-            events = events.filter(type__code=event_type)
+        if event_types:
+            events = events.filter(type__code__in=event_types)
 
         if ordering == OrderingType.ASC:
             events = events.order_by("time")

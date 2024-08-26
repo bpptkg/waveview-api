@@ -37,6 +37,7 @@ class ParamSerializer(serializers.Serializer):
     ordering = serializers.ChoiceField(
         required=False, choices=OrderingType.choices, default=OrderingType.DESC
     )
+    is_bookmarked = serializers.BooleanField(required=False)
 
 
 class EventIndexEndpoint(Endpoint):
@@ -80,6 +81,12 @@ class EventIndexEndpoint(Endpoint):
                 type=openapi.TYPE_STRING,
                 enum=OrderingType.values,
             ),
+            openapi.Parameter(
+                "is_bookmarked",
+                openapi.IN_QUERY,
+                description="Filter events that are bookmarked by the user.",
+                type=openapi.TYPE_BOOLEAN,
+            ),
         ],
     )
     def get(
@@ -111,6 +118,7 @@ class EventIndexEndpoint(Endpoint):
         end = param.validated_data.get("end")
         event_types = param.validated_data.get("event_types")
         ordering = param.validated_data.get("ordering")
+        is_bookmarked = param.validated_data.get("is_bookmarked")
 
         events = (
             Event.objects.filter(catalog=catalog)
@@ -125,6 +133,9 @@ class EventIndexEndpoint(Endpoint):
 
         if event_types:
             events = events.filter(type__code__in=event_types)
+
+        if is_bookmarked:
+            events = events.filter(bookmarked_by=request.user)
 
         if ordering == OrderingType.ASC:
             events = events.order_by("time")

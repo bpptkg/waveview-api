@@ -296,3 +296,5 @@ CELERYD_MAX_TASKS_PER_CHILD = 1
 CELERY_IMPORTS = ()
 CELERYBEAT_SCHEDULE_FILENAME = str(Path(tempfile.gettempdir()) / "waveview-celerybeat")
 CELERYBEAT_SCHEDULE = {}
+
+BMA_API_KEY = env("BMA_API_KEY", default="")

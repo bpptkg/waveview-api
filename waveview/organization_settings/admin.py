@@ -72,6 +72,7 @@ class HypocenterConfigAdmin(admin.ModelAdmin):
 class SeismicityConfigAdmin(admin.ModelAdmin):
     list_display = (
         "organization",
+        "volcano",
         "type",
         "order",
         "created_at",

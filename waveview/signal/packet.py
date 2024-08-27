@@ -20,10 +20,12 @@ class Packet:
     end: int
     channel_id: str
     request_id: str
+    command: str
 
     def encode(self) -> bytes:
-        channel_id = pad(self.channel_id.encode("utf-8"), 64)
         request_id = pad(self.request_id.encode("utf-8"), 64)
+        command = pad(self.command.encode("utf-8"), 64)
+        channel_id = pad(self.channel_id.encode("utf-8"), 64)
         header = np.array(
             [
                 int(self.start),
@@ -40,6 +42,7 @@ class Packet:
         return b"".join(
             [
                 request_id,
+                command,
                 channel_id,
                 header.tobytes(),
                 self.x.tobytes(),

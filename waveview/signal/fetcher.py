@@ -73,6 +73,7 @@ class DummyStreamFetcher(BaseStreamFetcher):
 
         packet = Packet(
             request_id=request_id,
+            command="stream.fetch",
             channel_id=channel_id,
             start=start.timestamp() * 1000,
             end=end.timestamp() * 1000,
@@ -151,4 +152,4 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
 
 
 def get_fetcher() -> BaseStreamFetcher:
-    return TimescaleStreamFetcher()
+    return DummyStreamFetcher()

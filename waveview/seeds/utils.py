@@ -7,8 +7,8 @@ from django.utils import timezone
 from waveview.event.header import EvaluationMode, EvaluationStatus
 
 
-def random_datetime() -> datetime:
-    return timezone.now() - timezone.timedelta(days=random.randint(0, 365))
+def random_datetime(days: int = 365) -> datetime:
+    return timezone.now() - timezone.timedelta(days=random.randint(0, days))
 
 
 def random_duration() -> float:

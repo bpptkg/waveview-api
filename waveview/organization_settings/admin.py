@@ -3,6 +3,7 @@ from django.contrib import admin
 from waveview.organization_settings.models import (
     HelicorderConfig,
     HypocenterConfig,
+    MagnitudeConfig,
     PickerConfig,
     SeismicityConfig,
     SeismogramConfig,
@@ -79,3 +80,15 @@ class SeismicityConfigAdmin(admin.ModelAdmin):
         "updated_at",
     )
     ordering = ("order",)
+
+
+@admin.register(MagnitudeConfig)
+class MagnitudeConfigAdmin(admin.ModelAdmin):
+    list_display = (
+        "organization",
+        "volcano",
+        "channel",
+        "is_preferred",
+        "created_at",
+        "updated_at",
+    )

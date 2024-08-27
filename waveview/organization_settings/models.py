@@ -193,3 +193,37 @@ class SeismicityConfig(models.Model):
 
     def __repr__(self) -> str:
         return f"<SeismicityConfig: {self.id}>"
+
+
+class MagnitudeConfig(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        "organization.Organization",
+        on_delete=models.CASCADE,
+    )
+    volcano = models.ForeignKey(
+        "volcano.Volcano",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    channel = models.ForeignKey(
+        "inventory.Channel",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    is_preferred = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("magnitude config")
+        verbose_name_plural = _("magnitude configs")
+        unique_together = ("organization", "channel")
+
+    def __str__(self) -> str:
+        return f"MagnitudeConfig: {self.id}"
+
+    def __repr__(self) -> str:
+        return f"<MagnitudeConfig: {self.id}>"

@@ -31,7 +31,6 @@ PREREQUISITE_APPS = [
     "corsheaders",
     "drf_yasg",
     "drf_standardized_errors",
-    "rest_framework_simplejwt.token_blacklist",
     "phonenumber_field",
 ]
 
@@ -62,6 +61,11 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
 ]
+
+AUTHENTICATION_BACKENDS = env.list(
+    "AUTHENTICATION_BACKENDS",
+    default=["django.contrib.auth.backends.ModelBackend"],
+)
 
 ROOT_URLCONF = "waveview.urls"
 

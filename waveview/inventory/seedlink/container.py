@@ -1,7 +1,7 @@
+import docker
 import docker.errors
 from docker.models.containers import Container
 
-import docker
 from waveview.inventory.models import Inventory
 
 
@@ -41,3 +41,11 @@ class ContainerManager:
     def get_status(self) -> str:
         container = self.get_or_create_container()
         return container.status
+
+    def remove(self) -> None:
+        container = self.get_or_create_container()
+        container.remove()
+
+    def get_logs(self) -> str:
+        container = self.get_or_create_container()
+        return container.logs().decode("utf-8")

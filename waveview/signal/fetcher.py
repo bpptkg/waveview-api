@@ -28,6 +28,7 @@ class FetcherData:
     ]
     width: float
     max_points: int
+    force_center: bool
 
     @classmethod
     def parse_raw(cls, raw: dict) -> "FetcherData":
@@ -38,7 +39,8 @@ class FetcherData:
             end=raw["end"],
             mode=raw["mode"],
             width=raw.get("width", 0),
-            max_points=raw.get("max_points", 0),
+            max_points=raw.get("maxPoints", 0),
+            force_center=raw.get("forceCenter", False),
         )
 
 
@@ -109,6 +111,7 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
         empty_packet = Packet(
             request_id=request_id,
             channel_id=channel_id,
+            command="stream.fetch",
             start=timestamp.to_milliseconds(start),
             end=timestamp.to_milliseconds(end),
             x=np.array([]),
@@ -143,6 +146,7 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
         packet = Packet(
             request_id=request_id,
             channel_id=channel_id,
+            command="stream.fetch",
             start=start.timestamp() * 1000,
             end=end.timestamp() * 1000,
             x=a,
@@ -152,4 +156,4 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
 
 
 def get_fetcher() -> BaseStreamFetcher:
-    return DummyStreamFetcher()
+    return TimescaleStreamFetcher()

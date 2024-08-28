@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from waveview.event.serializers.event_type import EventTypeSerializer
 from waveview.inventory.serializers import ChannelSerializer, StationSerializer
-from waveview.organization_settings.models import SeismicityConfig
+from waveview.appconfig.models import SeismicityConfig
 
 
 class SeismogramStationConfigSerializer(serializers.Serializer):

@@ -15,7 +15,7 @@ from waveview.api.permissions import IsOrganizationMember
 from waveview.api.serializers import CommaSeparatedListField
 from waveview.event.models import Event, EventType, Origin
 from waveview.event.serializers import HypocenterSerializer
-from waveview.organization_settings.models import HypocenterConfig
+from waveview.appconfig.models import HypocenterConfig
 
 
 class ParamSerializer(serializers.Serializer):

@@ -11,8 +11,8 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.organization_settings.models import PickerConfig
-from waveview.organization_settings.serializers import PickerConfigSerializer
+from waveview.appconfig.models import PickerConfig
+from waveview.appconfig.serializers import PickerConfigSerializer
 
 
 class PickerConfigIndexEndpoint(Endpoint):

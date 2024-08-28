@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from waveview.organization_settings.models import (
+from waveview.appconfig.models import (
     HelicorderConfig,
     HypocenterConfig,
     MagnitudeConfig,
@@ -8,6 +8,7 @@ from waveview.organization_settings.models import (
     SeismicityConfig,
     SeismogramConfig,
     SeismogramStationConfig,
+    StationMagnitudeConfig,
 )
 
 
@@ -87,8 +88,17 @@ class MagnitudeConfigAdmin(admin.ModelAdmin):
     list_display = (
         "organization",
         "volcano",
-        "channel",
+        "name",
         "is_preferred",
         "created_at",
         "updated_at",
+    )
+
+
+@admin.register(StationMagnitudeConfig)
+class StationMagnitudeConfigAdmin(admin.ModelAdmin):
+    list_display = (
+        "magnitude_config",
+        "channel",
+        "is_enabled",
     )

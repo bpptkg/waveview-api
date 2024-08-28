@@ -8,72 +8,6 @@ from waveview.event.header import AmplitudeCategory, EvaluationMode, EvaluationS
 from waveview.event.models.event import Event
 
 
-class Magnitude(models.Model):
-    """
-    Describes a magnitude which can, but does not need to be associated with an
-    origin or it represents the reported magnitude for the given event.
-    """
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name="magnitudes",
-        related_query_name="magnitude",
-    )
-    magnitude = models.FloatField(
-        help_text=_(
-            """
-            Resulting magnitude value from combining values of type
-            StationMagnitude. If no estimations are available, this value can
-            represent the reported magnitude.
-            """
-        )
-    )
-    type = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        help_text=_("Describes the type of magnitude."),
-    )
-    method = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        help_text=_("Identifies the method of magnitude estimation."),
-    )
-    station_count = models.IntegerField(
-        null=True,
-        blank=True,
-        help_text=_("Number of used stations for this magnitude computation."),
-    )
-    azimuthal_gap = models.FloatField(
-        null=True,
-        blank=True,
-        help_text=_("Azimuthal gap for this magnitude computation in degrees."),
-    )
-    evaluation_status = models.CharField(
-        max_length=255, null=True, blank=True, choices=EvaluationStatus.choices
-    )
-    is_preferred = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        related_name="+",
-        null=True,
-        blank=True,
-    )
-
-    class Meta:
-        verbose_name = _("magnitude")
-        verbose_name_plural = _("magnitudes")
-
-    def __str__(self) -> str:
-        return f"{self.type}: {self.magnitude}"
-
-
 class Amplitude(models.Model):
     """
     This class represents a quantification of the waveform anomaly, usually a
@@ -207,6 +141,78 @@ class StationMagnitude(models.Model):
     class Meta:
         verbose_name = _("station magnitude")
         verbose_name_plural = _("station magnitudes")
+
+    def __str__(self) -> str:
+        return f"{self.type}: {self.magnitude}"
+
+
+class Magnitude(models.Model):
+    """
+    Describes a magnitude which can, but does not need to be associated with an
+    origin or it represents the reported magnitude for the given event.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="magnitudes",
+        related_query_name="magnitude",
+    )
+    magnitude = models.FloatField(
+        help_text=_(
+            """
+            Resulting magnitude value from combining values of type
+            StationMagnitude. If no estimations are available, this value can
+            represent the reported magnitude.
+            """
+        )
+    )
+    type = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        help_text=_("Describes the type of magnitude."),
+    )
+    method = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text=_("Identifies the method of magnitude estimation."),
+    )
+    station_count = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text=_("Number of used stations for this magnitude computation."),
+    )
+    azimuthal_gap = models.FloatField(
+        null=True,
+        blank=True,
+        help_text=_("Azimuthal gap for this magnitude computation in degrees."),
+    )
+    evaluation_status = models.CharField(
+        max_length=255, null=True, blank=True, choices=EvaluationStatus.choices
+    )
+    is_preferred = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        null=True,
+        blank=True,
+    )
+    station_magnitudes = models.ManyToManyField(
+        "StationMagnitude",
+        through="StationMagnitudeContribution",
+        related_name="magnitude_contributions",
+        related_query_name="magnitude_contribution",
+    )
+
+    class Meta:
+        verbose_name = _("magnitude")
+        verbose_name_plural = _("magnitudes")
 
     def __str__(self) -> str:
         return f"{self.type}: {self.magnitude}"

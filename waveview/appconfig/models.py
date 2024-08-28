@@ -27,6 +27,7 @@ class PickerConfig(models.Model):
         blank=True,
     )
     name = models.CharField(max_length=255, null=True, blank=True)
+    data = models.JSONField(null=True, blank=True, default=dict)
     is_preferred = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -61,6 +62,7 @@ class HelicorderConfig(models.Model):
     color = models.CharField(max_length=32, null=True, blank=True)
     color_light = models.CharField(max_length=32, null=True, blank=True)
     color_dark = models.CharField(max_length=32, null=True, blank=True)
+    data = models.JSONField(null=True, blank=True, default=dict)
 
     class Meta:
         verbose_name = _("helicorder config")
@@ -82,6 +84,7 @@ class SeismogramConfig(models.Model):
         choices=SeismogramComponent.choices,
         default=SeismogramComponent.Z,
     )
+    data = models.JSONField(null=True, blank=True, default=dict)
 
     class Meta:
         verbose_name = _("seismogram config")
@@ -139,6 +142,7 @@ class HypocenterConfig(models.Model):
         related_name="hypocenter_configs",
         blank=True,
     )
+    data = models.JSONField(null=True, blank=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(
@@ -182,6 +186,12 @@ class SeismicityConfig(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = _("seismicity config")
@@ -207,23 +217,54 @@ class MagnitudeConfig(models.Model):
         null=True,
         blank=True,
     )
+    method = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    data = models.JSONField(null=True, blank=True, default=dict)
+    is_enabled = models.BooleanField(default=True)
+    is_preferred = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = _("magnitude config")
+        verbose_name_plural = _("magnitude configs")
+
+    def __str__(self) -> str:
+        return f"{self.organization.name} {self.name}"
+
+    def __repr__(self) -> str:
+        return f"{self.organization.name} {self.name}"
+
+
+class StationMagnitudeConfig(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    magnitude_config = models.ForeignKey(
+        "MagnitudeConfig",
+        related_name="station_magnitude_configs",
+        on_delete=models.CASCADE,
+    )
     channel = models.ForeignKey(
         "inventory.Channel",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
     )
-    is_preferred = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    data = models.JSONField(null=True, blank=True, default=dict)
+    is_enabled = models.BooleanField(default=True)
 
     class Meta:
-        verbose_name = _("magnitude config")
-        verbose_name_plural = _("magnitude configs")
-        unique_together = ("organization", "channel")
+        verbose_name = _("station magnitude config")
+        verbose_name_plural = _("station magnitude configs")
+        unique_together = ("magnitude_config", "channel")
 
     def __str__(self) -> str:
-        return f"MagnitudeConfig: {self.id}"
+        return f"{self.channel.stream_id}"
 
     def __repr__(self) -> str:
-        return f"<MagnitudeConfig: {self.id}>"
+        return f"{self.channel.stream_id}"

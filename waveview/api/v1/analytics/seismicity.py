@@ -23,7 +23,7 @@ from waveview.event.serializers import (
     SeismicityGroupByDaySerializer,
     SeismicityGroupByHourSerializer,
 )
-from waveview.organization_settings.models import SeismicityConfig
+from waveview.appconfig.models import SeismicityConfig
 
 
 class CountItem(TypedDict):

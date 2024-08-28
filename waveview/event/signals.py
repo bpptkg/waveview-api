@@ -3,7 +3,8 @@ from typing import Any, Dict
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from waveview.event.models import Attachment, Catalog
+from waveview.event.models import Attachment, Catalog, Event
+from waveview.tasks.magnitude import calc_magnitude
 from waveview.utils.media import MediaType
 from waveview.volcano.models import Volcano
 
@@ -30,3 +31,11 @@ def attachment_post_save(
         and not instance.thumbnail
     ):
         instance.generate_thumbnail()
+
+
+@receiver(post_save, sender=Event)
+def event_post_save(sender: Any, instance: Event, **kwargs: Dict[str, Any]) -> None:
+    event_id = str(instance.id)
+    volcano_id = str(instance.catalog.volcano.id)
+    organization_id = str(instance.catalog.volcano.organization.id)
+    calc_magnitude.delay(organization_id, volcano_id, event_id)

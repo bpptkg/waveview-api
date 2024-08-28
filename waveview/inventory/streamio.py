@@ -1,47 +1,61 @@
 from datetime import datetime
+from uuid import UUID
 
 import numpy as np
 import psycopg2
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 
+from waveview.inventory.db.query import TimescaleQuery
 from waveview.inventory.models import Channel
-from waveview.signal.stream_id import StreamIdentifier
+
+UUIDType = UUID | str
 
 
-class StreamIO:
+class DataStream:
     def __init__(self, connection: psycopg2.extensions.connection) -> None:
-        self.connection = connection
+        self.query = TimescaleQuery(connection)
 
-    def to_trace(self, rows: list[tuple[datetime, float]], stream_id: str) -> Trace:
-        data = np.array([row[1] for row in rows])
-        sid = StreamIdentifier(id=stream_id)
-        channel = Channel.objects.filter(
-            code=sid.channel,
-            station__code=sid.station,
-            station__network__code=sid.network,
-        ).first()
-        if not channel:
-            raise ValueError(
-                f"Channel {sid.network}.{sid.station}.{sid.location}.{sid.channel} not found."
-            )
+    def get_waveform(
+        self, channel_id: UUIDType | list[UUIDType], start: datetime, end: datetime
+    ) -> Stream:
+        if isinstance(channel_id, str):
+            traces = self.get_trace(channel_id, start, end)
+        else:
+            traces = self.get_multi_trace(channel_id, start, end)
+        return Stream(traces=traces)
+
+    def get_multi_trace(
+        self, channel_ids: list[str], start: datetime, end: datetime
+    ) -> Trace:
+        traces = []
+        for channel_id in channel_ids:
+            trace = self.get_trace(channel_id, start, end)
+            traces.append(trace)
+        return traces
+
+    def get_trace(self, channel_id: str, start: datetime, end: datetime) -> Trace:
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            raise ValueError(f"Channel {channel_id} does not exist")
 
         sample_rate = channel.sample_rate
         if sample_rate is None:
-            sample_rate = rows[1][0] - rows[0][0]
+            raise ValueError(f"Channel {channel_id} does not have a sample rate")
+
+        table = channel.get_datastream_id()
+        rows = self.query.fetch(start, end, table)
+        data = np.array([row[1] for row in rows])
 
         stats = Stats()
-        stats.network = sid.network
-        stats.station = sid.station
-        stats.location = sid.location
-        stats.channel = sid.channel
+        stats.network = channel.station.network.code
+        stats.station = channel.station.code
+        stats.location = channel.location_code
+        stats.channel = channel.code
         stats.starttime = UTCDateTime(rows[0][0])
         stats.sampling_rate = sample_rate
         stats.npts = len(data)
 
         trace = Trace(data=data, header=stats)
         return trace
-
-    def to_stream(self, rows: list[tuple[datetime, float]], stream_id: str) -> Stream:
-        trace = self.to_trace(rows, stream_id)
-        return Stream(traces=[trace])

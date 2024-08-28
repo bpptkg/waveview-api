@@ -93,7 +93,7 @@ class Amplitude(models.Model):
         verbose_name_plural = _("amplitudes")
 
     def __str__(self) -> str:
-        return f"{self.type}: {self.amplitude} {self.unit}"
+        return f"{self.amplitude:.2f} {self.unit}"
 
     @property
     def duration(self) -> float:
@@ -143,7 +143,7 @@ class StationMagnitude(models.Model):
         verbose_name_plural = _("station magnitudes")
 
     def __str__(self) -> str:
-        return f"{self.type}: {self.magnitude}"
+        return f"{self.type}: {self.magnitude:.2f}"
 
 
 class Magnitude(models.Model):
@@ -215,7 +215,7 @@ class Magnitude(models.Model):
         verbose_name_plural = _("magnitudes")
 
     def __str__(self) -> str:
-        return f"{self.type}: {self.magnitude}"
+        return f"{self.type}: {self.magnitude:.2f}"
 
 
 class StationMagnitudeContribution(models.Model):

@@ -6,7 +6,7 @@ class BaseMagnitudeCalculator(ABC):
 
     @abstractmethod
     def calc_magnitude(
-        self, organization_id: str, volcano_id: str, event_id: str
+        self, organization_id: str, volcano_id: str, event_id: str, author_id: str
     ) -> None:
         pass
 

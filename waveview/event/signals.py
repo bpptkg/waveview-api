@@ -38,4 +38,5 @@ def event_post_save(sender: Any, instance: Event, **kwargs: Dict[str, Any]) -> N
     event_id = str(instance.id)
     volcano_id = str(instance.catalog.volcano.id)
     organization_id = str(instance.catalog.volcano.organization.id)
-    calc_magnitude.delay(organization_id, volcano_id, event_id)
+    author_id = str(instance.author.id)
+    calc_magnitude.delay(organization_id, volcano_id, event_id, author_id)

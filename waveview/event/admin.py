@@ -108,17 +108,11 @@ class AmplitudeAdmin(admin.ModelAdmin):
         "amplitude",
         "type",
         "category",
-        "time",
-        "begin",
-        "end",
-        "snr",
         "unit",
         "waveform",
         "method",
         "evaluation_mode",
         "is_preferred",
-        "created_at",
-        "updated_at",
         "author",
     )
 
@@ -130,8 +124,6 @@ class StationMagnitudeAdmin(admin.ModelAdmin):
         "magnitude",
         "type",
         "method",
-        "created_at",
-        "updated_at",
         "author",
     )
 

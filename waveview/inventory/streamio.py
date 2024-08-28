@@ -19,14 +19,14 @@ class DataStream:
     def get_waveform(
         self, channel_id: UUIDType | list[UUIDType], start: datetime, end: datetime
     ) -> Stream:
-        if isinstance(channel_id, str):
-            traces = self.get_trace(channel_id, start, end)
-        else:
+        if isinstance(channel_id, list):
             traces = self.get_multi_trace(channel_id, start, end)
+        else:
+            traces = self.get_trace(channel_id, start, end)
         return Stream(traces=traces)
 
     def get_multi_trace(
-        self, channel_ids: list[str], start: datetime, end: datetime
+        self, channel_ids: list[UUIDType], start: datetime, end: datetime
     ) -> Trace:
         traces = []
         for channel_id in channel_ids:
@@ -34,7 +34,7 @@ class DataStream:
             traces.append(trace)
         return traces
 
-    def get_trace(self, channel_id: str, start: datetime, end: datetime) -> Trace:
+    def get_trace(self, channel_id: UUIDType, start: datetime, end: datetime) -> Trace:
         try:
             channel = Channel.objects.get(id=channel_id)
         except Channel.DoesNotExist:

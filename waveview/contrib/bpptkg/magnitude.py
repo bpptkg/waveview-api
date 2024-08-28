@@ -6,10 +6,7 @@ from django.db import connection
 from obspy import Inventory as ObspyInventory
 from obspy import Stream, read_inventory
 
-from waveview.contrib.magnitude.base import (
-    BaseMagnitudeCalculator,
-    register_magnitude_calculator,
-)
+from waveview.contrib.magnitude.base import BaseMagnitudeCalculator
 from waveview.event.header import (
     AmplitudeCategory,
     AmplitudeUnit,
@@ -74,9 +71,10 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
             logger.error("No preferred magnitude config found.")
             return
 
-        channels = StationMagnitudeConfig.objects.filter(
+        channel_ids = StationMagnitudeConfig.objects.filter(
             magnitude_config_id=config.id, is_enabled=True
         ).values_list("channel", flat=True)
+        channels = Channel.objects.filter(id__in=channel_ids).all()
         inventory = self.get_inventory(organization_id)
         event = Event.objects.get(id=event_id)
 
@@ -174,6 +172,3 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
         magnitude.magnitude = np.mean(magnitude_values)
         magnitude.station_count = len(magnitude_values)
         magnitude.save()
-
-
-register_magnitude_calculator("bpptkg", MagnitudeCalculator())

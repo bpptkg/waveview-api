@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(
-    name="waveview.tasks.magnitude.calc_magnitude",
+    name="waveview.tasks.calc_magnitude",
     default_retry_delay=60 * 5,
     max_retries=None,
 )

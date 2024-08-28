@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from waveview.event.models import Attachment, Catalog, Event
-from waveview.tasks.magnitude import calc_magnitude
+from waveview.tasks.calc_magnitude import calc_magnitude
 from waveview.utils.media import MediaType
 from waveview.volcano.models import Volcano
 

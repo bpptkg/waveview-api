@@ -7,4 +7,5 @@ class EventConfig(AppConfig):
     verbose_name = "Event"
 
     def ready(self) -> None:
+        import waveview.event.registry  # noqa
         import waveview.event.signals  # noqa

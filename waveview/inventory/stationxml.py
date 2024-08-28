@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from django.db import transaction
+from django.utils import timezone
 from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory import Channel as ObspyChannel
 from obspy.core.inventory import Inventory as ObspyInventory
@@ -17,7 +18,8 @@ logger = logging.getLogger(__name__)
 def dt(dt: UTCDateTime | None) -> datetime | None:
     if dt is None:
         return None
-    return datetime.fromtimestamp(dt.timestamp)
+    ts = datetime.fromtimestamp(dt.timestamp)
+    return timezone.make_aware(ts, timezone.utc)
 
 
 def f(value: float | None, default: float = 0) -> float:

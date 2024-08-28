@@ -75,8 +75,7 @@ def run_seedlink(inventory_id: str, debug: bool = False) -> None:
                 )
 
     statefile = get_statefile()
-    if statefile.exists():
-        client.set_state_file(str(statefile))
+    client.set_state_file(str(statefile))
 
     try:
         client.run()

@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from urllib.parse import urlparse
 
 import lxml
@@ -14,6 +15,10 @@ logger = logging.getLogger(__name__)
 
 RUN_DIR = STORAGE_DIR / "run"
 STATE_FILE = RUN_DIR / "seedlink.state"
+
+
+def get_statefile() -> Path:
+    return STATE_FILE
 
 
 class EasySeedLinkClientException(Exception):
@@ -54,14 +59,12 @@ class EasySeedLinkClient:
         self.debug = debug
 
         self.conn = SeedLinkConnection()
-        self.conn.statefile = str(STATE_FILE)
 
         self.conn.set_sl_address("%s:%d" % (self.server_hostname, self.server_port))
         logger.info(
             "Connecting to SeedLink server %s:%d"
             % (self.server_hostname, self.server_port)
         )
-        logger.info("State file: %s" % self.conn.statefile)
 
         if autoconnect:
             self.connect()
@@ -286,6 +289,20 @@ class EasySeedLinkClient:
             raise EasySeedLinkClientException(msg)
 
         self.conn.add_stream(net, station, selector, seqnum=-1, timestamp=None)
+
+    def set_state_file(self, statefile: str) -> None:
+        """
+        Set the state file for the SeedLink connection.
+
+        The state file is used to store the state of the SeedLink connection
+        (e.g. selected streams, sequence numbers, etc.) between runs. This
+        allows the client to resume streaming without having to reselect
+        streams.
+
+        :type filename: str
+        :param filename: The path to the state file
+        """
+        self.conn.set_state_file(statefile)
 
     def run(self) -> None:
         """

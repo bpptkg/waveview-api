@@ -6,7 +6,7 @@ from obspy.clients.seedlink.slpacket import SLPacket
 
 from waveview.inventory.models import Channel, Inventory
 from waveview.inventory.models.datasource import DataSource, DataSourceType
-from waveview.inventory.seedlink.client import EasySeedLinkClient
+from waveview.inventory.seedlink.client import EasySeedLinkClient, get_statefile
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +73,10 @@ def run_seedlink(inventory_id: str, debug: bool = False) -> None:
                 client.select_stream(
                     net=network.code, station=station.code, selector=channel.code
                 )
+
+    statefile = get_statefile()
+    if statefile.exists():
+        client.set_state_file(str(statefile))
 
     try:
         client.run()

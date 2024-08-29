@@ -17,7 +17,7 @@ class SurferGridReader:
         return grid
 
     def _read_grid(self, f: StringIO) -> XYZGrid:
-        name = f.readline()
+        name = f.readline().strip()
 
         size = f.readline().split()
         ncols = int(size[0])

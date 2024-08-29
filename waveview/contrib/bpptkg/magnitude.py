@@ -2,10 +2,11 @@ import logging
 from datetime import timedelta
 
 import numpy as np
-from django.db import connection
+from django.db import connection, transaction
 from obspy import Inventory as ObspyInventory
 from obspy import Stream, read_inventory
 
+from waveview.appconfig.models import MagnitudeConfig, StationMagnitudeConfig
 from waveview.contrib.magnitude.base import BaseMagnitudeCalculator
 from waveview.event.header import (
     AmplitudeCategory,
@@ -22,10 +23,6 @@ from waveview.event.models import (
 )
 from waveview.inventory.models import Channel, Inventory
 from waveview.inventory.streamio import DataStream
-from waveview.appconfig.models import (
-    MagnitudeConfig,
-    StationMagnitudeConfig,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +51,7 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
 
         self.datastream = DataStream(connection)
 
+    @transaction.atomic
     def calc_magnitude(
         self,
         organization_id: str,

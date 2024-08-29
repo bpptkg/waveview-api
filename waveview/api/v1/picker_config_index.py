@@ -28,7 +28,7 @@ class PickerConfigIndexEndpoint(Endpoint):
             configs.
             """
         ),
-        tags=["Organization Settings"],
+        tags=["App Config"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", PickerConfigSerializer),
         },

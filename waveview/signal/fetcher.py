@@ -95,6 +95,7 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
         width = payload.width
         mode = payload.mode
         max_points = payload.max_points
+        force_center = payload.force_center
 
         if mode == "auto":
             n_out = int(width * 2)
@@ -142,6 +143,9 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
 
         a = np.array([timestamp.to_milliseconds(x[0]) for x in data], dtype=np.float64)
         b = np.array([x[1] for x in data], dtype=np.float64)
+        if force_center:
+            mean_b = np.mean(b)
+            b -= mean_b
 
         packet = Packet(
             request_id=request_id,

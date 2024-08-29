@@ -1,0 +1,128 @@
+[
+    {
+        "code": "ANTHROP",
+        "name": "Anthropogenic",
+        "color": "#36349D",
+        "color_light": "#36349D",
+        "color_dark": "#7D7AF7"
+    },
+    {
+        "code": "AUTO",
+        "name": "Automatic",
+        "color": "#C52925",
+        "color_light": "#C52925",
+        "color_dark": "#ED7267"
+    },
+    {
+        "code": "EXPLOSION",
+        "name": "Explosion",
+        "color": "#A357D7",
+        "color_light": "#A357D7",
+        "color_dark": "#B260EA"
+    },
+    {
+        "code": "GASBURST",
+        "name": "Degassing",
+        "color": "#5AC4BD",
+        "color_light": "#5AC4BD",
+        "color_dark": "#83D2CE"
+    },
+    {
+        "code": "LF",
+        "name": "Low-Frequency",
+        "color": "#F7CE46",
+        "color_light": "#F7CE46",
+        "color_dark": "#F9D84A"
+    },
+    {
+        "code": "MP",
+        "name": "Multi-Phase",
+        "color": "#3478F6",
+        "color_light": "#3478F6",
+        "color_dark": "#3B82F7"
+    },
+    {
+        "code": "ROCKFALL",
+        "name": "Rockfall",
+        "color": "#63CA56",
+        "color_light": "#63CA56",
+        "color_dark": "#6BD45F"
+    },
+    {
+        "code": "SOUND",
+        "name": "Sound",
+        "color": "",
+        "color_light": "",
+        "color_dark": ""
+    },
+    {
+        "code": "TECLOC",
+        "name": "Local Tectonic",
+        "color": "#306FA0",
+        "color_light": "#306FA0",
+        "color_dark": "#8AD5FB"
+    },
+    {
+        "code": "TECT",
+        "name": "Tectonic",
+        "color": "#71BCEB",
+        "color_light": "#71BCEB",
+        "color_dark": "#78C6F0"
+    },
+    {
+        "code": "TELE",
+        "name": "Teleseism",
+        "color": "#FF5733",
+        "color_light": "#FF8A66",
+        "color_dark": "#CC4626"
+    },
+    {
+        "code": "TPHASE",
+        "name": "T-Phase",
+        "color": "#33C1FF",
+        "color_light": "#66D4FF",
+        "color_dark": "#2699CC"
+    },
+    {
+        "code": "TREMOR",
+        "name": "Tremor",
+        "color": "#6EABC1",
+        "color_light": "#6EABC1",
+        "color_dark": "#80C2D9"
+    },
+    {
+        "code": "UNKNOWN",
+        "name": "Unknown Event",
+        "color": "#9D8563",
+        "color_light": "#A78F6D",
+        "color_dark": "#A78F6D"
+    },
+    {
+        "code": "VTA",
+        "name": "Deep Volcano-Tectonic",
+        "color": "#EB4E3D",
+        "color_light": "#EB4E3D",
+        "color_dark": "#EB5545"
+    },
+    {
+        "code": "VTB",
+        "name": "Shallow Volcano-Tectonic",
+        "color": "#F19A37",
+        "color_light": "#F19A37",
+        "color_dark": "#F2A33C"
+    },
+    {
+        "code": "AWANPANAS",
+        "name": "Awan Panas",
+        "color": "#EB4B63",
+        "color_light": "#EB4B63",
+        "color_dark": "#EB4B63"
+    },
+    {
+        "code": "LAHAR",
+        "name": "Lahar",
+        "color": "#5856CF",
+        "color_light": "#5856CF",
+        "color_dark": "#5E5CDE"
+    }
+]

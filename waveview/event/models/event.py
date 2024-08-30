@@ -170,9 +170,6 @@ class Event(models.Model):
     def preferred_magnitude(self) -> Optional["Magnitude"]:
         return self.magnitudes.filter(is_preferred=True).first()
 
-    def preferred_amplitude(self) -> Optional["Amplitude"]:
-        return self.amplitudes.filter(is_preferred=True).first()
-
 
 class Attachment(models.Model):
     """

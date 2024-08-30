@@ -28,7 +28,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "organization_id",
             type=str,
-            help="Organization ID to update event types for.",
+            help="Organization ID to update event types for. Use 'first' to update the first organization.",
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
@@ -38,7 +38,10 @@ class Command(BaseCommand):
 
         organization_id = options["organization_id"]
         try:
-            organization = Organization.objects.get(id=organization_id)
+            if organization_id == "first":
+                organization = Organization.objects.first()
+            else:
+                organization = Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
             self.stdout.write(self.style.ERROR("Organization not found."))
             return

@@ -47,13 +47,17 @@ class DataStream:
         table = channel.get_datastream_id()
         rows = self.query.fetch(start, end, table)
         data = np.array([row[1] for row in rows])
+        if len(data) == 0:
+            starttime = UTCDateTime(start)
+        else:
+            starttime = UTCDateTime(rows[0][0])
 
         stats = Stats()
         stats.network = channel.station.network.code
         stats.station = channel.station.code
         stats.location = channel.location_code
         stats.channel = channel.code
-        stats.starttime = UTCDateTime(rows[0][0])
+        stats.starttime = starttime
         stats.sampling_rate = sample_rate
         stats.npts = len(data)
 

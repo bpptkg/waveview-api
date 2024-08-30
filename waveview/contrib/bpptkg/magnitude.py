@@ -7,7 +7,10 @@ from obspy import Inventory as ObspyInventory
 from obspy import Stream, read_inventory
 
 from waveview.appconfig.models import MagnitudeConfig, StationMagnitudeConfig
-from waveview.contrib.magnitude.base import BaseMagnitudeCalculator
+from waveview.contrib.magnitude.base import (
+    BaseMagnitudeCalculator,
+    MagnitudeCalculatorData,
+)
 from waveview.event.header import (
     AmplitudeCategory,
     AmplitudeUnit,
@@ -46,31 +49,19 @@ def calculate_bpptkg_ml(amplitude: float) -> float:
 class MagnitudeCalculator(BaseMagnitudeCalculator):
     method = "bpptkg"
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, config: MagnitudeConfig) -> None:
+        super().__init__(config)
 
         self.datastream = DataStream(connection)
 
     @transaction.atomic
-    def calc_magnitude(
-        self,
-        organization_id: str,
-        volcano_id: str,
-        event_id: str,
-        author_id: str,
-    ) -> None:
-        config = MagnitudeConfig.objects.filter(
-            organization_id=organization_id,
-            volcano_id=volcano_id,
-            is_enabled=True,
-            is_preferred=True,
-        ).first()
-        if not config:
-            logger.error("No preferred magnitude config found.")
-            return
+    def calc_magnitude(self, data: MagnitudeCalculatorData) -> None:
+        organization_id = data.organization_id
+        event_id = data.event_id
+        author_id = data.author_id
 
         channel_ids = StationMagnitudeConfig.objects.filter(
-            magnitude_config_id=config.id, is_enabled=True
+            magnitude_config_id=self.config.id, is_enabled=True
         ).values_list("channel", flat=True)
         channels = Channel.objects.filter(id__in=channel_ids).all()
         inventory = self.get_inventory(organization_id)
@@ -112,6 +103,7 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
                 "azimuthal_gap": 0,
                 "evaluation_status": EvaluationStatus.PRELIMINARY,
                 "author_id": author_id,
+                "is_preferred": True,
             },
         )
 

@@ -221,7 +221,6 @@ class MagnitudeConfig(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     data = models.JSONField(null=True, blank=True, default=dict)
     is_enabled = models.BooleanField(default=True)
-    is_preferred = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(
@@ -236,10 +235,12 @@ class MagnitudeConfig(models.Model):
         verbose_name_plural = _("magnitude configs")
 
     def __str__(self) -> str:
-        return f"{self.organization.name} {self.name}"
+        if self.name:
+            return f"{self.name}"
+        return "Magnitude Config"
 
     def __repr__(self) -> str:
-        return f"{self.organization.name} {self.name}"
+        return f"<MagnitudeConfig: {self.id}>"
 
 
 class StationMagnitudeConfig(models.Model):
@@ -267,4 +268,4 @@ class StationMagnitudeConfig(models.Model):
         return f"{self.channel.stream_id}"
 
     def __repr__(self) -> str:
-        return f"{self.channel.stream_id}"
+        return f"<StationMagnitudeConfig: {self.channel.stream_id}>"

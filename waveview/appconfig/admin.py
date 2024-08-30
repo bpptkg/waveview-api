@@ -89,7 +89,7 @@ class MagnitudeConfigAdmin(admin.ModelAdmin):
         "organization",
         "volcano",
         "name",
-        "is_preferred",
+        "method",
         "created_at",
         "updated_at",
     )

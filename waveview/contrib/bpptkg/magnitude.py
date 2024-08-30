@@ -79,6 +79,8 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
 
         data: np.ndarray = stream[0].data
         amplitude = np.abs(data).max()
+        if np.isnan(amplitude):
+            return None
         return amplitude * 1e3
 
     def calc_ML_magnitude(
@@ -159,6 +161,11 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
                 },
             )
 
+        if not magnitude_values:
+            return
+        avg_magnitude = np.mean(magnitude_values)
+        if np.isnan(avg_magnitude):
+            return
         magnitude.magnitude = np.mean(magnitude_values)
         magnitude.station_count = len(magnitude_values)
         magnitude.save()

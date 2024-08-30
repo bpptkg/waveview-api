@@ -26,9 +26,7 @@ class WaveViewConsumer(AsyncJsonWebsocketConsumer):
     def disconnect(self, close_code: int) -> None:
         user = self.scope["user"]
         if user.is_authenticated:
-            self.channel_layer.group_discard(
-                user_channel(self.user.pk), self.channel_name
-            )
+            self.channel_layer.group_discard(user_channel(user.pk), self.channel_name)
 
     async def notify(self, event: ChannelEvent) -> None:
         response = WebSocketResponse(

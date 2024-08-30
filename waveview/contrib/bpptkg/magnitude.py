@@ -166,6 +166,6 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
         avg_magnitude = np.mean(magnitude_values)
         if np.isnan(avg_magnitude):
             return
-        magnitude.magnitude = np.mean(magnitude_values)
+        magnitude.magnitude = avg_magnitude
         magnitude.station_count = len(magnitude_values)
         magnitude.save()

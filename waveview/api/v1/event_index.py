@@ -22,6 +22,7 @@ from waveview.event.serializers import (
 )
 from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
+from waveview.tasks.notify_new_event import notify_new_event
 from waveview.volcano.models import Volcano
 
 
@@ -199,6 +200,9 @@ class EventIndexEndpoint(Endpoint):
         )
         serializer.is_valid(raise_exception=True)
         event = serializer.save()
+        notify_new_event.delay(
+            organization_id=str(organization.id), event_id=str(event.id)
+        )
         return Response(
             EventDetailSerializer(event, context={"request": request}).data,
             status=status.HTTP_201_CREATED,

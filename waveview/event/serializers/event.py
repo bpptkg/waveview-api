@@ -38,6 +38,8 @@ class EventSerializer(serializers.Serializer):
 
     @swagger_serializer_method(serializer_or_field=serializers.BooleanField)
     def get_is_bookmarked(self, obj: Event) -> bool:
+        if "request" not in self.context:
+            return False
         user = self.context["request"].user
         return obj.bookmarked_by.filter(id=user.id).exists()
 

@@ -1,22 +1,27 @@
 import enum
 import json
 from dataclasses import dataclass
-from typing import Generic, Literal, TypeVar
+from typing import Generic, Literal, TypedDict, TypeVar
 
 T = TypeVar("T")
 
 
-class CommandType(enum.Enum):
+class ChannelEvent(TypedDict):
+    type: str
+    data: dict
+
+
+class CommandType(enum.StrEnum):
     ECHO = "echo"
 
 
-class WebSocketMessageType(enum.Enum):
+class WebSocketMessageType(enum.StrEnum):
     REQUEST = "request"
     RESPONSE = "response"
     NOTIFY = "notify"
 
 
-class WebSocketResponseStatus(enum.Enum):
+class WebSocketResponseStatus(enum.StrEnum):
     SUCCESS = "success"
     ERROR = "error"
 
@@ -27,6 +32,7 @@ class WebSocketRequest(Generic[T]):
         "stream.ssr",
         "stream.fetch",
         "ping",
+        "notify",
     ]
     data: T
 
@@ -40,6 +46,13 @@ class WebSocketResponse(Generic[T]):
     status: str
     type: str
     data: T
+
+    def to_dict(self) -> dict:
+        return {
+            "status": self.status,
+            "type": self.type,
+            "data": self.data,
+        }
 
 
 @dataclass

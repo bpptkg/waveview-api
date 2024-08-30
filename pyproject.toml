@@ -29,6 +29,7 @@ moviepy = "^1.0.3"
 pandas = "^2.2.2"
 django-phonenumber-field = "^8.0.0"
 phonenumbers = "^8.13.43"
+channels-redis = "^4.2.0"
 
 
 [build-system]

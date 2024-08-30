@@ -278,7 +278,7 @@ REDOC_SETTINGS = {
     "LAZY_RENDERING": True,
 }
 
-REDIS_URL = env("REDIS_URL", default="redis://localhost:6379")
+REDIS_URL = env("REDIS_URL", default="redis://127.0.0.1:6379")
 
 BROKER_URL = REDIS_URL
 BROKER_TRANSPORT_OPTIONS = {}
@@ -296,5 +296,13 @@ CELERYD_MAX_TASKS_PER_CHILD = 1
 CELERY_IMPORTS = ()
 CELERYBEAT_SCHEDULE_FILENAME = str(Path(tempfile.gettempdir()) / "waveview-celerybeat")
 CELERYBEAT_SCHEDULE = {}
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 BMA_API_KEY = env("BMA_API_KEY", default="")

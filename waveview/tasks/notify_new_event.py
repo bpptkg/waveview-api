@@ -35,16 +35,23 @@ def notify_new_event(organization_id: str, event_id: str) -> None:
     excluded = [event.author]
     members = [member for member in organization.members.all()] + [organization.author]
     participants = [member for member in members if member not in excluded]
+    if event.author.name:
+        author_name = event.author.name
+    else:
+        author_name = event.author.username
     channel_layer = get_channel_layer()
     for participant in participants:
         channel = user_channel(participant.pk)
+        message = NotificationMessage(
+            type=NotificationType.NEW_EVENT.value,
+            title=f"New Event ({event.type.code})",
+            body=f"Occurred at {event.time.strftime('%Y-%m-%d %H:%M:%S')} UTC with duration of {event.duration:.2f}s ({author_name})",
+            data=data,
+        ).to_dict()
         async_to_sync(channel_layer.group_send)(
             channel,
             {
                 "type": "notify",
-                "data": NotificationMessage(
-                    type=NotificationType.NEW_EVENT.value,
-                    data=data,
-                ).to_dict(),
+                "data": message,
             },
         )

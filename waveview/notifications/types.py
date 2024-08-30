@@ -12,10 +12,14 @@ class NotificationType(models.TextChoices):
 @dataclass
 class NotificationMessage:
     type: NotificationType
+    title: str
+    body: str
     data: dict
 
     def to_dict(self) -> dict:
         return {
             "type": str(self.type),
+            "title": self.title,
+            "body": self.body,
             "data": dict(self.data),
         }

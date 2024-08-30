@@ -12,7 +12,9 @@ class ChannelEvent(TypedDict):
 
 
 class CommandType(enum.StrEnum):
-    ECHO = "echo"
+    STREAM_FETCH = "stream.fetch"
+    PING = "ping"
+    NOTIFY = "notify"
 
 
 class WebSocketMessageType(enum.StrEnum):
@@ -28,12 +30,7 @@ class WebSocketResponseStatus(enum.StrEnum):
 
 @dataclass
 class WebSocketRequest(Generic[T]):
-    command: Literal[
-        "stream.ssr",
-        "stream.fetch",
-        "ping",
-        "notify",
-    ]
+    command: CommandType
     data: T
 
     @staticmethod
@@ -45,12 +42,14 @@ class WebSocketRequest(Generic[T]):
 class WebSocketResponse(Generic[T]):
     status: str
     type: str
+    command: CommandType
     data: T
 
     def to_dict(self) -> dict:
         return {
             "status": self.status,
             "type": self.type,
+            "command": self.command,
             "data": self.data,
         }
 

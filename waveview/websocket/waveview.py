@@ -5,6 +5,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from waveview.notifications.utils import user_channel
 from waveview.websocket.base import (
     ChannelEvent,
+    CommandType,
     WebSocketMessageType,
     WebSocketResponse,
     WebSocketResponseStatus,
@@ -33,6 +34,7 @@ class WaveViewConsumer(AsyncJsonWebsocketConsumer):
         response = WebSocketResponse(
             status=WebSocketResponseStatus.SUCCESS,
             type=WebSocketMessageType.NOTIFY,
+            command=CommandType.NOTIFY,
             data=event["data"],
         )
         await self.send_json(response.to_dict())

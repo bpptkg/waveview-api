@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 class WaveViewConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self) -> None:
         user = self.scope["user"]
-        if user.is_anonymous:
-            await self.close()
-        else:
+        if user.is_authenticated:
             await self.channel_layer.group_add(user_channel(user.pk), self.channel_name)
             await self.accept()
+        else:
+            await self.close()
 
     def disconnect(self, close_code: int) -> None:
         user = self.scope["user"]

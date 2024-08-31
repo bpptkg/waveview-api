@@ -13,6 +13,7 @@ from .v1.catchall import CatchallEndpoint
 from .v1.channel_detail import ChannelDetailEndpoint
 from .v1.channel_index import ChannelIndexEndpoint
 from .v1.demxyz import DEMXYZEndpoint
+from .v1.download_events import DownloadEventsEndpoint
 from .v1.event_attachment_detail import EventAttachmentDetailEndpoint
 from .v1.event_attachment_index import EventAttachmentUploadEndpoint
 from .v1.event_bookmark import BookmarkEventEndpoint
@@ -108,6 +109,11 @@ CATALOG_URLS = [
         "<uuid:catalog_id>/hypocenter/",
         HypocenterEndpoint.as_view(),
         name="waveview-api-1-analytics-hypocenter",
+    ),
+    path(
+        "<uuid:catalog_id>/download-events/",
+        DownloadEventsEndpoint.as_view(),
+        name="waveview-api-1-download-events",
     ),
 ]
 

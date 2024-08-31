@@ -22,6 +22,7 @@ class PermissionType(models.TextChoices):
     CREATE_EVENT = "event:create", _("Create Event")
     UPDATE_EVENT = "event:update", _("Update Event")
     DELETE_EVENT = "event:delete", _("Delete Event")
+    DOWNLOAD_EVENT = "event:download", _("Download Event")
 
     MANAGE_EVENT_TYPE = "event_type:manage", _("Manage Event Type")
     MANAGE_INVENTORY = "inventory:manage", _("Manage Inventory")

@@ -3,6 +3,7 @@ from io import BytesIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.translation import gettext_lazy as _
+from drf_yasg.utils import swagger_serializer_method
 from phonenumber_field.serializerfields import PhoneNumberField
 from PIL import Image
 from rest_framework import serializers
@@ -19,6 +20,12 @@ class UserSerializer(serializers.Serializer):
     )
 
 
+def get_organization_membership_serializer():
+    from waveview.organization.serializers import OrganizationMembershipSerializer
+
+    return OrganizationMembershipSerializer
+
+
 class UserDetailSerializer(UserSerializer):
     email = serializers.EmailField(help_text=_("User email."))
     phone_number = serializers.CharField(help_text=_("User phone number."))
@@ -30,6 +37,17 @@ class UserDetailSerializer(UserSerializer):
     is_superuser = serializers.BooleanField(
         help_text=_("True if the user is a superuser.")
     )
+    organization_memberships = serializers.SerializerMethodField()
+
+    @swagger_serializer_method(
+        serializer_or_field=get_organization_membership_serializer()
+    )
+    def get_organization_memberships(self, instance: User) -> list:
+        from waveview.organization.serializers import OrganizationMembershipSerializer
+
+        return OrganizationMembershipSerializer(
+            instance.organization_memberships, many=True
+        ).data
 
 
 class UserUpdatePayloadSerializer(serializers.Serializer):

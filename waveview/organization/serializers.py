@@ -13,7 +13,8 @@ class OrganizationRoleSerializer(serializers.Serializer):
     name = serializers.CharField(help_text=_("Organization role name."))
     description = serializers.CharField(help_text=_("Organization role description."))
     permissions = serializers.ListField(
-        help_text=_("List of permissions for the organization role.")
+        child=serializers.ChoiceField(choices=PermissionType.values),
+        help_text=_("List of permissions for the organization role."),
     )
     order = serializers.IntegerField(help_text=_("Order of the organization role."))
 
@@ -65,6 +66,19 @@ class OrganizationSerializer(serializers.Serializer):
     member_count = serializers.IntegerField(
         help_text=_("Number of organization members.")
     )
+
+
+class OrganizationMembershipSerializer(serializers.Serializer):
+    id = serializers.UUIDField(help_text=_("Organization membership ID."))
+    organization = OrganizationSerializer()
+    roles = OrganizationRoleSerializer(many=True)
+    date_added = serializers.DateTimeField(
+        help_text=_("Date when the user was added to the organization.")
+    )
+    expiration_date = serializers.DateTimeField(
+        help_text=_("Date when the user's membership expires."), allow_null=True
+    )
+    inviter = UserSerializer()
 
 
 class OrganizationPayloadSerializer(serializers.Serializer):

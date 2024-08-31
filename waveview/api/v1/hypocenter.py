@@ -35,7 +35,7 @@ class HypocenterEndpoint(Endpoint):
             Get hypocenter data for a given catalog.
             """
         ),
-        tags=["Analytics"],
+        tags=["Catalog"],
         responses={
             status.HTTP_200_OK: openapi.Response("OK", HypocenterSerializer(many=True))
         },

@@ -1,8 +1,6 @@
 from django.urls import include, path, re_path
 
 from .v1.account import AccountEndpoint
-from .v1.analytics.hypocenter import HypocenterEndpoint
-from .v1.analytics.seismicity import SeismicityEndpoint
 from .v1.auth import (
     TokenBlacklistEndpoint,
     TokenObtainPairEndpoint,
@@ -24,6 +22,7 @@ from .v1.event_origin_detail import EventOriginDetailEndpoint
 from .v1.event_origin_index import EventOriginIndexEndpoint
 from .v1.event_type_detail import EventTypeDetailEndpoint
 from .v1.event_type_index import EventTypeIndexEndpoint
+from .v1.hypocenter import HypocenterEndpoint
 from .v1.index import IndexEndpoint
 from .v1.inventory import InventoryEndpoint
 from .v1.network_detail import NetworkDetailEndpoint
@@ -43,24 +42,11 @@ from .v1.seedlink import (
     SeedLinkContainerStartEndpoint,
     SeedLinkContainerStopEndpoint,
 )
+from .v1.seismicity import SeismicityEndpoint
 from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
 from .v1.volcano_index import VolcanoIndexEndpoint
-
-ANALYTICS_URLS = [
-    path(
-        "seismicity/",
-        SeismicityEndpoint.as_view(),
-        name="waveview-api-1-analytics-seismicity",
-    ),
-    path(
-        "hypocenter/",
-        HypocenterEndpoint.as_view(),
-        name="waveview-api-1-analytics-hypocenter",
-    ),
-]
-
 
 EVENT_ORIGIN_URLS = [
     path(
@@ -114,8 +100,14 @@ CATALOG_URLS = [
         include(EVENT_URLS),
     ),
     path(
-        "<uuid:catalog_id>/analytics/",
-        include(ANALYTICS_URLS),
+        "<uuid:catalog_id>/seismicity/",
+        SeismicityEndpoint.as_view(),
+        name="waveview-api-1-analytics-seismicity",
+    ),
+    path(
+        "<uuid:catalog_id>/hypocenter/",
+        HypocenterEndpoint.as_view(),
+        name="waveview-api-1-analytics-hypocenter",
     ),
 ]
 

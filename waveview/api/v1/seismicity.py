@@ -90,7 +90,7 @@ class SeismicityEndpoint(Endpoint):
             seismicity.
             """
         ),
-        tags=["Analytics"],
+        tags=["Catalog"],
         responses={
             status.HTTP_200_OK: openapi.Response(
                 "OK", SeismicityGroupByDaySerializer(many=True)

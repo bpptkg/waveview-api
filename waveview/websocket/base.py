@@ -1,7 +1,7 @@
 import enum
 import json
 from dataclasses import dataclass
-from typing import Generic, Literal, TypedDict, TypeVar
+from typing import Generic, TypedDict, TypeVar
 
 T = TypeVar("T")
 
@@ -13,6 +13,7 @@ class ChannelEvent(TypedDict):
 
 class CommandType(enum.StrEnum):
     STREAM_FETCH = "stream.fetch"
+    STREAM_SPECTROGRAM = "stream.spectrogram"
     PING = "ping"
     NOTIFY = "notify"
 

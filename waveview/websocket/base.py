@@ -14,6 +14,9 @@ class ChannelEvent(TypedDict):
 class CommandType(enum.StrEnum):
     STREAM_FETCH = "stream.fetch"
     STREAM_SPECTROGRAM = "stream.spectrogram"
+    STREAM_SUBSCRIBE = "stream.subscribe"
+    STREAM_UNSUBSCRIBE = "stream.unsubscribe"
+    STREAM_FILTER = "stream.filter"
     PING = "ping"
     NOTIFY = "notify"
 

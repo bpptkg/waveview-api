@@ -1,0 +1,19 @@
+{% extends "waveview/emails/base.html" %} {% load i18n %} {% block main %}
+<h3>Security Notice</h3>
+{% block security_body %}{% endblock %}
+<table>
+  <tr>
+    <td>
+      Account: <strong>{{ account.email }}</strong><br />
+      IP: {{ ip_address }}<br />
+      When: {{ datetime }} UTC
+    </td>
+  </tr>
+  {% block security_metadata %}{% endblock %}
+</table>
+<h4>Don't recognize this activity?</h4>
+<p>
+  If you didn't trigger this action, we recommend you immediately review your
+  account security, including changing your password.
+</p>
+{% endblock %} {% block footer %}{% endblock %}

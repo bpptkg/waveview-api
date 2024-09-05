@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WaveView</title>
+
+    {% block head %}{% endblock %}
+  </head>
+
+  <body>
+    <div class="preheader">{% block preheader %}{% endblock %}</div>
+    <table class="main">
+      <tr>
+        <td>
+          <div class="header">
+            <div class="container">{% block header %} {% endblock %}</div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {% block content %}
+          <div class="container">
+            <div class="inner">
+              {% block main %}
+              <p>This is the body of an email</p>
+              {% endblock %}
+            </div>
+          </div>
+          {% endblock %}
+          <div class="container">
+            <div class="footer">{% block footer %} {% endblock %}</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

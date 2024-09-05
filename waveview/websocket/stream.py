@@ -12,9 +12,10 @@ logger = logging.getLogger(__name__)
 
 class StreamConsumer(AsyncWebsocketConsumer):
     async def connect(self) -> None:
-        if self.scope["user"].is_anonymous:
+        if self.scope["user"].is_authenticated:
+            await self.accept()
+        else:
             await self.close()
-        await self.accept()
 
     async def receive(self, text_data: str) -> None:
         request: WebSocketRequest = WebSocketRequest.parse_raw(text_data)

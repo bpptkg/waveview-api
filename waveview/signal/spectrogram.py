@@ -5,10 +5,13 @@ from datetime import datetime, timezone
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from django.db import connection
 from matplotlib.colors import Normalize
 from obspy import read
 from scipy.signal import resample
 
+from waveview.inventory.models import Channel
+from waveview.inventory.streamio import DataStream
 from waveview.settings import BASE_DIR
 from waveview.signal.packet import pad
 
@@ -163,6 +166,57 @@ class DummySpectrogramAdapter(BaseSpectrogramAdapter):
         fixtures_dir = BASE_DIR / "fixtures"
         filename = fixtures_dir / f"sample.mseed"
         st = read(str(filename))
+        data = st[0].data
+        sample_rate = st[0].stats.sampling_rate
+
+        try:
+            specgram, time, freq, norm = spectrogram(data, sample_rate)
+        except ValueError:
+            specgram = np.array([], dtype=np.float64)
+            time = np.array([], dtype=np.float64)
+            freq = np.array([], dtype=np.float64)
+
+        packet = SpectrogramData(
+            request_id=request_id,
+            channel_id=channel_id,
+            data=np.flipud(specgram),
+            time=time,
+            freq=freq,
+            start=start.timestamp() * 1000,
+            end=end.timestamp() * 1000,
+            norm=norm,
+        )
+        return packet.encode()
+
+
+class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
+    def __init__(self) -> None:
+        self.datastream = DataStream(connection=connection)
+
+    def spectrogram(self, payload: SpectrogramRequestData) -> bytes:
+        request_id = payload.request_id
+        channel_id = payload.channel_id
+
+        start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
+        end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
+
+        empty_packet = SpectrogramData(
+            request_id=request_id,
+            channel_id=channel_id,
+            data=np.array([]),
+            time=np.array([]),
+            freq=np.array([]),
+            start=start.timestamp() * 1000,
+            end=end.timestamp() * 1000,
+            norm=Normalize(0, 1),
+        )
+
+        try:
+            Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            return empty_packet.encode()
+
+        st = self.datastream.get_waveform(channel_id, start, end)
         data = st[0].data
         sample_rate = st[0].stats.sampling_rate
 

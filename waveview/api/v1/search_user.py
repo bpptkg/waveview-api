@@ -13,7 +13,7 @@ from waveview.users.serializers import UserSerializer
 
 
 class ParamSerializer(serializers.Serializer):
-    q = serializers.CharField()
+    query = serializers.CharField()
     limit = serializers.IntegerField(required=False)
 
 
@@ -33,7 +33,7 @@ class SearchUserEndpoint(Endpoint):
         },
         manual_parameters=[
             openapi.Parameter(
-                "q",
+                "query",
                 in_=openapi.IN_QUERY,
                 type=openapi.TYPE_STRING,
                 description="The keyword to search.",
@@ -51,7 +51,7 @@ class SearchUserEndpoint(Endpoint):
     def get(self, request: Request) -> Response:
         serializer = ParamSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-        query = serializer.validated_data["q"]
+        query = serializer.validated_data["query"]
         limit = serializer.validated_data.get("limit", 15)
         User = get_user_model()
         queryset = User.objects.filter(

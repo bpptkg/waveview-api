@@ -10,6 +10,7 @@ from .v1.auth import (
 from .v1.catalog_detail import CatalogDetailEndpoint
 from .v1.catalog_index import CatalogIndexEndpoint
 from .v1.catchall import CatchallEndpoint
+from .v1.change_password import ChangePasswordEndpoint
 from .v1.channel_detail import ChannelDetailEndpoint
 from .v1.channel_index import ChannelIndexEndpoint
 from .v1.demxyz import DEMXYZEndpoint
@@ -307,6 +308,11 @@ ACCOUNT_URLS = [
         "register/",
         AccountRegistrationEndpoint.as_view(),
         name="waveview-api-1-account-register",
+    ),
+    path(
+        "change-password/",
+        ChangePasswordEndpoint.as_view(),
+        name="waveview-api-1-account-change-password",
     ),
 ]
 

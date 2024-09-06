@@ -4,8 +4,8 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from waveview.notifications.utils import user_channel
 from waveview.websocket.base import (
-    ChannelEvent,
     CommandType,
+    MessageEvent,
     WebSocketMessageType,
     WebSocketResponse,
     WebSocketResponseStatus,
@@ -28,7 +28,7 @@ class WaveViewConsumer(AsyncJsonWebsocketConsumer):
         if user.is_authenticated:
             self.channel_layer.group_discard(user_channel(user.pk), self.channel_name)
 
-    async def notify(self, event: ChannelEvent) -> None:
+    async def notify(self, event: MessageEvent[dict]) -> None:
         response = WebSocketResponse(
             status=WebSocketResponseStatus.SUCCESS,
             type=WebSocketMessageType.NOTIFY,

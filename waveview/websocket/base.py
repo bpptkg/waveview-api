@@ -1,14 +1,14 @@
 import enum
 import json
 from dataclasses import dataclass
-from typing import Generic, TypedDict, TypeVar
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
 
-class ChannelEvent(TypedDict):
+class MessageEvent(Generic[T]):
     type: str
-    data: dict
+    data: T
 
 
 class CommandType(enum.StrEnum):

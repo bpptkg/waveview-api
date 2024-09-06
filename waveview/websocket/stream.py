@@ -1,3 +1,4 @@
+import base64
 import logging
 
 from channels.db import database_sync_to_async
@@ -5,7 +6,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 from waveview.signal.fetcher import FetcherData, get_fetcher
 from waveview.signal.spectrogram import SpectrogramRequestData, get_spectrogram_adapter
-from waveview.websocket.base import CommandType, WebSocketRequest
+from waveview.websocket.base import CommandType, MessageEvent, WebSocketRequest
 from waveview.websocket.subscribe import StreamSubscribeData, StreamUnsubscribeData
 
 logger = logging.getLogger(__name__)
@@ -77,3 +78,7 @@ class StreamConsumer(AsyncWebsocketConsumer):
 
     async def stream_filter(self, request: WebSocketRequest) -> None:
         pass
+
+    async def send_trace_buffer(self, event: MessageEvent[str]) -> None:
+        data = base64.base64decode(event.data)
+        await self.send(bytes_data=data)

@@ -1,12 +1,27 @@
-from typing import Any, Dict
+from typing import Any, Dict, Type
 
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.module_loading import import_string
 
+from waveview.event.magnitude import (
+    BaseMagnitudeEstimator,
+    register_magnitude_estimator,
+)
 from waveview.event.models import Attachment, Catalog, Event
-from waveview.tasks.calc_magnitude import calc_magnitude
+from waveview.event.observers import event_registry
 from waveview.utils.media import MediaType
 from waveview.volcano.models import Volcano
+
+
+def setup_magnitude_estimator() -> None:
+    for estimator in settings.MAGNITUDE_ESTIMATORS:
+        klass: Type[BaseMagnitudeEstimator] = import_string(estimator)
+        register_magnitude_estimator(klass.method, klass)
+
+
+setup_magnitude_estimator()
 
 
 @receiver(post_save, sender=Volcano)
@@ -35,8 +50,4 @@ def attachment_post_save(
 
 @receiver(post_save, sender=Event)
 def event_post_save(sender: Any, instance: Event, **kwargs: Dict[str, Any]) -> None:
-    event_id = str(instance.id)
-    volcano_id = str(instance.catalog.volcano.id)
-    organization_id = str(instance.catalog.volcano.organization.id)
-    author_id = str(instance.author.id)
-    calc_magnitude.delay(organization_id, volcano_id, event_id, author_id)
+    event_registry.notify(instance)

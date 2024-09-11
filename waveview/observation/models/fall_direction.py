@@ -13,7 +13,7 @@ class FallDirection(models.Model):
         related_query_name="fall_direction",
     )
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

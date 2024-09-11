@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from waveview.inventory.models import Channel, DataSource, Inventory, Network, Station
+from waveview.inventory.models import (
+    Channel,
+    DataSource,
+    Inventory,
+    InventoryFile,
+    Network,
+    Station,
+)
 
 
 @admin.register(Inventory)
@@ -12,6 +19,16 @@ class InventoryAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
         "author",
+    )
+
+
+@admin.register(InventoryFile)
+class InventoryFileAdmin(admin.ModelAdmin):
+    list_display = (
+        "inventory",
+        "file",
+        "created_at",
+        "updated_at",
     )
 
 

@@ -7,16 +7,13 @@ from obspy import Inventory as ObspyInventory
 from obspy import Stream, read_inventory
 
 from waveview.appconfig.models import MagnitudeConfig, StationMagnitudeConfig
-from waveview.contrib.magnitude.base import (
-    BaseMagnitudeCalculator,
-    MagnitudeCalculatorData,
-)
 from waveview.event.header import (
     AmplitudeCategory,
     AmplitudeUnit,
     EvaluationMode,
     EvaluationStatus,
 )
+from waveview.event.magnitude import BaseMagnitudeEstimator, MagnitudeEstimatorData
 from waveview.event.models import (
     Amplitude,
     Event,
@@ -24,13 +21,15 @@ from waveview.event.models import (
     StationMagnitude,
     StationMagnitudeContribution,
 )
+from waveview.event.observers import EventObserver
 from waveview.inventory.models import Channel, Inventory
-from waveview.inventory.streamio import DataStream
+from waveview.inventory.datastream import DataStream
+from waveview.tasks.calc_magnitude import calc_magnitude
 
 logger = logging.getLogger(__name__)
 
 
-def calculate_bpptkg_ml(amplitude: float) -> float:
+def calc_bpptkg_ml(amplitude: float) -> float:
     """
     Compute BPPTKG Richter local magnitude scale (ML) from amplitude.
 
@@ -46,7 +45,7 @@ def calculate_bpptkg_ml(amplitude: float) -> float:
     return np.log10(amplitude) + 1.4
 
 
-class MagnitudeCalculator(BaseMagnitudeCalculator):
+class MagnitudeEstimator(BaseMagnitudeEstimator):
     method = "bpptkg"
 
     def __init__(self, config: MagnitudeConfig) -> None:
@@ -55,7 +54,7 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
         self.datastream = DataStream(connection)
 
     @transaction.atomic
-    def calc_magnitude(self, data: MagnitudeCalculatorData) -> None:
+    def calc_magnitude(self, data: MagnitudeEstimatorData) -> None:
         organization_id = data.organization_id
         event_id = data.event_id
         author_id = data.author_id
@@ -78,10 +77,12 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
             return None
 
         data: np.ndarray = stream[0].data
-        amplitude = np.abs(data).max()
+        minval = np.abs(data).min()
+        maxval = np.abs(data).max()
+        amplitude = (maxval - minval) / 2
         if np.isnan(amplitude):
             return None
-        return amplitude * 1e3
+        return amplitude * 1e3  # Convert to mm
 
     def calc_ML_magnitude(
         self,
@@ -123,7 +124,7 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
             amplitude_value = self.get_amplitude(stream)
             if amplitude_value is None:
                 continue
-            magnitude_value = calculate_bpptkg_ml(amplitude_value)
+            magnitude_value = calc_bpptkg_ml(amplitude_value)
             magnitude_values.append(magnitude_value)
 
             amplitude, _ = Amplitude.objects.update_or_create(
@@ -132,7 +133,7 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
                 method=self.method,
                 defaults={
                     "amplitude": amplitude_value,
-                    "type": "Zero-to-Peak",
+                    "type": "Amax",
                     "category": AmplitudeCategory.DURATION,
                     "time": starttime,
                     "begin": 0,
@@ -169,3 +170,12 @@ class MagnitudeCalculator(BaseMagnitudeCalculator):
         magnitude.magnitude = avg_magnitude
         magnitude.station_count = len(magnitude_values)
         magnitude.save()
+
+
+class MagnitudeObserver(EventObserver):
+    def run(self, event: Event) -> None:
+        event_id = str(event.id)
+        volcano_id = str(event.catalog.volcano.id)
+        organization_id = str(event.catalog.volcano.organization.id)
+        author_id = str(event.author.id)
+        calc_magnitude.delay(organization_id, volcano_id, event_id, author_id)

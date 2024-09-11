@@ -12,7 +12,12 @@ from django.utils.translation import gettext_lazy as _
 from moviepy.editor import ImageClip, VideoFileClip
 from PIL import Image
 
-from waveview.event.header import EvaluationMode, EvaluationStatus, EventTypeCertainty
+from waveview.event.header import (
+    EvaluationMode,
+    EvaluationStatus,
+    EventTypeCertainty,
+    ObservationType,
+)
 from waveview.event.models.catalog import Catalog
 from waveview.utils.media import MediaPath, MediaType
 
@@ -51,6 +56,13 @@ class EventType(models.Model):
     )
     color_dark = models.CharField(
         max_length=32, null=True, blank=True, help_text=_("Event type dark color.")
+    )
+    observation_type = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        choices=ObservationType.choices,
+        help_text=_("Type of observation for the event."),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

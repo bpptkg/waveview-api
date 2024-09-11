@@ -10,12 +10,15 @@ from obspy.core.inventory import Network as ObspyNetwork
 from obspy.core.inventory import Station as ObspyStation
 
 from waveview.inventory.header import RestrictedStatus
-from waveview.inventory.models import Channel, Inventory, Network, Station
+from waveview.inventory.models import Channel, InventoryFile, Network, Station
 
 logger = logging.getLogger(__name__)
 
 
 def dt(dt: UTCDateTime | None) -> datetime | None:
+    """
+    Convert ObsPy UTCDateTime to Django datetime. If dt is None, return None.
+    """
     if dt is None:
         return None
     ts = datetime.fromtimestamp(dt.timestamp)
@@ -23,6 +26,9 @@ def dt(dt: UTCDateTime | None) -> datetime | None:
 
 
 def f(value: float | None, default: float = 0) -> float:
+    """
+    Convert value to float. If value is None, return default.
+    """
     if value is None:
         return default
     try:
@@ -33,33 +39,25 @@ def f(value: float | None, default: float = 0) -> float:
 
 
 class StationXMLAdapter:
-    def __init__(self, inventory: Inventory) -> None:
-        self.inventory = inventory
+    def __init__(self, inventory_file: InventoryFile) -> None:
+        self.inventory_file = inventory_file
+        self.inventory = inventory_file.inventory
 
     @transaction.atomic
     def update(self) -> None:
-        if not self.inventory.file:
-            logger.error("No file attached to inventory")
-            return
-
         try:
-            self._update()
+            inv: ObspyInventory = read_inventory(self.inventory_file.file.path)
+            for net in inv:
+                net: ObspyNetwork
+                network = self._update_network(net)
+                for sta in net:
+                    sta: ObspyStation
+                    station = self._update_station(network, sta)
+                    for cha in sta:
+                        cha: ObspyChannel
+                        self._update_channel(station, cha)
         except Exception as e:
             logger.error(f"Failed to update inventory: {e}")
-
-    def _update(self) -> None:
-        path = self.inventory.file.path
-        inv: ObspyInventory = read_inventory(path)
-
-        for net in inv:
-            net: ObspyNetwork
-            network = self._update_network(net)
-            for sta in net:
-                sta: ObspyStation
-                station = self._update_station(network, sta)
-                for cha in sta:
-                    cha: ObspyChannel
-                    self._update_channel(station, cha)
 
     def _update_network(self, net: ObspyNetwork) -> Network:
         logger.info(f"Updating network {net.code}")

@@ -1,4 +1,6 @@
+import io
 import math
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -10,10 +12,11 @@ from matplotlib.colors import Normalize
 from obspy import read
 from scipy.signal import resample
 
+from waveview.inventory.datastream import DataStream
 from waveview.inventory.models import Channel
-from waveview.inventory.streamio import DataStream
 from waveview.settings import BASE_DIR
 from waveview.signal.packet import pad
+from matplotlib.colors import LinearSegmentedColormap
 
 matplotlib.use("Agg")
 
@@ -88,6 +91,8 @@ class SpectrogramRequestData:
     channel_id: str
     start: int
     end: int
+    width: int
+    height: int
 
     @classmethod
     def parse_raw(cls, raw: dict) -> "SpectrogramRequestData":
@@ -96,12 +101,54 @@ class SpectrogramRequestData:
             channel_id=raw["channelId"],
             start=raw["start"],
             end=raw["end"],
+            width=raw.get("width", 300),
+            height=raw.get("height", 150),
         )
 
 
 class BaseSpectrogramAdapter:
     def spectrogram(self, payload: SpectrogramRequestData) -> bytes:
         raise NotImplementedError("spectrogram method must be implemented")
+
+
+def generate_image(
+    specgram: np.ndarray,
+    time: np.ndarray,
+    freq: np.ndarray,
+    norm: Normalize,
+    width: int,
+    height: int,
+) -> bytes:
+    colors = [
+        (1, 1, 1),  # White
+        (0, 0, 1),  # Blue
+        (0, 1, 0),  # Green
+        (1, 1, 0),  # Yellow
+        # (1, 0.5, 0),  # Orange
+        (1, 0, 0),  # Red
+        # (0.5, 0, 0)  # Dark Red
+    ]
+    n_bins = 100  # Discretizes the interpolation into bins
+    cmap_name = "waveview"
+    cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
+    px = 1 / plt.rcParams["figure.dpi"]
+    w = width * px
+    h = height * px
+    fig, ax = plt.subplots(figsize=(w, h))
+    ax.imshow(
+        specgram,
+        aspect="auto",
+        norm=norm,
+        origin="lower",
+        extent=[time.min(), time.max(), freq.min(), freq.max()],
+        cmap=cmap,
+    )
+    ax.axis("off")
+    fig.tight_layout(pad=0)
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+    buf.seek(0)
+    return buf.read()
 
 
 @dataclass
@@ -114,20 +161,38 @@ class SpectrogramData:
     start: int
     end: int
     norm: Normalize
+    width: int = 300
+    height: int = 150
     command: str = "stream.spectrogram"
 
     def encode(self) -> bytes:
         request_id = pad(self.request_id.encode("utf-8"), 64)
         command = pad(self.command.encode("utf-8"), 64)
         channel_id = pad(self.channel_id.encode("utf-8"), 64)
-        timeMin = self.time.min()
-        timeMax = self.time.max()
-        freqMin = self.freq.min()
-        freqMax = self.freq.max()
+        if len(self.time) == 0:
+            timeMin = 0
+            timeMax = 0
+        else:
+            timeMin = self.time.min()
+            timeMax = self.time.max()
+        if len(self.freq) == 0:
+            freqMin = 0
+            freqMax = 0
+        else:
+            freqMin = self.freq.min()
+            freqMax = self.freq.max()
         timeLength = len(self.time)
         freqLength = len(self.freq)
-        minVal = self.data.min()
-        maxVal = self.data.max()
+        if len(self.data) == 0:
+            minVal = 0
+            maxVal = 0
+            image = b""
+        else:
+            minVal = self.data.min()
+            maxVal = self.data.max()
+            image = generate_image(
+                self.data, self.time, self.freq, self.norm, self.width, self.height
+            )
         header = np.array(
             [
                 int(self.start),
@@ -142,15 +207,15 @@ class SpectrogramData:
                 maxVal,
             ],
             dtype=np.float64,
-        )
-        specgram = self.data.flatten().astype(np.float64)
+        ).tobytes()
+
         return b"".join(
             [
                 request_id,
                 command,
                 channel_id,
-                header.tobytes(),
-                specgram.tobytes(),
+                header,
+                image,
             ]
         )
 
@@ -159,6 +224,8 @@ class DummySpectrogramAdapter(BaseSpectrogramAdapter):
     def spectrogram(self, payload: SpectrogramRequestData) -> bytes:
         request_id = payload.request_id
         channel_id = payload.channel_id
+        width = payload.width
+        height = payload.height
 
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
@@ -175,17 +242,21 @@ class DummySpectrogramAdapter(BaseSpectrogramAdapter):
             specgram = np.array([], dtype=np.float64)
             time = np.array([], dtype=np.float64)
             freq = np.array([], dtype=np.float64)
+            norm = Normalize(0, 1)
 
         packet = SpectrogramData(
             request_id=request_id,
             channel_id=channel_id,
-            data=np.flipud(specgram),
+            data=specgram,
             time=time,
             freq=freq,
             start=start.timestamp() * 1000,
             end=end.timestamp() * 1000,
             norm=norm,
+            width=width,
+            height=height,
         )
+
         return packet.encode()
 
 
@@ -217,7 +288,11 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
             return empty_packet.encode()
 
         st = self.datastream.get_waveform(channel_id, start, end)
+        if len(st) == 0:
+            return empty_packet.encode()
         data = st[0].data
+        if len(data) == 0:
+            return empty_packet.encode()
         sample_rate = st[0].stats.sampling_rate
 
         try:
@@ -226,11 +301,12 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
             specgram = np.array([], dtype=np.float64)
             time = np.array([], dtype=np.float64)
             freq = np.array([], dtype=np.float64)
+            norm = Normalize(0, 1)
 
         packet = SpectrogramData(
             request_id=request_id,
             channel_id=channel_id,
-            data=np.flipud(specgram),
+            data=specgram,
             time=time,
             freq=freq,
             start=start.timestamp() * 1000,
@@ -241,4 +317,4 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
 
 
 def get_spectrogram_adapter() -> BaseSpectrogramAdapter:
-    return DummySpectrogramAdapter()
+    return TimescaleSpectrogramAdapter()

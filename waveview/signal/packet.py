@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 
 import numpy as np
+import uuid
 
 logger = logging.getLogger(__name__)
 

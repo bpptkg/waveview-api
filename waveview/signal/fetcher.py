@@ -6,7 +6,8 @@ from typing import Literal
 import numpy as np
 from django.db import connection
 
-from waveview.inventory.db.query import TimescaleQuery
+from waveview.inventory.db.schema import TimescaleSchemaEditor
+from waveview.inventory.datastream import DataStream
 from waveview.inventory.models import Channel
 from waveview.signal.packet import Packet
 from waveview.utils import timestamp
@@ -37,7 +38,7 @@ class FetcherData:
             channel_id=raw["channelId"],
             start=raw["start"],
             end=raw["end"],
-            mode=raw["mode"],
+            mode=raw.get("mode", "none"),
             width=raw.get("width", 0),
             max_points=raw.get("maxPoints", 0),
             force_center=raw.get("forceCenter", False),
@@ -87,7 +88,7 @@ class DummyStreamFetcher(BaseStreamFetcher):
 
 class TimescaleStreamFetcher(BaseStreamFetcher):
     def __init__(self) -> None:
-        self.query = TimescaleQuery(connection=connection)
+        self.datastream = DataStream(connection)
 
     def fetch(self, payload: FetcherData) -> bytes:
         request_id = payload.request_id
@@ -120,32 +121,27 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
         )
 
         try:
-            channel = Channel.objects.get(id=channel_id)
+            Channel.objects.get(id=channel_id)
         except Channel.DoesNotExist:
             logger.debug(f"Channel {channel_id} not found.")
             return empty_packet.encode()
 
-        table = channel.get_datastream_id()
+        st = self.datastream.get_waveform(channel_id, start, end)
+        st.resample(10)
+        if len(st) == 0:
+            return empty_packet.encode()
 
-        if n_out == -1:
-            data = self.query.fetch(
-                start=start,
-                end=end,
-                table=table,
-            )
-        else:
-            data = self.query.fetch_lttb(
-                start=start,
-                end=end,
-                table=table,
-                max_points=n_out,
-            )
-
-        a = np.array([timestamp.to_milliseconds(x[0]) for x in data], dtype=np.float64)
-        b = np.array([x[1] for x in data], dtype=np.float64)
         if force_center:
-            mean_b = np.mean(b)
-            b -= mean_b
+            st.detrend("linear")
+
+        starttime = st[0].stats.starttime
+        npts = st[0].stats.npts
+        delta = st[0].stats.delta
+        a = np.array(
+            [starttime.timestamp * 1000 + i * delta * 1000 for i in range(npts)],
+            dtype=np.float64,
+        )
+        b = st[0].data.astype(np.float64)
 
         packet = Packet(
             request_id=request_id,

@@ -41,6 +41,7 @@ PROJECT_APPS = [
     "waveview.inventory",
     "waveview.event",
     "waveview.appconfig",
+    "waveview.observation",
 ]
 
 INSTALLED_APPS = PREREQUISITE_APPS + PROJECT_APPS
@@ -306,3 +307,7 @@ CHANNEL_LAYERS = {
 }
 
 BMA_API_KEY = env("BMA_API_KEY", default="")
+EVENT_OBSERVERS = env.list("EVENT_OBSERVERS", default=[])
+MAGNITUDE_ESTIMATORS = [
+    "waveview.contrib.bpptkg.magnitude.MagnitudeEstimator",
+]

@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime, timedelta, timezone
 
 from obspy import Trace
 from obspy.clients.seedlink.slpacket import SLPacket
@@ -7,18 +6,9 @@ from obspy.clients.seedlink.slpacket import SLPacket
 from waveview.inventory.models import Channel, Inventory
 from waveview.inventory.models.datasource import DataSource, DataSourceType
 from waveview.inventory.seedlink.client import EasySeedLinkClient, get_statefile
+from waveview.inventory.datastream import preparebuffer
 
 logger = logging.getLogger(__name__)
-
-
-def prepare(trace: Trace) -> tuple[list[datetime], list[float]]:
-    starttime = trace.stats.starttime.datetime.replace(tzinfo=timezone.utc)
-    times = [
-        starttime + timedelta(seconds=i * trace.stats.delta)
-        for i in range(len(trace.data))
-    ]
-    values = [trace.data[i] for i in range(len(trace.data))]
-    return times, values
 
 
 class SeedLinkClient(EasySeedLinkClient):
@@ -32,7 +22,6 @@ class SeedLinkClient(EasySeedLinkClient):
         trace: Trace = packet.get_trace()
         if self.debug:
             logger.info(f"Received packet: {trace}")
-        times, values = prepare(trace)
         network: str = trace.stats.network
         station: str = trace.stats.station
         channel: str = trace.stats.channel
@@ -45,7 +34,8 @@ class SeedLinkClient(EasySeedLinkClient):
             return
 
         table = instance.get_datastream_id()
-        self.schema.bulk_upsert(table, times, values)
+        st, et, sr, dtype, buf = preparebuffer(trace)
+        self.schema.insert(table, st, et, sr, dtype, buf)
 
 
 def run_seedlink(inventory_id: str, debug: bool = False) -> None:

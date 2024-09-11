@@ -47,6 +47,7 @@ class DataSource(models.Model):
         related_query_name="data_source",
     )
     source = models.CharField(max_length=50, choices=DataSourceType.choices)
+    name = models.CharField(max_length=100, null=True, blank=True)
     data = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

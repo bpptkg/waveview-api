@@ -148,3 +148,13 @@ class MagnitudeType(models.TextChoices):
     ME = "Me", "Energy Magnitude"
     MC = "Mc", "Coda Magnitude"
     OTHER = "other", "Other"
+
+
+class ObservationType(models.TextChoices):
+    EXPLOSION = "explosion", "Explosion"
+    PYROCLASTIC_FLOW = "pyroclastic_flow", "Pyroclastic Flow"
+    ROCKFALL = "rockfall", "Rockfall"
+    TECTONIC = "tectonic", "Tectonic"
+    VOLCANIC_EMISION = "volcanic_emision", "Volcanic Emision"
+    LAHAR = "lahar", "Lahar"
+    SOUND = "sound", "Sound"

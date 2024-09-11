@@ -1,41 +1,51 @@
-import random
 import unittest
 import uuid
-from datetime import datetime, timedelta
+import zlib
+from datetime import timedelta
 
+import numpy as np
 from django.db import connection
+from django.utils import timezone
 
-from waveview.inventory.db.query import TimescaleQuery
 from waveview.inventory.db.schema import TimescaleSchemaEditor
 
 
 class TimescaleQueryTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.schema_editor = TimescaleSchemaEditor(connection=connection)
-        self.query = TimescaleQuery(connection=connection)
+        self.schema = TimescaleSchemaEditor(connection=connection)
         self.table = f"datastream_{uuid.uuid4().hex}"
 
     def tearDown(self) -> None:
-        self.schema_editor.drop_table(self.table)
+        self.schema.drop_table(self.table)
 
     def test_query(self) -> None:
-        self.schema_editor.create_table(self.table)
-        self.schema_editor.create_hypertable(self.table)
-        is_table_created = self.schema_editor.assert_table_exists(self.table)
+        self.schema.create_table(self.table)
+        self.schema.create_hypertable(self.table)
+        is_table_created = self.schema.assert_table_exists(self.table)
         self.assertTrue(is_table_created)
 
-        start = datetime.now()
-        times = [start + timedelta(seconds=i) for i in range(1000)]
-        values = [random.random() for _ in range(100)]
-        self.schema_editor.bulk_upsert(self.table, times, values)
+        sample_rate = 100
+        npts = 1000
+        start = timezone.now() - timedelta(minutes=5)
+        end = start + timedelta(seconds=npts / sample_rate)
+        data = np.random.rand(npts).astype(np.int32)
+        cdata = zlib.compress(data.tobytes())
+        self.schema.insert(self.table, start, end, sample_rate, "int32", cdata)
 
-        result = self.query.fetch(start, start + timedelta(seconds=100), self.table)
-        self.assertEqual(len(result), 100)
+        qst = start - timedelta(seconds=10)
+        qet = end + timedelta(seconds=10)
+        result = self.schema.query(self.table, qst, qet)
+        self.assertEqual(len(result), 1)
 
-        result = self.query.fetch_lttb(
-            start, start + timedelta(seconds=100), self.table, 10
-        )
-        self.assertEqual(len(result), 10)
+        [st, et, sr, dtype, buf] = result[0]
+        self.assertEqual(st, start)
+        self.assertEqual(et, end)
+        self.assertEqual(sr, sample_rate)
+        self.assertEqual(dtype, "int32")
+
+        dtrace = zlib.decompress(buf)
+        trace = np.frombuffer(dtrace, dtype=np.int32)
+        self.assertTrue(np.array_equal(data, trace))
 
 
 if __name__ == "__main__":

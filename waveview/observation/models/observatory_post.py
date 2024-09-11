@@ -13,7 +13,7 @@ class ObservatoryPost(models.Model):
         related_query_name="observatory_post",
     )
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     latitude = models.DecimalField(
         max_digits=9, decimal_places=6, blank=True, null=True
     )

@@ -1,6 +1,5 @@
 import io
 import math
-import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -8,15 +7,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from django.db import connection
-from matplotlib.colors import Normalize
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 from obspy import read
-from scipy.signal import resample
 
 from waveview.inventory.datastream import DataStream
 from waveview.inventory.models import Channel
 from waveview.settings import BASE_DIR
 from waveview.signal.packet import pad
-from matplotlib.colors import LinearSegmentedColormap
 
 matplotlib.use("Agg")
 
@@ -77,11 +74,6 @@ def spectrogram(
     vmax = specgram.min() + vmax * _range
     norm = Normalize(vmin, vmax, clip=True)
 
-    specgram = resample(specgram, specgram.shape[0] // downsample_factor, axis=0)
-    specgram = resample(specgram, specgram.shape[1] // downsample_factor, axis=1)
-    time = resample(time, len(time) // downsample_factor)
-    freq = resample(freq, len(freq) // downsample_factor)
-
     return specgram, time, freq, norm
 
 
@@ -93,6 +85,7 @@ class SpectrogramRequestData:
     end: int
     width: int
     height: int
+    dark_mode: bool
 
     @classmethod
     def parse_raw(cls, raw: dict) -> "SpectrogramRequestData":
@@ -103,6 +96,7 @@ class SpectrogramRequestData:
             end=raw["end"],
             width=raw.get("width", 300),
             height=raw.get("height", 150),
+            dark_mode=raw.get("darkMode", False),
         )
 
 
@@ -116,8 +110,6 @@ def generate_image(
     time: np.ndarray,
     freq: np.ndarray,
     norm: Normalize,
-    width: int,
-    height: int,
 ) -> bytes:
     colors = [
         (1, 1, 1),  # White
@@ -128,12 +120,12 @@ def generate_image(
         (1, 0, 0),  # Red
         # (0.5, 0, 0)  # Dark Red
     ]
-    n_bins = 100  # Discretizes the interpolation into bins
+    n_bins = 100
     cmap_name = "waveview"
     cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
     px = 1 / plt.rcParams["figure.dpi"]
-    w = width * px
-    h = height * px
+    w = len(time) * px
+    h = len(freq) * px
     fig, ax = plt.subplots(figsize=(w, h))
     ax.imshow(
         specgram,
@@ -161,20 +153,16 @@ class SpectrogramData:
     start: int
     end: int
     norm: Normalize
-    width: int = 300
-    height: int = 150
+    width: int
+    height: int
     command: str = "stream.spectrogram"
 
     def encode(self) -> bytes:
         request_id = pad(self.request_id.encode("utf-8"), 64)
         command = pad(self.command.encode("utf-8"), 64)
         channel_id = pad(self.channel_id.encode("utf-8"), 64)
-        if len(self.time) == 0:
-            timeMin = 0
-            timeMax = 0
-        else:
-            timeMin = self.time.min()
-            timeMax = self.time.max()
+        start = self.start
+        end = self.end
         if len(self.freq) == 0:
             freqMin = 0
             freqMax = 0
@@ -190,15 +178,13 @@ class SpectrogramData:
         else:
             minVal = self.data.min()
             maxVal = self.data.max()
-            image = generate_image(
-                self.data, self.time, self.freq, self.norm, self.width, self.height
-            )
+            image = generate_image(self.data, self.time, self.freq, self.norm)
         header = np.array(
             [
                 int(self.start),
                 int(self.end),
-                timeMin,
-                timeMax,
+                start,
+                end,
                 freqMin,
                 freqMax,
                 timeLength,
@@ -267,6 +253,8 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
     def spectrogram(self, payload: SpectrogramRequestData) -> bytes:
         request_id = payload.request_id
         channel_id = payload.channel_id
+        width = payload.width
+        height = payload.height
 
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
@@ -280,6 +268,8 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
             start=start.timestamp() * 1000,
             end=end.timestamp() * 1000,
             norm=Normalize(0, 1),
+            width=width,
+            height=height,
         )
 
         try:
@@ -312,6 +302,8 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
             start=start.timestamp() * 1000,
             end=end.timestamp() * 1000,
             norm=norm,
+            width=width,
+            height=height,
         )
         return packet.encode()
 

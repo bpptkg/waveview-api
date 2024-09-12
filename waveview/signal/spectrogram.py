@@ -88,7 +88,7 @@ class SpectrogramRequestData:
     dark_mode: bool
 
     @classmethod
-    def parse_raw(cls, raw: dict) -> "SpectrogramRequestData":
+    def from_raw_data(cls, raw: dict) -> "SpectrogramRequestData":
         return cls(
             request_id=raw["requestId"],
             channel_id=raw["channelId"],

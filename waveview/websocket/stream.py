@@ -4,7 +4,8 @@ import logging
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from waveview.signal.fetcher import FetcherData, get_fetcher
+from waveview.signal.fetcher import FetcherData, get_fetcher_adapter
+from waveview.signal.filtering import FilterData, get_filter_adapter
 from waveview.signal.spectrogram import SpectrogramRequestData, get_spectrogram_adapter
 from waveview.websocket.base import CommandType, MessageEvent, WebSocketRequest
 from waveview.websocket.subscribe import StreamSubscribeData, StreamUnsubscribeData
@@ -15,8 +16,12 @@ logger = logging.getLogger(__name__)
 class StreamConsumer(AsyncWebsocketConsumer):
     async def connect(self) -> None:
         self.subscribed_channels = set()
+        user = self.scope.get("user")
+        if not user:
+            await self.close()
+            return
 
-        if self.scope["user"].is_authenticated:
+        if user.is_authenticated:
             await self.accept()
         else:
             await self.close()
@@ -31,21 +36,21 @@ class StreamConsumer(AsyncWebsocketConsumer):
             await self.stream_fetch(request)
         elif request.command == CommandType.STREAM_SPECTROGRAM:
             await self.stream_spectrogram(request)
+        elif request.command == CommandType.STREAM_FILTER:
+            await self.stream_filter(request)
         elif request.command == CommandType.STREAM_SUBSCRIBE:
             await self.stream_subscribe(request)
         elif request.command == CommandType.STREAM_UNSUBSCRIBE:
             await self.stream_unsubscribe(request)
-        elif request.command == CommandType.STREAM_FILTER:
-            await self.stream_filter(request)
 
     async def stream_fetch(self, request: WebSocketRequest) -> None:
         raw = request.data
 
-        payload = FetcherData.parse_raw(raw)
+        payload = FetcherData.from_raw_data(raw)
         if not payload.channel_id:
             return
 
-        fetcher = get_fetcher()
+        fetcher = get_fetcher_adapter()
         data = await database_sync_to_async(fetcher.fetch)(payload)
 
         await self.send(bytes_data=data)
@@ -53,12 +58,24 @@ class StreamConsumer(AsyncWebsocketConsumer):
     async def stream_spectrogram(self, request: WebSocketRequest) -> None:
         raw = request.data
 
-        payload = SpectrogramRequestData.parse_raw(raw)
+        payload = SpectrogramRequestData.from_raw_data(raw)
         if not payload.channel_id:
             return
 
         adapter = get_spectrogram_adapter()
         data = await database_sync_to_async(adapter.spectrogram)(payload)
+
+        await self.send(bytes_data=data)
+
+    async def stream_filter(self, request: WebSocketRequest) -> None:
+        raw = request.data
+
+        payload = FilterData.from_raw_data(raw)
+        if not payload.channel_id:
+            return
+
+        adapter = get_filter_adapter()
+        data = await database_sync_to_async(adapter.filter)(payload)
 
         await self.send(bytes_data=data)
 
@@ -75,9 +92,6 @@ class StreamConsumer(AsyncWebsocketConsumer):
         for channel_id in payload.channel_ids:
             await self.channel_layer.group_discard(channel_id, self.channel_name)
             self.subscribed_channels.discard(channel_id)
-
-    async def stream_filter(self, request: WebSocketRequest) -> None:
-        pass
 
     async def send_trace_buffer(self, event: MessageEvent[str]) -> None:
         data = base64.base64decode(event.data)

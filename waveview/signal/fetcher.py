@@ -6,7 +6,6 @@ from typing import Literal
 import numpy as np
 from django.db import connection
 
-from waveview.inventory.db.schema import TimescaleSchemaEditor
 from waveview.inventory.datastream import DataStream
 from waveview.inventory.models import Channel
 from waveview.signal.packet import Packet
@@ -32,7 +31,7 @@ class FetcherData:
     force_center: bool
 
     @classmethod
-    def parse_raw(cls, raw: dict) -> "FetcherData":
+    def from_raw_data(cls, raw: dict) -> "FetcherData":
         return cls(
             request_id=raw["requestId"],
             channel_id=raw["channelId"],
@@ -155,5 +154,5 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
         return packet.encode()
 
 
-def get_fetcher() -> BaseStreamFetcher:
+def get_fetcher_adapter() -> BaseStreamFetcher:
     return TimescaleStreamFetcher()

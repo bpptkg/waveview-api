@@ -112,13 +112,13 @@ def generate_image(
     norm: Normalize,
 ) -> bytes:
     colors = [
-        (1, 1, 1),  # White
-        (0, 0, 1),  # Blue
-        (0, 1, 0),  # Green
-        (1, 1, 0),  # Yellow
-        # (1, 0.5, 0),  # Orange
-        (1, 0, 0),  # Red
-        # (0.5, 0, 0)  # Dark Red
+        (1, 1, 1, 0),  # White
+        (0, 0, 1, 1),  # Blue
+        (0, 1, 0, 1),  # Green
+        (1, 1, 0, 1),  # Yellow
+        # (1, 0.5, 0, 1),  # Orange
+        (1, 0, 0, 1),  # Red
+        # (0.5, 0, 0, 1)  # Dark Red
     ]
     n_bins = 100
     cmap_name = "waveview"
@@ -138,7 +138,7 @@ def generate_image(
     ax.axis("off")
     fig.tight_layout(pad=0)
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+    fig.savefig(buf, format="png", transparent=True, bbox_inches="tight", pad_inches=0)
     buf.seek(0)
     return buf.read()
 

@@ -15,7 +15,6 @@ from waveview.appconfig.models import (
 @admin.register(PickerConfig)
 class PickerConfigAdmin(admin.ModelAdmin):
     list_display = (
-        "organization",
         "volcano",
         "name",
         "is_preferred",
@@ -61,7 +60,6 @@ class SeismogramStationConfigAdmin(admin.ModelAdmin):
 @admin.register(HypocenterConfig)
 class HypocenterConfigAdmin(admin.ModelAdmin):
     list_display = (
-        "organization",
         "volcano",
         "name",
         "is_preferred",
@@ -73,7 +71,6 @@ class HypocenterConfigAdmin(admin.ModelAdmin):
 @admin.register(SeismicityConfig)
 class SeismicityConfigAdmin(admin.ModelAdmin):
     list_display = (
-        "organization",
         "volcano",
         "type",
         "order",
@@ -86,7 +83,6 @@ class SeismicityConfigAdmin(admin.ModelAdmin):
 @admin.register(MagnitudeConfig)
 class MagnitudeConfigAdmin(admin.ModelAdmin):
     list_display = (
-        "organization",
         "volcano",
         "name",
         "method",

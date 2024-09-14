@@ -155,6 +155,6 @@ class ObservationType(models.TextChoices):
     PYROCLASTIC_FLOW = "pyroclastic_flow", "Pyroclastic Flow"
     ROCKFALL = "rockfall", "Rockfall"
     TECTONIC = "tectonic", "Tectonic"
-    VOLCANIC_EMISION = "volcanic_emision", "Volcanic Emision"
+    VOLCANIC_EMISSION = "volcanic_emission", "Volcanic Emission"
     LAHAR = "lahar", "Lahar"
     SOUND = "sound", "Sound"

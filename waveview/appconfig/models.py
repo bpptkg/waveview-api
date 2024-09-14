@@ -15,11 +15,6 @@ class SeismogramComponent(models.TextChoices):
 
 class PickerConfig(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        "organization.Organization",
-        related_name="picker_configs",
-        on_delete=models.CASCADE,
-    )
     volcano = models.ForeignKey(
         "volcano.Volcano",
         on_delete=models.CASCADE,
@@ -39,11 +34,11 @@ class PickerConfig(models.Model):
     )
 
     class Meta:
-        verbose_name = _("picker config")
-        verbose_name_plural = _("picker configs")
+        verbose_name = _("picker")
+        verbose_name_plural = _("picker")
 
     def __str__(self) -> str:
-        return f"{self.organization.name} {self.name}"
+        return f"<PickerConfig: {self.volcano}>"
 
 
 class HelicorderConfig(models.Model):
@@ -65,11 +60,11 @@ class HelicorderConfig(models.Model):
     data = models.JSONField(null=True, blank=True, default=dict)
 
     class Meta:
-        verbose_name = _("helicorder config")
-        verbose_name_plural = _("helicorder configs")
+        verbose_name = _("helicorder")
+        verbose_name_plural = _("helicorder")
 
     def __str__(self) -> str:
-        return f"{self.picker_config.organization.name} Helicorder Config"
+        return f"<HelicorderConfig: {self.picker_config}>"
 
 
 class SeismogramConfig(models.Model):
@@ -87,11 +82,11 @@ class SeismogramConfig(models.Model):
     data = models.JSONField(null=True, blank=True, default=dict)
 
     class Meta:
-        verbose_name = _("seismogram config")
-        verbose_name_plural = _("seismogram configs")
+        verbose_name = _("seismogram")
+        verbose_name_plural = _("seismogram")
 
     def __str__(self) -> str:
-        return f"{self.picker_config.organization.name} Seismogram Config"
+        return f"<SeismogramConfig: {self.picker_config}>"
 
 
 class SeismogramStationConfig(models.Model):
@@ -113,22 +108,17 @@ class SeismogramStationConfig(models.Model):
     order = models.IntegerField(default=0, null=False, blank=False)
 
     class Meta:
-        verbose_name = _("seismogram station config")
-        verbose_name_plural = _("seismogram station configs")
+        verbose_name = _("seismogram station")
+        verbose_name_plural = _("seismogram station")
         ordering = ("order",)
         unique_together = ("seismogram_config", "station")
 
     def __str__(self) -> str:
-        return f"{self.seismogram_config.picker_config.organization.name} Seismogram Station Config"
+        return f"<SeismogramStationConfig: {self.seismogram_config}>"
 
 
 class HypocenterConfig(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        "organization.Organization",
-        related_name="hypocenter_configs",
-        on_delete=models.CASCADE,
-    )
     volcano = models.ForeignKey(
         "volcano.Volcano",
         on_delete=models.CASCADE,
@@ -137,11 +127,7 @@ class HypocenterConfig(models.Model):
     )
     name = models.CharField(max_length=255, null=True, blank=True)
     is_preferred = models.BooleanField(default=False)
-    event_types = models.ManyToManyField(
-        "event.EventType",
-        related_name="hypocenter_configs",
-        blank=True,
-    )
+    event_types = models.ManyToManyField("event.EventType", blank=True)
     data = models.JSONField(null=True, blank=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -153,19 +139,15 @@ class HypocenterConfig(models.Model):
     )
 
     class Meta:
-        verbose_name = _("hypocenter config")
-        verbose_name_plural = _("hypocenter configs")
+        verbose_name = _("hypocenter")
+        verbose_name_plural = _("hypocenter")
 
     def __str__(self) -> str:
-        return f"{self.organization.name} {self.name}"
+        return f"<HypocenterConfig: {self.volcano}>"
 
 
 class SeismicityConfig(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        "organization.Organization",
-        on_delete=models.CASCADE,
-    )
     volcano = models.ForeignKey(
         "volcano.Volcano",
         on_delete=models.CASCADE,
@@ -194,23 +176,15 @@ class SeismicityConfig(models.Model):
     )
 
     class Meta:
-        verbose_name = _("seismicity config")
-        verbose_name_plural = _("seismicity configs")
-        unique_together = ("organization", "type")
+        verbose_name = _("seismicity")
+        verbose_name_plural = _("seismicity")
 
     def __str__(self) -> str:
-        return f"SeismicityConfig: {self.id}"
-
-    def __repr__(self) -> str:
-        return f"<SeismicityConfig: {self.id}>"
+        return f"<SeismicityConfig: {self.volcano}>"
 
 
 class MagnitudeConfig(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization = models.ForeignKey(
-        "organization.Organization",
-        on_delete=models.CASCADE,
-    )
     volcano = models.ForeignKey(
         "volcano.Volcano",
         on_delete=models.CASCADE,
@@ -231,16 +205,11 @@ class MagnitudeConfig(models.Model):
     )
 
     class Meta:
-        verbose_name = _("magnitude config")
-        verbose_name_plural = _("magnitude configs")
+        verbose_name = _("magnitude")
+        verbose_name_plural = _("magnitude")
 
     def __str__(self) -> str:
-        if self.name:
-            return f"{self.name}"
-        return "Magnitude Config"
-
-    def __repr__(self) -> str:
-        return f"<MagnitudeConfig: {self.id}>"
+        return f"<MagnitudeConfig: {self.volcano}>"
 
 
 class StationMagnitudeConfig(models.Model):
@@ -260,8 +229,8 @@ class StationMagnitudeConfig(models.Model):
     is_enabled = models.BooleanField(default=True)
 
     class Meta:
-        verbose_name = _("station magnitude config")
-        verbose_name_plural = _("station magnitude configs")
+        verbose_name = _("station magnitude")
+        verbose_name_plural = _("station magnitude")
         unique_together = ("magnitude_config", "channel")
 
     def __str__(self) -> str:

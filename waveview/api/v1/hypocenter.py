@@ -37,7 +37,7 @@ class HypocenterEndpoint(Endpoint):
         ),
         tags=["Catalog"],
         responses={
-            status.HTTP_200_OK: openapi.Response("OK", HypocenterSerializer(many=True))
+            status.HTTP_200_OK: openapi.Response("OK", HypocenterSerializer)
         },
         manual_parameters=[
             openapi.Parameter(

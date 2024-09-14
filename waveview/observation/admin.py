@@ -3,7 +3,6 @@ from django.contrib import admin
 from waveview.observation.models import (
     Explosion,
     FallDirection,
-    ObservatoryPost,
     PyroclasticFlow,
     Rockfall,
     Tectonic,
@@ -15,8 +14,12 @@ from waveview.observation.models import (
 class ExplosionAdmin(admin.ModelAdmin):
     list_display = (
         "event",
-        "observatory_post",
-        "occurred_at",
+        "observation_form",
+        "column_height",
+        "color",
+        "intensity",
+        "vei",
+        "note",
     )
 
 
@@ -28,20 +31,18 @@ class FallDirectionAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(ObservatoryPost)
-class ObservatoryPostAdmin(admin.ModelAdmin):
-    list_display = (
-        "volcano",
-        "name",
-    )
-
-
 @admin.register(PyroclasticFlow)
 class PyroclasticFlowAdmin(admin.ModelAdmin):
     list_display = (
         "event",
-        "observatory_post",
-        "occurred_at",
+        "is_lava_flow",
+        "observation_form",
+        "event_size",
+        "runout_distance",
+        "fall_direction",
+        "amplitude",
+        "duration",
+        "note",
     )
 
 
@@ -49,8 +50,14 @@ class PyroclasticFlowAdmin(admin.ModelAdmin):
 class RockfallAdmin(admin.ModelAdmin):
     list_display = (
         "event",
-        "observatory_post",
-        "occurred_at",
+        "is_lava_flow",
+        "observation_form",
+        "event_size",
+        "runout_distance",
+        "fall_direction",
+        "amplitude",
+        "duration",
+        "note",
     )
 
 
@@ -58,8 +65,10 @@ class RockfallAdmin(admin.ModelAdmin):
 class TectonicAdmin(admin.ModelAdmin):
     list_display = (
         "event",
-        "observatory_post",
-        "occurred_at",
+        "mmi_scale",
+        "magnitude",
+        "depth",
+        "note",
     )
 
 
@@ -67,6 +76,9 @@ class TectonicAdmin(admin.ModelAdmin):
 class VolcanicEmissionAdmin(admin.ModelAdmin):
     list_display = (
         "event",
-        "observatory_post",
-        "occurred_at",
+        "observation_form",
+        "height",
+        "color",
+        "intensity",
+        "note",
     )

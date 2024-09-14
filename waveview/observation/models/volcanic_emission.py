@@ -8,16 +8,11 @@ from waveview.observation.choices import EmissionColor, ObservationForm
 
 class VolcanicEmission(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    event = models.ForeignKey(
+    event = models.OneToOneField(
         "event.Event",
         on_delete=models.CASCADE,
-        related_name="volcanic_emissions",
-        related_query_name="volcanic_emission",
+        related_name="volcanic_emission",
     )
-    observatory_post = models.ForeignKey(
-        "ObservatoryPost", on_delete=models.SET_NULL, null=True, blank=True
-    )
-    occurred_at = models.DateTimeField(null=True, blank=True)
     observation_form = models.CharField(
         max_length=100, choices=ObservationForm.choices, null=True, blank=True
     )

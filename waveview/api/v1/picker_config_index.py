@@ -42,7 +42,7 @@ class PickerConfigIndexEndpoint(Endpoint):
 
         try:
             config = PickerConfig.objects.filter(
-                organization=organization, volcano=volcano, is_preferred=True
+                volcano=volcano, is_preferred=True
             ).first()
         except PickerConfig.DoesNotExist:
             raise NotFound(_("Picker config not found."))

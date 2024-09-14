@@ -1,12 +1,5 @@
 [
     {
-        "code": "ANTHROP",
-        "name": "Anthropogenic",
-        "color": "#36349D",
-        "color_light": "#36349D",
-        "color_dark": "#7D7AF7"
-    },
-    {
         "code": "AUTO",
         "name": "Automatic",
         "color": "#C52925",
@@ -18,14 +11,16 @@
         "name": "Explosion",
         "color": "#A357D7",
         "color_light": "#A357D7",
-        "color_dark": "#B260EA"
+        "color_dark": "#B260EA",
+        "observation_type": "explosion"
     },
     {
         "code": "GASBURST",
         "name": "Degassing",
         "color": "#5AC4BD",
         "color_light": "#5AC4BD",
-        "color_dark": "#83D2CE"
+        "color_dark": "#83D2CE",
+        "observation_type": "volcanic_emission"
     },
     {
         "code": "LF",
@@ -46,18 +41,12 @@
         "name": "Rockfall",
         "color": "#63CA56",
         "color_light": "#63CA56",
-        "color_dark": "#6BD45F"
+        "color_dark": "#6BD45F",
+        "observation_type": "rockfall"
     },
     {
         "code": "SOUND",
         "name": "Sound",
-        "color": "",
-        "color_light": "",
-        "color_dark": ""
-    },
-    {
-        "code": "TECLOC",
-        "name": "Local Tectonic",
         "color": "#306FA0",
         "color_light": "#306FA0",
         "color_dark": "#8AD5FB"
@@ -67,7 +56,8 @@
         "name": "Tectonic",
         "color": "#71BCEB",
         "color_light": "#71BCEB",
-        "color_dark": "#78C6F0"
+        "color_dark": "#78C6F0",
+        "observation_type": "tectonic"
     },
     {
         "code": "TELE",
@@ -75,13 +65,6 @@
         "color": "#FF5733",
         "color_light": "#FF8A66",
         "color_dark": "#CC4626"
-    },
-    {
-        "code": "TPHASE",
-        "name": "T-Phase",
-        "color": "#33C1FF",
-        "color_light": "#66D4FF",
-        "color_dark": "#2699CC"
     },
     {
         "code": "TREMOR",
@@ -116,7 +99,8 @@
         "name": "Awan Panas",
         "color": "#EB4B63",
         "color_light": "#EB4B63",
-        "color_dark": "#EB4B63"
+        "color_dark": "#EB4B63",
+        "observation_type": "pyroclastic_flow"
     },
     {
         "code": "LAHAR",

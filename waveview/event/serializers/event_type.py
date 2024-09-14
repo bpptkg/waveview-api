@@ -1,8 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from waveview.event.header import ObservationType
 from waveview.event.models import EventType
-from waveview.users.serializers import UserSerializer
 
 
 class EventTypeSerializer(serializers.Serializer):
@@ -18,7 +18,9 @@ class EventTypeSerializer(serializers.Serializer):
         help_text=_("Event type creation timestamp.")
     )
     updated_at = serializers.DateTimeField(help_text=_("Event type update timestamp."))
-    author = UserSerializer()
+    observation_type = serializers.ChoiceField(
+        help_text=_("Event type observation type."), choices=ObservationType.choices
+    )
 
 
 class EventTypePayloadSerializer(serializers.Serializer):

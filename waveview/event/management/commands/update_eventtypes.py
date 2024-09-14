@@ -11,9 +11,11 @@ from waveview.organization.models import Organization
 class EventTypeDict(TypedDict):
     code: str
     name: str
+    description: str
     color: str
     color_light: str
     color_dark: str
+    observation_type: str
 
 
 class Command(BaseCommand):
@@ -26,9 +28,9 @@ class Command(BaseCommand):
             help="Path to the JSON file containing list of event types.",
         )
         parser.add_argument(
-            "organization_id",
+            "org",
             type=str,
-            help="Organization ID to update event types for. Use 'first' to update the first organization.",
+            help="Organization slug.",
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
@@ -36,33 +38,20 @@ class Command(BaseCommand):
         with open(path) as f:
             event_types: list[EventTypeDict] = json.load(f)
 
-        organization_id = options["organization_id"]
+        slug = options["org"]
         try:
-            if organization_id == "first":
-                organization = Organization.objects.first()
-            else:
-                organization = Organization.objects.get(id=organization_id)
+            organization = Organization.objects.get(slug=slug)
         except Organization.DoesNotExist:
             self.stdout.write(self.style.ERROR("Organization not found."))
             return
 
         with transaction.atomic():
             for item in event_types:
-                code = item["code"]
-                name = item["name"]
-                color = item["color"]
-                color_light = item["color_light"]
-                color_dark = item["color_dark"]
-
+                code = item.pop("code")
                 event_type, created = EventType.objects.update_or_create(
                     organization=organization,
                     code=code,
-                    defaults={
-                        "name": name,
-                        "color": color,
-                        "color_light": color_light,
-                        "color_dark": color_dark,
-                    },
+                    defaults=item,
                 )
 
                 if created:

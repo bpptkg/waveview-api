@@ -49,6 +49,7 @@ from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
 from .v1.volcano_index import VolcanoIndexEndpoint
+from .v1.fall_directions_index import FallDirectionIndexEndpoint
 
 EVENT_ORIGIN_URLS = [
     path(
@@ -213,6 +214,11 @@ VOLCANO_URLS = [
         "<uuid:volcano_id>/demxyz/",
         DEMXYZEndpoint.as_view(),
         name="waveview-api-1-volcano-demxyz",
+    ),
+    path(
+        "<uuid:volcano_id>/fall-directions/",
+        FallDirectionIndexEndpoint.as_view(),
+        name="waveview-api-1-volcano-fall-directions",
     ),
     path(
         "<uuid:volcano_id>/catalogs/",

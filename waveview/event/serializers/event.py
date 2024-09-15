@@ -14,10 +14,15 @@ from waveview.event.serializers.magnitude import MagnitudeSerializer
 from waveview.event.serializers.origin import OriginSerializer
 from waveview.inventory.models import Station
 from waveview.observation.serializers import (
+    ExplosionPayloadSerializer,
     ExplosionSerializer,
+    PyroclasticFlowPayloadSerializer,
     PyroclasticFlowSerializer,
+    RockfallPayloadSerializer,
     RockfallSerializer,
+    TectonicPayloadSerializer,
     TectonicSerializer,
+    VolcanicEmissionPayloadSerializer,
     VolcanicEmissionSerializer,
 )
 from waveview.users.serializers import UserSerializer
@@ -70,19 +75,19 @@ class EventDetailSerializer(EventSerializer):
     @swagger_serializer_method(serializer_or_field=serializers.DictField)
     def get_observation(self, event: Event) -> dict | None:
         observation_type = event.type.observation_type
-        if observation_type == ObservationType.EXPLOSION:
-            serializer = ExplosionSerializer(event.explosion)
-        elif observation_type == ObservationType.PYROCLASTIC_FLOW:
-            serializer = PyroclasticFlowSerializer(event.pyroclastic_flow)
-        elif observation_type == ObservationType.TECTONIC:
-            serializer = TectonicSerializer(event.tectonic)
-        elif observation_type == ObservationType.VOLCANIC_EMISSION:
-            serializer = VolcanicEmissionSerializer(event.volcanic_emission)
-        elif observation_type == ObservationType.ROCKFALL:
-            serializer = RockfallSerializer(event.rockfall)
-        else:
-            return None
-        return serializer.data
+        serializer_map: Dict[ObservationType, Type[serializers.Serializer]] = {
+            ObservationType.EXPLOSION: ExplosionSerializer,
+            ObservationType.PYROCLASTIC_FLOW: PyroclasticFlowSerializer,
+            ObservationType.TECTONIC: TectonicSerializer,
+            ObservationType.VOLCANIC_EMISSION: VolcanicEmissionSerializer,
+            ObservationType.ROCKFALL: RockfallSerializer,
+        }
+        serializer = serializer_map.get(observation_type)
+        if serializer:
+            instance = getattr(event, observation_type, None)
+            observation = serializer(instance)
+            return observation.data
+        return None
 
 
 class EventPayloadSerializer(serializers.Serializer):
@@ -133,11 +138,11 @@ class EventPayloadSerializer(serializers.Serializer):
             return None
         observation_type = event_type.observation_type
         serializer_map: Dict[ObservationType, Type[serializers.Serializer]] = {
-            ObservationType.EXPLOSION: ExplosionSerializer,
-            ObservationType.PYROCLASTIC_FLOW: PyroclasticFlowSerializer,
-            ObservationType.TECTONIC: TectonicSerializer,
-            ObservationType.VOLCANIC_EMISSION: VolcanicEmissionSerializer,
-            ObservationType.ROCKFALL: RockfallSerializer,
+            ObservationType.EXPLOSION: ExplosionPayloadSerializer,
+            ObservationType.PYROCLASTIC_FLOW: PyroclasticFlowPayloadSerializer,
+            ObservationType.TECTONIC: TectonicPayloadSerializer,
+            ObservationType.VOLCANIC_EMISSION: VolcanicEmissionPayloadSerializer,
+            ObservationType.ROCKFALL: RockfallPayloadSerializer,
         }
 
         serializer_class = serializer_map.get(observation_type)
@@ -194,16 +199,18 @@ class EventPayloadSerializer(serializers.Serializer):
 
     def update_observation(self, instance: Event, observation: dict | None) -> Event:
         observation_type = instance.type.observation_type
-        if observation_type in ObservationType:
+        if observation_type in ObservationType.values:
             if observation is None:
-                raise ValueError(_("Observation data could not be empty."))
+                raise serializers.ValidationError(
+                    _("Observation data could not be empty.")
+                )
 
             serializer_map: Dict[ObservationType, Type[serializers.Serializer]] = {
-                ObservationType.EXPLOSION: ExplosionSerializer,
-                ObservationType.PYROCLASTIC_FLOW: PyroclasticFlowSerializer,
-                ObservationType.TECTONIC: TectonicSerializer,
-                ObservationType.VOLCANIC_EMISSION: VolcanicEmissionSerializer,
-                ObservationType.ROCKFALL: RockfallSerializer,
+                ObservationType.EXPLOSION: ExplosionPayloadSerializer,
+                ObservationType.PYROCLASTIC_FLOW: PyroclasticFlowPayloadSerializer,
+                ObservationType.TECTONIC: TectonicPayloadSerializer,
+                ObservationType.VOLCANIC_EMISSION: VolcanicEmissionPayloadSerializer,
+                ObservationType.ROCKFALL: RockfallPayloadSerializer,
             }
 
             serializer_class = serializer_map.get(observation_type)
@@ -211,7 +218,7 @@ class EventPayloadSerializer(serializers.Serializer):
                 raise ValueError(_("Invalid observation type."))
 
             serializer = serializer_class(
-                instance, data=observation, context={"event_id": instance.id}
+                data=observation, context={"event_id": instance.id}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()

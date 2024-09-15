@@ -25,7 +25,9 @@ class TectonicPayloadSerializer(serializers.Serializer):
         help_text=_("Tectonic magnitude."), allow_null=True
     )
     depth = serializers.FloatField(help_text=_("Tectonic depth."), allow_null=True)
-    note = serializers.CharField(help_text=_("Tectonic note."), allow_null=True)
+    note = serializers.CharField(
+        help_text=_("Tectonic note."), allow_null=True, allow_blank=True
+    )
 
     def create(self, validated_data: dict) -> Tectonic:
         event_id = self.context["event_id"]
@@ -33,4 +35,10 @@ class TectonicPayloadSerializer(serializers.Serializer):
             event_id=event_id,
             defaults=validated_data,
         )
+        return instance
+
+    def update(self, instance: Tectonic, validated_data: dict) -> Tectonic:
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
         return instance

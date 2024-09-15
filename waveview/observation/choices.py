@@ -10,10 +10,10 @@ class ObservationForm(models.TextChoices):
 
 
 class EventSize(models.TextChoices):
+    NOT_OBSERVED = "not_observed", _("Not Observed")
     SMALL = "small", _("Small")
     MEDIUM = "medium", _("Medium")
     LARGE = "large", _("Large")
-    NOT_OBSERVED = "not_observed", _("Not Observed")
 
 
 class EmissionColor(models.TextChoices):

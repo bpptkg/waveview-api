@@ -29,11 +29,18 @@ class VolcanicEmissionPayloadSerializer(serializers.Serializer):
         help_text=_("Volcanic emission observation form.")
     )
     height = serializers.FloatField(help_text=_("Volcanic emission height."))
-    color = serializers.CharField(help_text=_("Volcanic emission color."))
+    color = serializers.CharField(
+        help_text=_("Volcanic emission color."), allow_null=True, allow_blank=True
+    )
     intensity = serializers.FloatField(help_text=_("Volcanic emission intensity."))
     note = serializers.CharField(
-        help_text=_("Volcanic emission note."), allow_null=True
+        help_text=_("Volcanic emission note."), allow_null=True, allow_blank=True
     )
+
+    def validate_color(self, value: str) -> str | None:
+        if not value:
+            return None
+        return value
 
     def create(self, validated_data: dict) -> VolcanicEmission:
         event_id = self.context["event_id"]
@@ -41,4 +48,12 @@ class VolcanicEmissionPayloadSerializer(serializers.Serializer):
             event_id=event_id,
             defaults=validated_data,
         )
+        return instance
+
+    def update(
+        self, instance: VolcanicEmission, validated_data: dict
+    ) -> VolcanicEmission:
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
         return instance

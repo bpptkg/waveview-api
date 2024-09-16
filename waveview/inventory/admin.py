@@ -26,6 +26,7 @@ class InventoryAdmin(admin.ModelAdmin):
 class InventoryFileAdmin(admin.ModelAdmin):
     list_display = (
         "inventory",
+        "name",
         "file",
         "created_at",
         "updated_at",

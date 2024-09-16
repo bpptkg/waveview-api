@@ -1,0 +1,107 @@
+[
+    {
+        "station": "MEMBB",
+        "color": "#3478F6",
+        "color_light": "#3478F6",
+        "color_dark": "#3B82F7",
+        "order": 0
+    },
+    {
+        "station": "MEGRA",
+        "color": "#EB4E3D",
+        "color_light": "#EB4E3D",
+        "color_dark": "#EB5545",
+        "order": 1
+    },
+    {
+        "station": "MEKLS",
+        "color": "#EB4E3D",
+        "color_light": "#EB4E3D",
+        "color_dark": "#EB5545",
+        "order": 2
+    },
+    {
+        "station": "MEPAS",
+        "color": "#F7CE46",
+        "color_light": "#F7CE46",
+        "color_dark": "#F9D84A",
+        "order": 3
+    },
+    {
+        "station": "MEPSL",
+        "color": "#F7CE46",
+        "color_light": "#F7CE46",
+        "color_dark": "#F9D84A",
+        "order": 4
+    },
+    {
+        "station": "MEPUS",
+        "color": "#F7CE46",
+        "color_light": "#F7CE46",
+        "color_dark": "#F9D84A",
+        "order": 5
+    },
+    {
+        "station": "MESEL",
+        "color": "#A357D7",
+        "color_light": "#A357D7",
+        "color_dark": "#B260EA",
+        "order": 6
+    },
+    {
+        "station": "MELAB",
+        "color": "#A357D7",
+        "color_light": "#A357D7",
+        "color_dark": "#B260EA",
+        "order": 7
+    },
+    {
+        "station": "MEIJO",
+        "color": "#A357D7",
+        "color_light": "#A357D7",
+        "color_dark": "#B260EA",
+        "order": 8
+    },
+    {
+        "station": "MEDEL",
+        "color": "#A357D7",
+        "color_light": "#A357D7",
+        "color_dark": "#B260EA",
+        "order": 9
+    },
+    {
+        "station": "MEJRO",
+        "color": "#A357D7",
+        "color_light": "#A357D7",
+        "color_dark": "#B260EA",
+        "order": 10
+    },
+    {
+        "station": "MEGEM",
+        "color": "#A357D7",
+        "color_light": "#A357D7",
+        "color_dark": "#B260EA",
+        "order": 11
+    },
+    {
+        "station": "MEPET",
+        "color": "#A357D7",
+        "color_light": "#A357D7",
+        "color_dark": "#B260EA",
+        "order": 12
+    },
+    {
+        "station": "MEPLA",
+        "color": "#A357D7",
+        "color_light": "#A357D7",
+        "color_dark": "#B260EA",
+        "order": 13
+    },
+    {
+        "station": "MEIMO",
+        "color": "#63CA56",
+        "color_light": "#63CA56",
+        "color_dark": "#6BD45F",
+        "order": 14
+    }
+]

@@ -46,6 +46,7 @@ class SeismogramConfigAdmin(admin.ModelAdmin):
 class SeismogramStationConfigAdmin(admin.ModelAdmin):
     list_display = (
         "picker_config",
+        "seismogram_config",
         "station",
         "color",
         "color_light",

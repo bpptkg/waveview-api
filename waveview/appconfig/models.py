@@ -38,7 +38,7 @@ class PickerConfig(models.Model):
         verbose_name_plural = _("picker")
 
     def __str__(self) -> str:
-        return f"<PickerConfig: {self.volcano}>"
+        return f"{self.volcano}"
 
 
 class HelicorderConfig(models.Model):
@@ -64,7 +64,7 @@ class HelicorderConfig(models.Model):
         verbose_name_plural = _("helicorder")
 
     def __str__(self) -> str:
-        return f"<HelicorderConfig: {self.picker_config}>"
+        return f"{self.picker_config}"
 
 
 class SeismogramConfig(models.Model):
@@ -86,7 +86,7 @@ class SeismogramConfig(models.Model):
         verbose_name_plural = _("seismogram")
 
     def __str__(self) -> str:
-        return f"<SeismogramConfig: {self.picker_config}>"
+        return f"{self.picker_config}"
 
 
 class SeismogramStationConfig(models.Model):
@@ -114,7 +114,7 @@ class SeismogramStationConfig(models.Model):
         unique_together = ("seismogram_config", "station")
 
     def __str__(self) -> str:
-        return f"<SeismogramStationConfig: {self.seismogram_config}>"
+        return f"{self.seismogram_config}"
 
 
 class HypocenterConfig(models.Model):

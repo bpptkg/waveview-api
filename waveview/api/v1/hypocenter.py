@@ -36,9 +36,7 @@ class HypocenterEndpoint(Endpoint):
             """
         ),
         tags=["Catalog"],
-        responses={
-            status.HTTP_200_OK: openapi.Response("OK", HypocenterSerializer)
-        },
+        responses={status.HTTP_200_OK: openapi.Response("OK", HypocenterSerializer)},
         manual_parameters=[
             openapi.Parameter(
                 "start",
@@ -112,7 +110,7 @@ class HypocenterEndpoint(Endpoint):
         else:
             try:
                 types = HypocenterConfig.objects.get(
-                    organization=organization, volcano=volcano, is_preferred=True
+                    volcano=volcano, is_preferred=True
                 ).event_types.all()
             except HypocenterConfig.DoesNotExist:
                 types = []

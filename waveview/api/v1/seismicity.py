@@ -164,9 +164,7 @@ class SeismicityEndpoint(Endpoint):
             )
         else:
             type_ids = (
-                SeismicityConfig.objects.filter(
-                    organization=organization, volcano=volcano
-                )
+                SeismicityConfig.objects.filter(volcano=volcano)
                 .order_by("order")
                 .values_list("type", flat=True)
             )

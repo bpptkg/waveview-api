@@ -18,6 +18,7 @@ class Volcano(models.Model):
         related_name="volcanoes",
         related_query_name="volcano",
     )
+    slug = models.SlugField(max_length=200)
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True, default="")
     elevation = models.FloatField(null=True, blank=True)

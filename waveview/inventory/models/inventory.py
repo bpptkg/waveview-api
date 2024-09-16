@@ -40,10 +40,10 @@ class Inventory(models.Model):
         verbose_name_plural = _("inventories")
 
     def __str__(self) -> str:
-        return self.name
+        return str(self.organization.name)
 
     def __repr__(self) -> str:
-        return f"<Inventory: {self.name}>"
+        return f"<Inventory: {self.organization.name}>"
 
     @property
     def network_count(self) -> int:

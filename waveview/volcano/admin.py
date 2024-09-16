@@ -6,6 +6,7 @@ from waveview.volcano.models import DigitalElevationModel, Volcano, VolcanoMedia
 @admin.register(Volcano)
 class VolcanoAdmin(admin.ModelAdmin):
     list_display = (
+        "slug",
         "name",
         "elevation",
         "location",

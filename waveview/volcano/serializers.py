@@ -9,6 +9,7 @@ from waveview.volcano.models import Volcano
 class VolcanoSerializer(serializers.Serializer):
     id = serializers.UUIDField(help_text=_("Volcano ID."))
     organization_id = serializers.UUIDField(help_text=_("Organization ID."))
+    slug = serializers.SlugField(help_text=_("Volcano slug."))
     name = serializers.CharField(help_text=_("Volcano name."))
     description = serializers.CharField(
         help_text=_("Volcano description."), allow_blank=True
@@ -35,6 +36,7 @@ class VolcanoSerializer(serializers.Serializer):
 
 
 class VolcanoPayloadSerializer(serializers.Serializer):
+    slug = serializers.SlugField(help_text=_("Volcano slug."))
     name = serializers.CharField(help_text=_("Volcano name."))
     description = serializers.CharField(
         help_text=_("Volcano description."), allow_blank=True, required=False
@@ -54,6 +56,13 @@ class VolcanoPayloadSerializer(serializers.Serializer):
     longitude = serializers.FloatField(
         help_text=_("Volcano longitude."), allow_null=True, required=False
     )
+
+    def validate_slug(self, value: str) -> str:
+        if Volcano.objects.filter(slug=value).exists():
+            raise serializers.ValidationError(
+                _("Volcano with this slug already exists.")
+            )
+        return value
 
     @transaction.atomic
     def create(self, validated_data: dict) -> Volcano:

@@ -1,12 +1,13 @@
 import logging
+import time
 
 from obspy import Trace
 from obspy.clients.seedlink.slpacket import SLPacket
 
+from waveview.inventory.datastream import preparebuffer
 from waveview.inventory.models import Channel, Inventory
 from waveview.inventory.models.datasource import DataSource, DataSourceType
 from waveview.inventory.seedlink.client import EasySeedLinkClient, get_statefile
-from waveview.inventory.datastream import preparebuffer
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +68,13 @@ def run_seedlink(inventory_id: str, debug: bool = False) -> None:
     statefile = get_statefile()
     client.set_state_file(str(statefile))
 
-    try:
-        client.run()
-    except KeyboardInterrupt:
-        logger.info("Exiting Seedlink client.")
-        client.close()
+    while True:
+        try:
+            client.run()
+        except KeyboardInterrupt:
+            logger.info("Exiting Seedlink client.")
+            client.close()
+            break
+        except Exception as e:
+            logger.error(f"Error running Seedlink client: {e} - retrying in 5 seconds.")
+            time.sleep(5)

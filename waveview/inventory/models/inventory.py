@@ -66,6 +66,7 @@ class InventoryFile(models.Model):
     )
     type = models.CharField(max_length=50, null=True, blank=True)
     file = models.FileField(upload_to=MediaPath("inventories/"))
+    name = models.CharField(max_length=200, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(

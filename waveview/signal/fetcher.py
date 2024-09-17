@@ -21,6 +21,8 @@ class FetcherData:
     start: float
     end: float
     force_center: bool
+    resample: bool
+    sample_rate: int
 
     @classmethod
     def from_raw_data(cls, raw: dict) -> "FetcherData":
@@ -30,6 +32,8 @@ class FetcherData:
             start=raw["start"],
             end=raw["end"],
             force_center=raw.get("forceCenter", True),
+            resample=raw.get("resample", True),
+            sample_rate=raw.get("sampleRate", 10),
         )
 
 
@@ -82,6 +86,8 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
         request_id = payload.request_id
         channel_id = payload.channel_id
         force_center = payload.force_center
+        sample_rate = payload.sample_rate
+        resample = payload.resample
 
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
@@ -103,12 +109,14 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
             return empty_packet.encode()
 
         st = self.datastream.get_waveform(channel_id, start, end)
-        st.resample(10)
-        if len(st) == 0:
+        if resample:
+            st.resample(sample_rate)
+
+        if len(st) == 0 or st[0].stats.npts == 0:
             return empty_packet.encode()
 
         if force_center:
-            st.detrend("linear")
+            st.detrend("demean")
 
         starttime = st[0].stats.starttime
         npts = st[0].stats.npts

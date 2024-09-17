@@ -52,6 +52,8 @@ class FilterData:
     filter_options: dict
     taper_type: str
     taper_width: float
+    resample: bool
+    sample_rate: int
 
     @classmethod
     def from_raw_data(cls, data: dict) -> "FilterData":
@@ -64,6 +66,8 @@ class FilterData:
             filter_options=data["filterOptions"],
             taper_type=data["taperType"],
             taper_width=data["taperWidth"],
+            resample=data.get("resample", True),
+            sample_rate=data.get("sampleRate", 10),
         )
 
 
@@ -81,6 +85,8 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
         channel_id = payload.channel_id
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
+        resample = payload.resample
+        sample_rate = payload.sample_rate
 
         empty_packet = Packet(
             request_id=request_id,
@@ -134,7 +140,8 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
         else:
             return empty_packet.encode()
 
-        st.resample(10)
+        if resample:
+            st.resample(sample_rate)
 
         starttime = st[0].stats.starttime
         npts = st[0].stats.npts

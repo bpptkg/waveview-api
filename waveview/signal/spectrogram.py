@@ -35,7 +35,7 @@ def spectrogram(
     mult: float | None = 8.0,
     dbscale: bool = False,
     clip: list[float, float] = [0, 1],
-    downsample_factor: int = 3,
+    freqmax: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, Normalize]:
     if not wlen:
         wlen = 128 / sample_rate
@@ -51,7 +51,6 @@ def spectrogram(
     nlap = int(nfft * float(per_lap))
 
     data = data - data.mean()
-    end = npoints / sample_rate
 
     specgram, freq, time, _ = plt.specgram(
         data, Fs=sample_rate, NFFT=nfft, pad_to=mult, noverlap=nlap
@@ -64,6 +63,11 @@ def spectrogram(
     else:
         specgram = np.sqrt(specgram[1:, :])
     freq = freq[1:]
+
+    if freqmax:
+        freq_mask = freq <= freqmax
+        freq = freq[freq_mask]
+        specgram = specgram[freq_mask, :]
 
     vmin, vmax = clip
     if vmin < 0 or vmax > 1 or vmin >= vmax:
@@ -86,6 +90,7 @@ class SpectrogramRequestData:
     width: int
     height: int
     dark_mode: bool
+    freqmax: float | None = None
 
     @classmethod
     def from_raw_data(cls, raw: dict) -> "SpectrogramRequestData":
@@ -97,6 +102,7 @@ class SpectrogramRequestData:
             width=raw.get("width", 300),
             height=raw.get("height", 150),
             dark_mode=raw.get("darkMode", False),
+            freqmax=raw.get("freqMax", 25),
         )
 
 
@@ -212,6 +218,7 @@ class DummySpectrogramAdapter(BaseSpectrogramAdapter):
         channel_id = payload.channel_id
         width = payload.width
         height = payload.height
+        freqmax = payload.freqmax
 
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
@@ -223,7 +230,7 @@ class DummySpectrogramAdapter(BaseSpectrogramAdapter):
         sample_rate = st[0].stats.sampling_rate
 
         try:
-            specgram, time, freq, norm = spectrogram(data, sample_rate)
+            specgram, time, freq, norm = spectrogram(data, sample_rate, freqmax=freqmax)
         except ValueError:
             specgram = np.array([], dtype=np.float64)
             time = np.array([], dtype=np.float64)
@@ -255,6 +262,7 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
         channel_id = payload.channel_id
         width = payload.width
         height = payload.height
+        freqmax = payload.freqmax
 
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
@@ -286,7 +294,7 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
         sample_rate = st[0].stats.sampling_rate
 
         try:
-            specgram, time, freq, norm = spectrogram(data, sample_rate)
+            specgram, time, freq, norm = spectrogram(data, sample_rate, freqmax=freqmax)
         except ValueError:
             specgram = np.array([], dtype=np.float64)
             time = np.array([], dtype=np.float64)

@@ -20,14 +20,6 @@ class FetcherData:
     channel_id: str
     start: float
     end: float
-    mode: Literal[
-        "match_width",
-        "max_points",
-        "none",
-        "auto",
-    ]
-    width: float
-    max_points: int
     force_center: bool
 
     @classmethod
@@ -37,10 +29,7 @@ class FetcherData:
             channel_id=raw["channelId"],
             start=raw["start"],
             end=raw["end"],
-            mode=raw.get("mode", "none"),
-            width=raw.get("width", 0),
-            max_points=raw.get("maxPoints", 0),
-            force_center=raw.get("forceCenter", False),
+            force_center=raw.get("forceCenter", True),
         )
 
 
@@ -92,19 +81,7 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
     def fetch(self, payload: FetcherData) -> bytes:
         request_id = payload.request_id
         channel_id = payload.channel_id
-        width = payload.width
-        mode = payload.mode
-        max_points = payload.max_points
         force_center = payload.force_center
-
-        if mode == "auto":
-            n_out = int(width * 2)
-        elif mode == "match_width":
-            n_out = int(width)
-        elif mode == "max_points":
-            n_out = max_points
-        else:
-            n_out = -1
 
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)

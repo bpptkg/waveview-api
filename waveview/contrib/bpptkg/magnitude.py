@@ -6,7 +6,7 @@ from django.db import connection, transaction
 from obspy import Inventory as ObspyInventory
 from obspy import Stream, read_inventory
 
-from waveview.appconfig.models import MagnitudeConfig, StationMagnitudeConfig
+from waveview.appconfig.models import MagnitudeConfig
 from waveview.event.header import (
     AmplitudeCategory,
     AmplitudeUnit,
@@ -22,8 +22,8 @@ from waveview.event.models import (
     StationMagnitudeContribution,
 )
 from waveview.event.observers import EventObserver
-from waveview.inventory.models import Channel, Inventory
 from waveview.inventory.datastream import DataStream
+from waveview.inventory.models import Channel, Inventory
 from waveview.tasks.calc_magnitude import calc_magnitude
 
 logger = logging.getLogger(__name__)

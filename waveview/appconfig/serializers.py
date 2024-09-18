@@ -1,50 +1,39 @@
+import json
+import uuid
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from waveview.appconfig.models import PickerConfig, SeismicityConfig
 from waveview.event.serializers.event_type import EventTypeSerializer
-from waveview.inventory.serializers import ChannelSerializer, StationSerializer
-from waveview.appconfig.models import SeismicityConfig
 
 
-class SeismogramStationConfigSerializer(serializers.Serializer):
-    station = StationSerializer()
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        return super().default(obj)
+
+
+class ChannelConfigSerializer(serializers.Serializer):
+    channel_id = serializers.UUIDField(help_text=_("Channel ID."))
     color = serializers.CharField(
         max_length=32, required=False, help_text=_("Default color.")
     )
-    color_light = serializers.CharField(
-        max_length=32, required=False, help_text=_("Light color.")
-    )
-    color_dark = serializers.CharField(
-        max_length=32, required=False, help_text=_("Dark color.")
-    )
-    order = serializers.IntegerField(required=False, help_text=_("Ordering value."))
 
 
-class SeismogramConfigSerializer(serializers.Serializer):
-    component = serializers.CharField(
-        max_length=32, required=False, help_text=_("Component.")
+class PickerConfigDataSerializer(serializers.Serializer):
+    helicorder_channel = ChannelConfigSerializer(help_text=_("Helicorder channel."))
+    seismogram_channels = ChannelConfigSerializer(
+        help_text=_("Seismogram channels."), many=True
     )
-    station_configs = SeismogramStationConfigSerializer(
-        many=True, required=False, help_text=_("Station configs.")
-    )
-
-
-class HelicorderConfigSerializer(serializers.Serializer):
-    channel = ChannelSerializer()
-    color = serializers.CharField(
-        max_length=32, required=False, help_text=_("Default color.")
-    )
-    color_light = serializers.CharField(
-        max_length=32, required=False, help_text=_("Light color.")
-    )
-    color_dark = serializers.CharField(
-        max_length=32, required=False, help_text=_("Dark color.")
-    )
+    force_center = serializers.BooleanField(help_text=_("Force center."))
+    window_size = serializers.IntegerField(help_text=_("Selection window in minutes."))
 
 
 class PickerConfigSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True, help_text=_("Picker config ID."))
-    volcano_id = serializers.UUIDField(required=False, help_text=_("Volcano ID."))
+    user_id = serializers.UUIDField(required=False, help_text=_("Author ID."))
     name = serializers.CharField(max_length=255, help_text=_("Picker config name."))
     created_at = serializers.DateTimeField(
         read_only=True, help_text=_("Picker config creation datetime.")
@@ -52,9 +41,37 @@ class PickerConfigSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(
         read_only=True, help_text=_("Picker config update datetime.")
     )
-    author_id = serializers.UUIDField(required=False, help_text=_("Author ID."))
-    helicorder_config = HelicorderConfigSerializer(help_text=_("Helicorder config."))
-    seismogram_config = SeismogramConfigSerializer(help_text=_("Seismogram config."))
+    data = PickerConfigDataSerializer(help_text=_("Helicorder config."))
+
+
+class PickerConfigPayloadSerializer(serializers.Serializer):
+    helicorder_channel = ChannelConfigSerializer(help_text=_("Helicorder channel."))
+    seismogram_channels = ChannelConfigSerializer(
+        help_text=_("Seismogram channels."), many=True
+    )
+    force_center = serializers.BooleanField(help_text=_("Force center."))
+    window_size = serializers.IntegerField(help_text=_("Selection window in minutes."))
+
+    def create(self, validated_data: dict) -> PickerConfig:
+        user = self.context["user"]
+        volcano = self.context["volcano"]
+        data = json.loads(json.dumps(validated_data, cls=CustomJSONEncoder))
+        instance, __ = PickerConfig.objects.update_or_create(
+            user=user,
+            volcano=volcano,
+            defaults={
+                "data": data,
+                "name": "Default",
+            },
+        )
+        return instance
+
+    def update(
+        self, instance: SeismicityConfig, validated_data: dict
+    ) -> SeismicityConfig:
+        instance.data = validated_data
+        instance.save()
+        return instance
 
 
 class SeismicityConfigSerializer(serializers.ModelSerializer):

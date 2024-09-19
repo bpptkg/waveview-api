@@ -30,10 +30,10 @@ class RockfallSerializer(serializers.Serializer):
 class RockfallPayloadSerializer(serializers.Serializer):
     is_lava_flow = serializers.BooleanField(help_text=_("Is lava flow."))
     observation_form = serializers.ChoiceField(
-        help_text=_("Rockfall observation form."), choices=ObservationForm.choices
+        help_text=_("Rockfall observation form."), choices=ObservationForm.choices, allow_null=True
     )
     event_size = serializers.ChoiceField(
-        help_text=_("Rockfall event size."), choices=EventSize.choices
+        help_text=_("Rockfall event size."), choices=EventSize.choices, allow_null=True
     )
     runout_distance = serializers.FloatField(help_text=_("Rockfall runout distance."))
     fall_direction_id = serializers.UUIDField(

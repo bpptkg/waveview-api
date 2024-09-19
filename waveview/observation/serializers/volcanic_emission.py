@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from waveview.observation.models import VolcanicEmission
+from waveview.observation.choices import ObservationForm
 
 
 class VolcanicEmissionSerializer(serializers.Serializer):
@@ -25,8 +26,10 @@ class VolcanicEmissionSerializer(serializers.Serializer):
 
 
 class VolcanicEmissionPayloadSerializer(serializers.Serializer):
-    observation_form = serializers.CharField(
-        help_text=_("Volcanic emission observation form.")
+    observation_form = serializers.ChoiceField(
+        help_text=_("Volcanic emission observation form."),
+        choices=ObservationForm.choices,
+        allow_null=True,
     )
     height = serializers.FloatField(help_text=_("Volcanic emission height."))
     color = serializers.CharField(

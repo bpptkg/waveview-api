@@ -40,11 +40,11 @@ class PyroclasticFlowPayloadSerializer(serializers.Serializer):
     is_lava_flow = serializers.BooleanField(help_text=_("Is lava flow."))
     observation_form = serializers.ChoiceField(
         help_text=_("Pyroclastic flow observation form."),
-        choices=ObservationForm.choices,
+        choices=ObservationForm.choices, allow_null=True
     )
     event_size = serializers.ChoiceField(
         help_text=_("Pyroclastic flow event size."),
-        choices=EventSize.choices,
+        choices=EventSize.choices, allow_null=True
     )
     runout_distance = serializers.FloatField(
         help_text=_("Pyroclastic flow runout distance.")

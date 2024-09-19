@@ -28,7 +28,7 @@ class HypocenterDataSeederOptions:
     depth_min: float
     depth_max: float
     num_events: int
-    days: int
+    hours: int
 
     @classmethod
     def from_dict(cls, data: dict) -> "HypocenterDataSeederOptions":
@@ -47,7 +47,7 @@ class HypocenterDataSeeder(BaseDataSeeder):
         lon_max = options.lon_max
         depth_min = options.depth_min
         depth_max = options.depth_max
-        days = options.days
+        hours = options.hours
 
         event_types = list(EventType.objects.all())
 
@@ -55,7 +55,7 @@ class HypocenterDataSeeder(BaseDataSeeder):
             event = Event.objects.create(
                 catalog_id=catalog_id,
                 station_of_first_arrival_id=station_of_first_arrival_id,
-                time=random_datetime(days),
+                time=random_datetime(hours),
                 duration=random_duration(),
                 type=random_choices(event_types),
                 note="",

@@ -89,7 +89,6 @@ class SpectrogramRequestData:
     end: int
     width: int
     height: int
-    dark_mode: bool
     freqmax: float | None = None
 
     @classmethod
@@ -101,7 +100,6 @@ class SpectrogramRequestData:
             end=raw["end"],
             width=raw.get("width", 300),
             height=raw.get("height", 150),
-            dark_mode=raw.get("darkMode", False),
             freqmax=raw.get("freqMax", 25),
         )
 
@@ -122,9 +120,7 @@ def generate_image(
         (0, 0, 1, 1),  # Blue
         (0, 1, 0, 1),  # Green
         (1, 1, 0, 1),  # Yellow
-        # (1, 0.5, 0, 1),  # Orange
         (1, 0, 0, 1),  # Red
-        # (0.5, 0, 0, 1)  # Dark Red
     ]
     n_bins = 100
     cmap_name = "waveview"

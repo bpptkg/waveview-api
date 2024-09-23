@@ -109,12 +109,7 @@ class BaseSpectrogramAdapter:
         raise NotImplementedError("spectrogram method must be implemented")
 
 
-def generate_image(
-    specgram: np.ndarray,
-    time: np.ndarray,
-    freq: np.ndarray,
-    norm: Normalize,
-) -> bytes:
+def get_cmap() -> LinearSegmentedColormap:
     colors = [
         (1, 1, 1, 0),  # White
         (0, 0, 1, 1),  # Blue
@@ -125,6 +120,16 @@ def generate_image(
     n_bins = 100
     cmap_name = "waveview"
     cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
+    return cmap
+
+
+def generate_image(
+    specgram: np.ndarray,
+    time: np.ndarray,
+    freq: np.ndarray,
+    norm: Normalize,
+) -> bytes:
+    cmap = get_cmap()
     px = 1 / plt.rcParams["figure.dpi"]
     w = len(time) * px
     h = len(freq) * px

@@ -45,13 +45,14 @@ class PickerConfigIndexEndpoint(Endpoint):
         user = request.user
 
         try:
-            config = PickerConfig.objects.filter(user=user, volcano=volcano).first()
-            if config is None:
+            config = PickerConfig.objects.filter(user=user, volcano=volcano).get()
+        except PickerConfig.DoesNotExist:
+            try:
                 config = PickerConfig.objects.filter(
                     organization=organization, volcano=volcano
-                ).first()
-        except PickerConfig.DoesNotExist:
-            raise NotFound(_("Picker config not found."))
+                ).get()
+            except PickerConfig.DoesNotExist:
+                raise NotFound(_("Picker config not found."))
 
         serializer = PickerConfigSerializer(config)
         return Response(serializer.data, status=status.HTTP_200_OK)

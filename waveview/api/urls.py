@@ -24,6 +24,7 @@ from .v1.event_origin_detail import EventOriginDetailEndpoint
 from .v1.event_origin_index import EventOriginIndexEndpoint
 from .v1.event_type_detail import EventTypeDetailEndpoint
 from .v1.event_type_index import EventTypeIndexEndpoint
+from .v1.fall_directions_index import FallDirectionIndexEndpoint
 from .v1.hypocenter import HypocenterEndpoint
 from .v1.index import IndexEndpoint
 from .v1.inventory import InventoryEndpoint
@@ -37,6 +38,7 @@ from .v1.organization_permissions import OrganizationPermissionsEndpoint
 from .v1.organization_role_detail import OrganizationRoleDetailEndpoint
 from .v1.organization_role_index import OrganizationRoleIndexEndpoint
 from .v1.picker_config_index import PickerConfigIndexEndpoint
+from .v1.picker_config_reset import PickerConfigResetEndpoint
 from .v1.registration import AccountRegistrationEndpoint
 from .v1.search_user import SearchUserEndpoint
 from .v1.seedlink import (
@@ -49,7 +51,6 @@ from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
 from .v1.volcano_index import VolcanoIndexEndpoint
-from .v1.fall_directions_index import FallDirectionIndexEndpoint
 
 EVENT_ORIGIN_URLS = [
     path(
@@ -138,6 +139,11 @@ PICKER_CONFIG_URLS = [
         "",
         PickerConfigIndexEndpoint.as_view(),
         name="waveview-api-1-picker-config-index",
+    ),
+    path(
+        "reset/",
+        PickerConfigResetEndpoint.as_view(),
+        name="waveview-api-1-picker-config-reset",
     ),
 ]
 

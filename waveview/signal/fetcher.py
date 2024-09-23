@@ -26,11 +26,13 @@ class FetcherData:
 
     @classmethod
     def from_raw_data(cls, raw: dict) -> "FetcherData":
+        start = raw["start"]
+        end = raw["end"]
         return cls(
             request_id=raw["requestId"],
             channel_id=raw["channelId"],
-            start=raw["start"],
-            end=raw["end"],
+            start=int(start),
+            end=int(end),
             force_center=raw.get("forceCenter", True),
             resample=raw.get("resample", True),
             sample_rate=raw.get("sampleRate", 10),

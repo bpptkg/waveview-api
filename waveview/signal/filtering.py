@@ -57,11 +57,13 @@ class FilterData:
 
     @classmethod
     def from_raw_data(cls, data: dict) -> "FilterData":
+        start = data["start"]
+        end = data["end"]
         return cls(
             request_id=data["requestId"],
             channel_id=data["channelId"],
-            start=data["start"],
-            end=data["end"],
+            start=int(start),
+            end=int(end),
             filter_type=data["filterType"],
             filter_options=data["filterOptions"],
             taper_type=data["taperType"],

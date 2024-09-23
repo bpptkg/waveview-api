@@ -93,11 +93,13 @@ class SpectrogramRequestData:
 
     @classmethod
     def from_raw_data(cls, raw: dict) -> "SpectrogramRequestData":
+        start = raw["start"]
+        end = raw["end"]
         return cls(
             request_id=raw["requestId"],
             channel_id=raw["channelId"],
-            start=raw["start"],
-            end=raw["end"],
+            start=int(start),
+            end=int(end),
             width=raw.get("width", 300),
             height=raw.get("height", 150),
             freqmax=raw.get("freqMax", 25),
@@ -169,15 +171,23 @@ class SpectrogramData:
         command = pad(self.command.encode("utf-8"), 64)
         channel_id = pad(self.channel_id.encode("utf-8"), 64)
         start = self.start
-        end = self.end
+
+        freqLength = len(self.freq)
         if len(self.freq) == 0:
             freqMin = 0
             freqMax = 0
         else:
             freqMin = self.freq.min()
             freqMax = self.freq.max()
+
         timeLength = len(self.time)
-        freqLength = len(self.freq)
+        if len(self.time) == 0:
+            timeMin = 0
+            timeMax = 0
+        else:
+            timeMin = self.time.min()
+            timeMax = self.time.max()
+
         if len(self.data) == 0:
             minVal = 0
             maxVal = 0
@@ -186,12 +196,17 @@ class SpectrogramData:
             minVal = self.data.min()
             maxVal = self.data.max()
             image = generate_image(self.data, self.time, self.freq, self.norm)
+
+        # Adjust time to match the spectrogram
+        timeMin = start + timeMin * 1000
+        timeMax = start + timeMax * 1000
+
         header = np.array(
             [
                 int(self.start),
                 int(self.end),
-                start,
-                end,
+                int(timeMin),
+                int(timeMax),
                 freqMin,
                 freqMax,
                 timeLength,

@@ -43,7 +43,7 @@ class FilterType(enum.StrEnum):
 
 
 @dataclass
-class FilterData:
+class FilterRequestData:
     request_id: str
     channel_id: str
     start: float
@@ -56,7 +56,7 @@ class FilterData:
     sample_rate: int
 
     @classmethod
-    def from_raw_data(cls, data: dict) -> "FilterData":
+    def from_raw_data(cls, data: dict) -> "FilterRequestData":
         start = data["start"]
         end = data["end"]
         return cls(
@@ -74,7 +74,7 @@ class FilterData:
 
 
 class BaseFilterAdapter:
-    def filter(self, payload: FilterData) -> bytes:
+    def filter(self, payload: FilterRequestData) -> bytes:
         raise NotImplementedError("filter method must be implemented")
 
 
@@ -82,7 +82,7 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
     def __init__(self) -> None:
         self.datastream = DataStream(connection)
 
-    def filter(self, payload: FilterData) -> bytes:
+    def filter(self, payload: FilterRequestData) -> bytes:
         request_id = payload.request_id
         channel_id = payload.channel_id
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)

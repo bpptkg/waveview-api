@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class FetcherData:
+class FetcherRequestData:
     request_id: str
     channel_id: str
     start: float
@@ -25,7 +25,7 @@ class FetcherData:
     sample_rate: int
 
     @classmethod
-    def from_raw_data(cls, raw: dict) -> "FetcherData":
+    def from_raw_data(cls, raw: dict) -> "FetcherRequestData":
         start = raw["start"]
         end = raw["end"]
         return cls(
@@ -35,17 +35,17 @@ class FetcherData:
             end=int(end),
             force_center=raw.get("forceCenter", True),
             resample=raw.get("resample", True),
-            sample_rate=raw.get("sampleRate", 10),
+            sample_rate=raw.get("sampleRate", 1),
         )
 
 
 class BaseStreamFetcher:
-    def fetch(self, payload: FetcherData) -> bytes:
+    def fetch(self, payload: FetcherRequestData) -> bytes:
         raise NotImplementedError("fetch method must be implemented")
 
 
 class DummyStreamFetcher(BaseStreamFetcher):
-    def fetch(self, payload: FetcherData) -> bytes:
+    def fetch(self, payload: FetcherRequestData) -> bytes:
         request_id = payload.request_id
         channel_id = payload.channel_id
         n_out = 6000
@@ -84,7 +84,7 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
     def __init__(self) -> None:
         self.datastream = DataStream(connection)
 
-    def fetch(self, payload: FetcherData) -> bytes:
+    def fetch(self, payload: FetcherRequestData) -> bytes:
         request_id = payload.request_id
         channel_id = payload.channel_id
         force_center = payload.force_center
@@ -129,6 +129,11 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
         )
         b = st[0].data.astype(np.float64)
 
+        # start and end time of the packet need to be the same as the original
+        # request as the client uses these values to cache the data. If the data
+        # is resampled, the start and end time of the packet will be different
+        # from the original request. But it should not affect the caching
+        # mechanism as the point will be plotted at the same time.
         packet = Packet(
             request_id=request_id,
             channel_id=channel_id,

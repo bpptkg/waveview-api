@@ -4,8 +4,8 @@ import logging
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from waveview.signal.fetcher import FetcherData, get_fetcher_adapter
-from waveview.signal.filtering import FilterData, get_filter_adapter
+from waveview.signal.fetcher import FetcherRequestData, get_fetcher_adapter
+from waveview.signal.filtering import FilterRequestData, get_filter_adapter
 from waveview.signal.spectrogram import SpectrogramRequestData, get_spectrogram_adapter
 from waveview.websocket.base import CommandType, MessageEvent, WebSocketRequest
 from waveview.websocket.subscribe import StreamSubscribeData, StreamUnsubscribeData
@@ -46,7 +46,7 @@ class StreamConsumer(AsyncWebsocketConsumer):
     async def stream_fetch(self, request: WebSocketRequest) -> None:
         raw = request.data
 
-        payload = FetcherData.from_raw_data(raw)
+        payload = FetcherRequestData.from_raw_data(raw)
         if not payload.channel_id:
             return
 
@@ -70,7 +70,7 @@ class StreamConsumer(AsyncWebsocketConsumer):
     async def stream_filter(self, request: WebSocketRequest) -> None:
         raw = request.data
 
-        payload = FilterData.from_raw_data(raw)
+        payload = FilterRequestData.from_raw_data(raw)
         if not payload.channel_id:
             return
 

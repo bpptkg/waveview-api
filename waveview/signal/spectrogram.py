@@ -89,6 +89,8 @@ class SpectrogramRequestData:
     end: int
     width: int
     height: int
+    resample: bool
+    sample_rate: int
     freqmax: float | None = None
 
     @classmethod
@@ -100,6 +102,8 @@ class SpectrogramRequestData:
             channel_id=raw["channelId"],
             start=int(start),
             end=int(end),
+            resample=raw.get("resample", True),
+            sample_rate=raw.get("sampleRate", 1),
             width=raw.get("width", 300),
             height=raw.get("height", 150),
             freqmax=raw.get("freqMax", 25),
@@ -130,7 +134,29 @@ def generate_image(
     time: np.ndarray,
     freq: np.ndarray,
     norm: Normalize,
+    tmin: float,
+    tmax: float,
 ) -> bytes:
+    """
+    Generate a spectrogram image from the given data.
+
+    Parameters
+    ----------
+    specgram : np.ndarray
+        The spectrogram data.
+    time : np.ndarray
+        The offset time of the spectrogram, e.g. array([0.5, 1.5, 2.5, ...]).
+    freq : np.ndarray
+        The frequency of the spectrogram, e.g. array([0, 1, 2, 3, ...]).
+    norm : Normalize
+        The normalization object.
+    tmin : float
+        The minimum time of the spectrogram. It is used to set the x-axis limit so that
+        the image only shows the desired time range.
+    tmax : float
+        The maximum time of the spectrogram. It is used to set the x-axis limit so that
+        the image only shows the desired time range.
+    """
     cmap = get_cmap()
     px = 1 / plt.rcParams["figure.dpi"]
     w = len(time) * px
@@ -144,6 +170,8 @@ def generate_image(
         extent=[time.min(), time.max(), freq.min(), freq.max()],
         cmap=cmap,
     )
+    ax.set_xlim(tmin, tmax)
+    ax.set_ylim(0, freq.max())
     ax.axis("off")
     fig.tight_layout(pad=0)
     buf = io.BytesIO()
@@ -156,6 +184,8 @@ def generate_image(
 class SpectrogramData:
     request_id: str
     channel_id: str
+    npoints: int
+    sample_rate: float
     data: np.ndarray
     time: np.ndarray
     freq: np.ndarray
@@ -170,7 +200,7 @@ class SpectrogramData:
         request_id = pad(self.request_id.encode("utf-8"), 64)
         command = pad(self.command.encode("utf-8"), 64)
         channel_id = pad(self.channel_id.encode("utf-8"), 64)
-        start = self.start
+        time_signal = np.arange(self.npoints) / self.sample_rate
 
         freqLength = len(self.freq)
         if len(self.freq) == 0:
@@ -195,18 +225,21 @@ class SpectrogramData:
         else:
             minVal = self.data.min()
             maxVal = self.data.max()
-            image = generate_image(self.data, self.time, self.freq, self.norm)
-
-        # Adjust time to match the spectrogram
-        timeMin = start + timeMin * 1000
-        timeMax = start + timeMax * 1000
+            image = generate_image(
+                self.data,
+                self.time,
+                self.freq,
+                self.norm,
+                time_signal.min(),
+                time_signal.max(),
+            )
 
         header = np.array(
             [
                 int(self.start),
                 int(self.end),
-                int(timeMin),
-                int(timeMax),
+                timeMin,
+                timeMax,
                 freqMin,
                 freqMax,
                 timeLength,
@@ -256,6 +289,8 @@ class DummySpectrogramAdapter(BaseSpectrogramAdapter):
         packet = SpectrogramData(
             request_id=request_id,
             channel_id=channel_id,
+            npoints=len(data),
+            sample_rate=sample_rate,
             data=specgram,
             time=time,
             freq=freq,
@@ -286,6 +321,8 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
         empty_packet = SpectrogramData(
             request_id=request_id,
             channel_id=channel_id,
+            npoints=0,
+            sample_rate=1,
             data=np.array([]),
             time=np.array([]),
             freq=np.array([]),
@@ -308,6 +345,10 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
         if len(data) == 0:
             return empty_packet.encode()
         sample_rate = st[0].stats.sampling_rate
+        starttime = st[0].stats.starttime
+        npts = st[0].stats.npts
+        delta = st[0].stats.delta
+        endtime = starttime + npts * delta
 
         try:
             specgram, time, freq, norm = spectrogram(data, sample_rate, freqmax=freqmax)
@@ -317,14 +358,30 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
             freq = np.array([], dtype=np.float64)
             norm = Normalize(0, 1)
 
+        # If signal is resampled, update the start and end time of the signal as
+        # the original start and end time of the signal will be different after
+        # resampling. Therefore, the spectrogram coordinates need to be updated
+        # as well.
+        if payload.resample:
+            st.resample(payload.sample_rate)
+            sample_rate = payload.sample_rate
+            starttime = st[0].stats.starttime
+            npts = st[0].stats.npts
+            delta = st[0].stats.delta
+            endtime = starttime + npts * delta
+            data = st[0].data
+            npoints = len(data)
+
         packet = SpectrogramData(
             request_id=request_id,
             channel_id=channel_id,
+            npoints=npoints,
+            sample_rate=sample_rate,
             data=specgram,
             time=time,
             freq=freq,
-            start=start.timestamp() * 1000,
-            end=end.timestamp() * 1000,
+            start=starttime.timestamp * 1000,
+            end=endtime.timestamp * 1000,
             norm=norm,
             width=width,
             height=height,

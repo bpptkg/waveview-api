@@ -31,6 +31,8 @@ django-phonenumber-field = "^8.0.0"
 phonenumbers = "^8.13.43"
 channels-redis = "^4.2.0"
 zstandard = "^0.23.0"
+sphinx = "7.4.7"
+sphinx-rtd-theme = "^2.0.0"
 
 
 [build-system]

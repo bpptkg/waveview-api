@@ -1,38 +1,54 @@
+import enum
 from typing import Type
 
 from django.conf import settings
 from django.utils.module_loading import import_string
 
-from waveview.event.models import Event
+
+class OperationType(enum.StrEnum):
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
 
 
 class EventObserver:
-    def run(self, event: Event) -> None:
-        """
-        Run the observer for the given event.
+    name: str = ""
 
-        This method should ideally be used with an asynchronous approach to
-        avoid blocking the main thread. Running this method synchronously may
-        lead to performance issues, especially if the observer performs
-        time-consuming operations.
-        """
+    def create(self, event_id: str, data: dict) -> None:
+        pass
+
+    def update(self, event_id: str, data: dict) -> None:
+        pass
+
+    def delete(self, event_id: str, data: dict) -> None:
         pass
 
 
-class EventRegistry:
+class EventObserverRegistry:
     def __init__(self):
-        self._observers: list[EventObserver] = []
+        self._observers: dict[str, Type[EventObserver]] = {}
 
-    def register(self, observer: EventObserver) -> None:
-        self._observers.append(observer)
+    def register(self, observer_class: Type[EventObserver]) -> None:
+        name = observer_class.name
+        if name in self._observers:
+            raise ValueError(f"Observer {name} is already registered.")
+        self._observers[name] = observer_class
 
-    def notify(self, event: Event) -> None:
-        for observer in self._observers:
-            observer.run(event)
+    def unregister(self, name: str) -> None:
+        if name in self._observers:
+            del self._observers[name]
+
+    def get(self, name: str) -> Type[EventObserver]:
+        if name not in self._observers:
+            raise ValueError(f"Observer {name} is not registered.")
+        return self._observers.get(name)
+
+    def has(self, name: str) -> bool:
+        return name in self._observers
 
 
-event_registry = EventRegistry()
-for path in settings.EVENT_OBSERVERS:
-    path: str
-    observer: Type[EventObserver] = import_string(path)
-    event_registry.register(observer())
+observer_registry = EventObserverRegistry()
+for name in settings.EVENT_OBSERVER_REGISTRY:
+    name: str
+    observer_class: Type[EventObserver] = import_string(name)
+    observer_registry.register(observer_class)

@@ -306,8 +306,6 @@ CHANNEL_LAYERS = {
     },
 }
 
-BMA_API_KEY = env("BMA_API_KEY", default="")
-EVENT_OBSERVERS = env.list("EVENT_OBSERVERS", default=[])
-MAGNITUDE_ESTIMATORS = [
-    "waveview.contrib.bpptkg.magnitude.MagnitudeEstimator",
+EVENT_OBSERVER_REGISTRY = [
+    "waveview.contrib.bpptkg.magnitude.MagnitudeObserver",
 ]

@@ -168,6 +168,13 @@ class Event(models.Model):
         related_query_name="bookmarked_event",
         blank=True,
     )
+    refid = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("Reference ID."),
+    )
 
     class Meta:
         verbose_name = _("Event")

@@ -1,27 +1,12 @@
-from typing import Any, Dict, Type
+from typing import Any, Dict
 
-from django.conf import settings
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from django.utils.module_loading import import_string
 
-from waveview.event.magnitude import (
-    BaseMagnitudeEstimator,
-    register_magnitude_estimator,
-)
 from waveview.event.models import Attachment, Catalog, Event
-from waveview.event.observers import event_registry
+from waveview.tasks.notify_event_observer import OperationType, notify_event_observer
 from waveview.utils.media import MediaType
 from waveview.volcano.models import Volcano
-
-
-def setup_magnitude_estimator() -> None:
-    for estimator in settings.MAGNITUDE_ESTIMATORS:
-        klass: Type[BaseMagnitudeEstimator] = import_string(estimator)
-        register_magnitude_estimator(klass.method, klass)
-
-
-setup_magnitude_estimator()
 
 
 @receiver(post_save, sender=Volcano)
@@ -49,5 +34,20 @@ def attachment_post_save(
 
 
 @receiver(post_save, sender=Event)
-def event_post_save(sender: Any, instance: Event, **kwargs: Dict[str, Any]) -> None:
-    event_registry.notify(instance)
+def event_post_save(
+    sender: Any, instance: Event, created: bool, **kwargs: Dict[str, Any]
+) -> None:
+    event_id: str = str(instance.id)
+    volcano_id: str = str(instance.catalog.volcano.id)
+    if created:
+        operation = OperationType.CREATE
+    else:
+        operation = OperationType.UPDATE
+    notify_event_observer.delay(operation, event_id, volcano_id)
+
+
+@receiver(post_delete, sender=Event)
+def event_post_delete(sender: Any, instance: Event, **kwargs: Dict[str, Any]) -> None:
+    event_id: str = str(instance.id)
+    volcano_id: str = str(instance.catalog.volcano.id)
+    notify_event_observer.delay(OperationType.DELETE, event_id, volcano_id)

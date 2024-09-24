@@ -1,8 +1,8 @@
 from django.contrib import admin
 
 from waveview.appconfig.models import (
+    EventObserverConfig,
     HypocenterConfig,
-    MagnitudeConfig,
     PickerConfig,
     SeismicityConfig,
 )
@@ -42,12 +42,11 @@ class SeismicityConfigAdmin(admin.ModelAdmin):
     ordering = ("order",)
 
 
-@admin.register(MagnitudeConfig)
-class MagnitudeConfigAdmin(admin.ModelAdmin):
+@admin.register(EventObserverConfig)
+class EventObserverConfigAdmin(admin.ModelAdmin):
     list_display = (
         "volcano",
         "name",
-        "method",
         "created_at",
         "updated_at",
     )

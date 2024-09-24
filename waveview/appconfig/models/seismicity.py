@@ -41,4 +41,4 @@ class SeismicityConfig(models.Model):
         verbose_name_plural = _("seismicity")
 
     def __str__(self) -> str:
-        return f"<SeismicityConfig: {self.volcano}>"
+        return f"{self.volcano}"

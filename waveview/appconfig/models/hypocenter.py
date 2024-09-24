@@ -31,4 +31,4 @@ class HypocenterConfig(models.Model):
         verbose_name_plural = _("hypocenter")
 
     def __str__(self) -> str:
-        return f"<HypocenterConfig: {self.volcano}>"
+        return f"{self.volcano}"

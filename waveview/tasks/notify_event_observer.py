@@ -20,9 +20,11 @@ def notify_event_observer(
     **options,
 ) -> None:
     """
-    Notify an event observer that a new event has been created or updated.
+    Notify an event observer based on the operation type.
     """
-    items = EventObserverConfig.objects.filter(volcano_id=volcano_id).all()
+    items = EventObserverConfig.objects.filter(
+        volcano_id=volcano_id, is_enabled=True
+    ).all()
     for item in items:
         if not observer_registry.has(item.name):
             logger.error(

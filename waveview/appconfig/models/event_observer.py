@@ -23,6 +23,7 @@ class EventObserverConfig(models.Model):
         default=dict,
         help_text=_("Configuration data for the event observer."),
     )
+    is_enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(
@@ -37,4 +38,4 @@ class EventObserverConfig(models.Model):
         verbose_name_plural = _("event observer")
 
     def __str__(self) -> str:
-        return f"<EventObserverConfig: {self.volcano}>"
+        return self.name

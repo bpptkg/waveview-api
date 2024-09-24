@@ -47,6 +47,7 @@ class EventObserverConfigAdmin(admin.ModelAdmin):
     list_display = (
         "volcano",
         "name",
+        "is_enabled",
         "created_at",
         "updated_at",
     )

@@ -3,7 +3,7 @@ import logging
 from waveview.appconfig.models import EventObserverConfig
 from waveview.celery import app
 from waveview.event.observers import OperationType, observer_registry
-from waveview.tasks.functions import exec_async
+from waveview.tasks.exec_async import exec_async
 
 logger = logging.getLogger(__name__)
 

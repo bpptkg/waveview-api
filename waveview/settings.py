@@ -308,4 +308,5 @@ CHANNEL_LAYERS = {
 
 EVENT_OBSERVER_REGISTRY = [
     "waveview.contrib.bpptkg.magnitude.MagnitudeObserver",
+    "waveview.contrib.bma.bulletin.BulletinObserver",
 ]

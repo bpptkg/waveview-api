@@ -154,7 +154,7 @@ class MessageBuilder:
         cc: Optional[Sequence[str]] = None,
         bcc: Optional[Sequence[str]] = None,
     ) -> None:
-        from waveview.tasks.email import send_email
+        from waveview.tasks.send_email import send_email
 
         messages = self.get_built_messages(to, cc=cc, bcc=bcc)
         extra: MutableMapping[str, Union[str, tuple[str]]] = {"message_type": self.type}

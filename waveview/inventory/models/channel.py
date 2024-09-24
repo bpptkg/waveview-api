@@ -7,6 +7,32 @@ from django.utils.translation import gettext_lazy as _
 from waveview.inventory.header import RestrictedStatus
 
 
+class ChannelManager(models.Manager):
+    def get_queryset(self) -> models.QuerySet:
+        return super().get_queryset().select_related("station", "station__network")
+
+    def get_by_stream_id(self, stream_id: str) -> "Channel":
+        """
+        Get a channel by stream ID.
+        """
+        parts = stream_id.split(".")
+        if len(parts) == 3:
+            network, station, channel = parts
+            return self.get(
+                station__network__code=network, station__code=station, code=channel
+            )
+        elif len(parts) == 4:
+            network, station, location, channel = parts
+            return self.get(
+                station__network__code=network,
+                station__code=station,
+                location_code=location,
+                code=channel,
+            )
+        else:
+            raise self.model.DoesNotExist
+
+
 class Channel(models.Model):
     """
     This class describes a seismic channel.
@@ -155,6 +181,8 @@ class Channel(models.Model):
         related_name="+",
     )
 
+    objects = ChannelManager()
+
     class Meta:
         verbose_name = _("channel")
         verbose_name_plural = _("channels")
@@ -181,13 +209,9 @@ class Channel(models.Model):
         return sid
 
     @property
-    def network_station_code(self) -> str:
-        network = self.station.network.code
-        station = self.station.code
-        return f"{network}.{station}"
+    def net_sta_code(self) -> str:
+        return f"{self.station.network.code}.{self.station.code}"
 
     @property
-    def station_channel_code(self) -> str:
-        station = self.station.code
-        channel = self.code
-        return f"{station}.{channel}"
+    def sta_chan_code(self) -> str:
+        return f"{self.station.code}.{self.code}"

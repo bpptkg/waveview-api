@@ -57,6 +57,11 @@ class VolcanoMedia(models.Model):
         related_query_name="media",
     )
     file = models.FileField(upload_to=MediaPath("volcano-media"))
+    thumbnail = models.ImageField(
+        upload_to=MediaPath("volcano-media"),
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=200, null=True, blank=True)
     size = models.PositiveBigIntegerField()
     media_type = models.CharField(max_length=50, choices=MediaType.choices)

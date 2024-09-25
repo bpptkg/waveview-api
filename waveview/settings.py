@@ -1,6 +1,7 @@
 import tempfile
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 import environ
 
@@ -281,12 +282,12 @@ REDOC_SETTINGS = {
 
 REDIS_URL = env("REDIS_URL", default="redis://127.0.0.1:6379")
 
-BROKER_URL = REDIS_URL
+BROKER_URL = env("BROKER_URL", default=REDIS_URL)
 BROKER_TRANSPORT_OPTIONS = {}
 CELERY_RESULT_BACKEND = None
-CELERY_ACCEPT_CONTENT = {"pickle"}
-CELERY_RESULT_SERIALIZER = "pickle"
-CELERY_TASK_SERIALIZER = "pickle"
+CELERY_ACCEPT_CONTENT = {"json", "pickle"}
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_SERIALIZER = "json"
 CELERY_DISABLE_RATE_LIMITS = True
 CELERY_DEFAULT_QUEUE = "default"
 CELERY_DEFAULT_EXCHANGE = "default"
@@ -297,11 +298,15 @@ CELERYD_MAX_TASKS_PER_CHILD = 1
 CELERY_IMPORTS = ()
 CELERYBEAT_SCHEDULE_FILENAME = str(Path(tempfile.gettempdir()) / "waveview-celerybeat")
 CELERYBEAT_SCHEDULE = {}
+
+redis = urlparse(REDIS_URL)
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [
+                (redis.hostname, redis.port),
+            ],
         },
     },
 }

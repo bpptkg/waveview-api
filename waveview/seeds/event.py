@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from datetime import datetime
 
 from django.db import transaction
 
-from waveview.event.models import Catalog, Event, EventType, Magnitude, Origin
+from waveview.event.models import Event, EventType, Magnitude, Origin
 from waveview.seeds.base import BaseDataSeeder
 from waveview.seeds.utils import (
     random_choices,
@@ -17,7 +16,7 @@ from waveview.seeds.utils import (
 
 
 @dataclass
-class HypocenterDataSeederOptions:
+class EventDataSeederOptions:
     catalog_id: str
     station_of_first_arrival_id: str
     user_id: str
@@ -31,13 +30,13 @@ class HypocenterDataSeederOptions:
     hours: int
 
     @classmethod
-    def from_dict(cls, data: dict) -> "HypocenterDataSeederOptions":
+    def from_dict(cls, data: dict) -> "EventDataSeederOptions":
         return cls(**data)
 
 
-class HypocenterDataSeeder(BaseDataSeeder):
+class EventDataSeeder(BaseDataSeeder):
     @transaction.atomic
-    def run(self, options: HypocenterDataSeederOptions) -> None:
+    def run(self, options: EventDataSeederOptions) -> None:
         catalog_id = options.catalog_id
         station_of_first_arrival_id = options.station_of_first_arrival_id
         num_events = options.num_events

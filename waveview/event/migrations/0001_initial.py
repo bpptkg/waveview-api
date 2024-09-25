@@ -199,8 +199,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('media_type', models.CharField(choices=[('photo', 'Photo'), ('video', 'Video'), ('audio', 'Audio'), ('document', 'Document'), ('other', 'Other')], max_length=255)),
-                ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('event-attachments'))),
-                ('thumbnail', models.ImageField(blank=True, null=True, upload_to=waveview.utils.media.MediaPath('event-attachments'))),
+                ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('event-attachments/%Y/%m/%d'))),
+                ('thumbnail', models.ImageField(blank=True, null=True, upload_to=waveview.utils.media.MediaPath('event-attachments/%Y/%m/%d'))),
                 ('name', models.CharField(max_length=255)),
                 ('size', models.PositiveIntegerField()),
                 ('uploaded_at', models.DateTimeField(auto_now_add=True)),

@@ -52,6 +52,7 @@ class MagnitudeEstimatorData:
     event_id: str
     author_id: str
     channels: list[str]
+    preferred_channel: str = ""
     is_preferred: bool = False
 
 
@@ -60,6 +61,7 @@ class MagnitudeEstimator:
 
     def __init__(self) -> None:
         self.datastream = DataStream(connection)
+        self.preferred_map: dict[str, bool] = {}
 
     @transaction.atomic
     def calc_magnitude(self, data: MagnitudeEstimatorData) -> None:
@@ -67,6 +69,7 @@ class MagnitudeEstimator:
         event_id = data.event_id
         author_id = data.author_id
         is_preferred = data.is_preferred
+        preferred_channel = data.preferred_channel
 
         channels: list[Channel] = []
         for network_station_channel in data.channels:
@@ -76,6 +79,11 @@ class MagnitudeEstimator:
                     code=channel, station__code=station, station__network__code=network
                 ).get()
                 channels.append(instance)
+                channel_id = str(instance.id)
+                if network_station_channel == preferred_channel:
+                    self.preferred_map[channel_id] = True
+                else:
+                    self.preferred_map[channel_id] = False
             except Channel.DoesNotExist:
                 logger.error(f"Channel {network_station_channel} does not exist.")
 
@@ -194,6 +202,7 @@ class MagnitudeEstimator:
                     "unit": AmplitudeUnit.MM,
                     "evaluation_mode": EvaluationMode.AUTOMATIC,
                     "author_id": author_id,
+                    "is_preferred": self.preferred_map.get(str(channel.id), False),
                 },
             )
             station_magnitude, _ = StationMagnitude.objects.update_or_create(
@@ -253,6 +262,7 @@ class MagnitudeObserver(EventObserver):
         author_id = str(event.author.id)
         channels = data.get("channels", [])
         is_preferred = data.get("is_preferred", False)
+        preferred_channel = data.get("preferred_channel", "")
 
         estimator = MagnitudeEstimator()
         estimator.calc_magnitude(
@@ -263,6 +273,7 @@ class MagnitudeObserver(EventObserver):
                 author_id=author_id,
                 channels=channels,
                 is_preferred=is_preferred,
+                preferred_channel=preferred_channel,
             )
         )
 

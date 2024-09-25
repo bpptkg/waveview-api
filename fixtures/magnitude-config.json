@@ -16,5 +16,6 @@
         "VG.MEPSL.HHN",
         "VG.MEPSL.HHE"
     ],
-    "is_preferred": true
+    "is_preferred": true,
+    "preferred_channel": "VG.MEPAS.HHZ"
 }

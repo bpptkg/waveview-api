@@ -47,7 +47,6 @@ services:
             - ./storage/rabbitmq/log:/var/log/rabbitmq/
         networks:
             - wv_network
-    
 
     app:
         build: .

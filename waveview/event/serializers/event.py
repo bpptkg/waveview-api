@@ -51,6 +51,7 @@ class EventSerializer(serializers.Serializer):
     author = UserSerializer()
     preferred_origin = OriginSerializer(allow_null=True)
     preferred_magnitude = MagnitudeSerializer(allow_null=True)
+    preferred_amplitude = AmplitudeSerializer(allow_null=True)
     is_bookmarked = serializers.SerializerMethodField(
         help_text=_("True if bookmarked.")
     )

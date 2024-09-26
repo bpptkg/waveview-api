@@ -18,12 +18,12 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.api.serializers import CommaSeparatedListField
+from waveview.appconfig.models import SeismicityConfig
 from waveview.event.models import Event, EventType
 from waveview.event.serializers import (
     SeismicityGroupByDaySerializer,
     SeismicityGroupByHourSerializer,
 )
-from waveview.appconfig.models import SeismicityConfig
 
 
 class CountItem(TypedDict):
@@ -41,14 +41,23 @@ class GroupByType(models.TextChoices):
     DAY = "day", _("Day")
 
 
-class ParamSerializer(serializers.Serializer):
-    start = serializers.DateTimeField(required=True)
-    end = serializers.DateTimeField(required=True)
-    group_by = serializers.ChoiceField(
-        required=False, choices=GroupByType.choices, default=GroupByType.DAY
+class QueryParamsSerializer(serializers.Serializer):
+    start = serializers.DateTimeField(
+        required=True, help_text="Start date of the query."
     )
-    event_types = CommaSeparatedListField(required=False)
-    fill_gaps = serializers.BooleanField(required=False, default=False)
+    end = serializers.DateTimeField(required=True, help_text="End date of the query.")
+    group_by = serializers.ChoiceField(
+        required=False,
+        choices=GroupByType.choices,
+        default=GroupByType.DAY,
+        help_text="Group by type. Default is grouped per day.",
+    )
+    event_types = CommaSeparatedListField(
+        required=False, help_text="Event type codes to filter in comma separated list."
+    )
+    fill_gaps = serializers.BooleanField(
+        required=False, default=False, help_text="Whether to fill the gaps in the data."
+    )
 
 
 def fill_data_gaps(
@@ -96,47 +105,7 @@ class SeismicityEndpoint(Endpoint):
                 "OK", SeismicityGroupByDaySerializer(many=True)
             ),
         },
-        manual_parameters=[
-            openapi.Parameter(
-                "start",
-                openapi.IN_QUERY,
-                description="Start date of the query.",
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_DATETIME,
-            ),
-            openapi.Parameter(
-                "end",
-                openapi.IN_QUERY,
-                description="End date of the query.",
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_DATETIME,
-            ),
-            openapi.Parameter(
-                "group_by",
-                openapi.IN_QUERY,
-                description="Group by type. Default is grouped per day.",
-                type=openapi.TYPE_STRING,
-                enum=[GroupByType.HOUR, GroupByType.DAY],
-            ),
-            openapi.Parameter(
-                "event_types",
-                openapi.IN_QUERY,
-                description=(
-                    "Event type codes to filter in comma separated list. "
-                    "If not provided, default configuration will be used."
-                ),
-                type=openapi.TYPE_STRING,
-            ),
-            openapi.Parameter(
-                "fill_gaps",
-                openapi.IN_QUERY,
-                description=(
-                    "Fill gaps in the data. It will fill missing data with 0 and "
-                    "return a continuous time series. Default is False."
-                ),
-                type=openapi.TYPE_BOOLEAN,
-            ),
-        ],
+        query_serializer=QueryParamsSerializer,
     )
     def get(
         self,
@@ -150,7 +119,7 @@ class SeismicityEndpoint(Endpoint):
         volcano = self.get_volcano(organization, volcano_id)
         catalog = self.get_catalog(volcano, catalog_id)
 
-        params = ParamSerializer(data=request.query_params)
+        params = QueryParamsSerializer(data=request.query_params)
         params.is_valid(raise_exception=True)
         start = params.validated_data.get("start")
         end = params.validated_data.get("end")

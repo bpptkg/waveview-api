@@ -28,6 +28,8 @@ class FallDirectionAdmin(admin.ModelAdmin):
     list_display = (
         "volcano",
         "name",
+        "description",
+        "azimuth",
     )
 
 

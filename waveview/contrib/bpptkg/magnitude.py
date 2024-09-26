@@ -154,6 +154,7 @@ class MagnitudeEstimator:
         )
 
         magnitude_values: list[float] = []
+        stations: set[str] = set()
 
         def remove_response(st: Stream) -> Stream:
             for inv_file in inventory.files.all():
@@ -186,6 +187,7 @@ class MagnitudeEstimator:
                 continue
             ml = calc_bpptkg_ml(zeropk)
             magnitude_values.append(ml)
+            stations.add(channel.station.code)
 
             amplitude, _ = Amplitude.objects.update_or_create(
                 event=event,
@@ -229,7 +231,7 @@ class MagnitudeEstimator:
         if np.isnan(avg):
             return
         magnitude.magnitude = avg
-        magnitude.station_count = len(magnitude_values)
+        magnitude.station_count = len(stations)
         magnitude.save()
 
 

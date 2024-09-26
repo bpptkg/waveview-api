@@ -197,7 +197,7 @@ class MagnitudeEstimator:
                     "amplitude": amax * 1e3,  # Convert to mm
                     "type": "Amax",
                     "category": AmplitudeCategory.DURATION,
-                    "time": starttime,
+                    "time": event.time,
                     "begin": buffer,
                     "end": event.duration,
                     "snr": 0,

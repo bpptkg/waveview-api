@@ -40,6 +40,7 @@ from .v1.organization_role_index import OrganizationRoleIndexEndpoint
 from .v1.picker_config_index import PickerConfigIndexEndpoint
 from .v1.picker_config_reset import PickerConfigResetEndpoint
 from .v1.registration import AccountRegistrationEndpoint
+from .v1.rfap_direction import RfApDirectionEndpoint
 from .v1.search_user import SearchUserEndpoint
 from .v1.seedlink import (
     SeedLinkContainerRestartEndpoint,
@@ -117,6 +118,11 @@ CATALOG_URLS = [
         "<uuid:catalog_id>/download-events/",
         DownloadEventsEndpoint.as_view(),
         name="waveview-api-1-download-events",
+    ),
+    path(
+        "<uuid:catalog_id>/rfap-direction/",
+        RfApDirectionEndpoint.as_view(),
+        name="waveview-api-1-rfap-direction",
     ),
 ]
 

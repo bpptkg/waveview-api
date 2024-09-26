@@ -101,6 +101,9 @@ class BulletinPayloadBuilder:
         return int(time.microsecond / 10_000)
 
     def _get_id(self, event: Event) -> str:
+        """
+        Get ID of the event in hex format. BMA limits the ID to 32 characters.
+        """
         return str(event.id.hex)
 
     def build(self) -> dict:

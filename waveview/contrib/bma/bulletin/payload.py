@@ -100,10 +100,13 @@ class BulletinPayloadBuilder:
     def _get_microsecond(self, time: datetime) -> int:
         return int(time.microsecond / 10_000)
 
+    def _get_id(self, event: Event) -> str:
+        return str(event.id.hex)
+
     def build(self) -> dict:
         event = self.event
 
-        eventid: str = str(event.id)
+        eventid: str = self._get_id(event)
         eventdate: str = self._format_time(event.time)
         eventdate_microsecond: int = self._get_microsecond(event.time)
         number: int = 0

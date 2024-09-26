@@ -13,16 +13,22 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.api.serializers import CommaSeparatedListField
+from waveview.appconfig.models import HypocenterConfig
 from waveview.event.models import Event, EventType, Origin
 from waveview.event.serializers import HypocenterSerializer
-from waveview.appconfig.models import HypocenterConfig
 
 
-class ParamSerializer(serializers.Serializer):
-    start = serializers.DateTimeField(required=True)
-    end = serializers.DateTimeField(required=True)
-    method = serializers.CharField(required=False)
-    event_types = CommaSeparatedListField(required=False)
+class QueryParamsSerializer(serializers.Serializer):
+    start = serializers.DateTimeField(
+        required=True, help_text="Start date of the query."
+    )
+    end = serializers.DateTimeField(required=True, help_text="End date of the query.")
+    method = serializers.CharField(
+        required=False, help_text="Filter origins by its method name."
+    )
+    event_types = CommaSeparatedListField(
+        required=False, help_text="Event type codes to filter."
+    )
 
 
 class HypocenterEndpoint(Endpoint):
@@ -37,43 +43,7 @@ class HypocenterEndpoint(Endpoint):
         ),
         tags=["Catalog"],
         responses={status.HTTP_200_OK: openapi.Response("OK", HypocenterSerializer)},
-        manual_parameters=[
-            openapi.Parameter(
-                "start",
-                openapi.IN_QUERY,
-                description="Start date of the query.",
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_DATETIME,
-            ),
-            openapi.Parameter(
-                "end",
-                openapi.IN_QUERY,
-                description="End date of the query.",
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_DATETIME,
-            ),
-            openapi.Parameter(
-                "method",
-                openapi.IN_QUERY,
-                description=(
-                    "Filter origins by its method name, e.g. 'HYPO71'. "
-                    "If not provided, only preferred origin will be included. "
-                    "Method name is case insensitive."
-                ),
-                type=openapi.TYPE_STRING,
-                required=False,
-            ),
-            openapi.Parameter(
-                "event_types",
-                openapi.IN_QUERY,
-                description=(
-                    "Event type codes to filter in comma separated list. "
-                    "If not provided, all event types will be included."
-                ),
-                type=openapi.TYPE_STRING,
-                required=False,
-            ),
-        ],
+        query_serializer=QueryParamsSerializer,
     )
     def get(
         self,
@@ -87,7 +57,7 @@ class HypocenterEndpoint(Endpoint):
         volcano = self.get_volcano(organization, volcano_id)
         catalog = self.get_catalog(volcano, catalog_id)
 
-        params = ParamSerializer(data=request.query_params)
+        params = QueryParamsSerializer(data=request.query_params)
         params.is_valid(raise_exception=True)
         start = params.validated_data.get("start")
         end = params.validated_data.get("end")

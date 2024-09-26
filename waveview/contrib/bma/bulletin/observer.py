@@ -28,18 +28,26 @@ class BulletinObserver(EventObserver):
     def create(self, event_id: str, data: dict) -> None:
         event = Event.objects.get(id=event_id)
         payload = BulletinPayloadBuilder(event).build()
+        logger.debug(f"Creating bulletin for event {event_id} with payload: {payload}")
+
         conf = BulletinData.from_dict(data)
         client = BulletinClient(conf.server_url, conf.token)
         client.create(payload)
+
+        logger.info(f"Bulletin created for event {event_id}")
 
     @delay(60)
     @retry(initial_delay=5)
     def update(self, event_id: str, data: dict) -> None:
         event = Event.objects.get(id=event_id)
         payload = BulletinPayloadBuilder(event).build()
+        logger.debug(f"Updating bulletin for event {event_id} with payload: {payload}")
+
         conf = BulletinData.from_dict(data)
         client = BulletinClient(conf.server_url, conf.token)
         client.update(event_id, payload)
+
+        logger.info(f"Bulletin updated for event {event_id}")
 
     @delay(60)
     @retry(initial_delay=5)
@@ -47,3 +55,5 @@ class BulletinObserver(EventObserver):
         conf = BulletinData.from_dict(data)
         client = BulletinClient(conf.server_url, conf.token)
         client.delete(event_id)
+
+        logger.info(f"Bulletin deleted for event {event_id}")

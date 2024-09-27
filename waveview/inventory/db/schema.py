@@ -26,6 +26,9 @@ class TimescaleSchemaEditor(DatabaseSchemaEditor):
     )
     sql_query_table = "SELECT st, et, sr, dtype, buf FROM {table} WHERE st >= '{start}' AND et < '{end}' ORDER BY st"
     sql_hypertable_size = "SELECT hypertable_size('{table}')"
+    sql_get_latest_data = (
+        "SELECT st, et, sr, dtype, buf FROM {table} ORDER BY st DESC LIMIT 1"
+    )
 
     def create_table(self, table: str) -> None:
         self.execute(self.sql_create_model.format(table=self.quote_name(table)))
@@ -81,3 +84,13 @@ class TimescaleSchemaEditor(DatabaseSchemaEditor):
         with self.connection.cursor() as cursor:
             cursor.execute(self.sql_hypertable_size.format(table=table))
             return cursor.fetchone()[0]
+
+    def fetch_latest_data(
+        self, table: str
+    ) -> tuple[datetime, datetime, float, str, bytes] | None:
+        with self.connection.cursor() as cursor:
+            cursor.execute(self.sql_get_latest_data.format(table=table))
+            result = cursor.fetchone()
+            if result is None:
+                return None
+            return result

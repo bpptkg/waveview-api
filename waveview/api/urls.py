@@ -47,6 +47,7 @@ from .v1.seedlink import (
     SeedLinkContainerStartEndpoint,
     SeedLinkContainerStopEndpoint,
 )
+from .v1.seismic_network_status import SeismicNetworkStatusEndpoint
 from .v1.seismicity import SeismicityEndpoint
 from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
@@ -293,6 +294,11 @@ ORGANIZATION_URLS = [
     path(
         "<uuid:organization_id>/services/",
         include(SERVICE_URLS),
+    ),
+    path(
+        "<uuid:organization_id>/seismic-network-status/",
+        SeismicNetworkStatusEndpoint.as_view(),
+        name="waveview-api-1-seismic-network-status",
     ),
 ]
 

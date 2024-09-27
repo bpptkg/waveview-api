@@ -123,10 +123,12 @@ class SeismicNetworkStatusEndpoint(Endpoint):
                 )
 
         normal_channels.sort(
-            key=lambda x: x.last_packet or timezone.make_aware(datetime.min)
+            key=lambda x: x.last_packet or timezone.make_aware(datetime.min),
+            reverse=True,
         )
         at_risk_channels.sort(
-            key=lambda x: x.last_packet or timezone.make_aware(datetime.min)
+            key=lambda x: x.last_packet or timezone.make_aware(datetime.min),
+            reverse=True,
         )
 
         normal.channels = normal_channels

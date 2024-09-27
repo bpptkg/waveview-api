@@ -99,7 +99,6 @@ class SeismicNetworkStatusEndpoint(Endpoint):
 
         now = timezone.now()
         one_minute_ago = now - timedelta(minutes=1)
-        five_minutes_ago = now - timedelta(minutes=5)
 
         normal_channels: list[ChannelInfo] = []
         at_risk_channels: list[ChannelInfo] = []
@@ -116,11 +115,11 @@ class SeismicNetworkStatusEndpoint(Endpoint):
                 continue
 
             st = data[0]
-            if st >= five_minutes_ago and st < one_minute_ago:
+            if st >= one_minute_ago:
                 normal_channels.append(
                     ChannelInfo(stream_id=stream_id, last_received_packet=st)
                 )
-            elif st < five_minutes_ago:
+            else:
                 at_risk_channels.append(
                     ChannelInfo(stream_id=stream_id, last_received_packet=st)
                 )

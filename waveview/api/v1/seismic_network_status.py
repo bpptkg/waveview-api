@@ -26,7 +26,7 @@ class StateType(models.TextChoices):
 @dataclass
 class ChannelInfo:
     stream_id: str
-    last_received_packet: datetime | None = None
+    last_packet: datetime | None = None
 
 
 @dataclass
@@ -41,7 +41,7 @@ class Status:
 
 class ChannelInfoSerializer(serializers.Serializer):
     stream_id = serializers.CharField()
-    last_received_packet = serializers.DateTimeField(allow_null=True)
+    last_packet = serializers.DateTimeField(allow_null=True)
 
 
 class NetworkStatusSerializer(serializers.Serializer):
@@ -110,25 +110,23 @@ class SeismicNetworkStatusEndpoint(Endpoint):
             data = db.fetch_latest_data(channel.get_datastream_id())
             if data is None:
                 at_risk_channels.append(
-                    ChannelInfo(stream_id=stream_id, last_received_packet=None)
+                    ChannelInfo(stream_id=stream_id, last_packet=None)
                 )
                 continue
 
             st = data[0]
             if st >= one_minute_ago:
-                normal_channels.append(
-                    ChannelInfo(stream_id=stream_id, last_received_packet=st)
-                )
+                normal_channels.append(ChannelInfo(stream_id=stream_id, last_packet=st))
             else:
                 at_risk_channels.append(
-                    ChannelInfo(stream_id=stream_id, last_received_packet=st)
+                    ChannelInfo(stream_id=stream_id, last_packet=st)
                 )
 
         normal_channels.sort(
-            key=lambda x: x.last_received_packet or timezone.make_aware(datetime.min)
+            key=lambda x: x.last_packet or timezone.make_aware(datetime.min)
         )
         at_risk_channels.sort(
-            key=lambda x: x.last_received_packet or timezone.make_aware(datetime.min)
+            key=lambda x: x.last_packet or timezone.make_aware(datetime.min)
         )
 
         normal.channels = normal_channels

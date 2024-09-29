@@ -11,7 +11,6 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 from waveview.volcano.models import Volcano
 from waveview.volcano.serializers import VolcanoPayloadSerializer, VolcanoSerializer
@@ -36,10 +35,7 @@ class VolcanoDetailEndpoint(Endpoint):
     def get(
         self, request: Request, organization_id: UUID, volcano_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         try:
@@ -69,10 +65,7 @@ class VolcanoDetailEndpoint(Endpoint):
     def put(
         self, request: Request, organization_id: UUID, volcano_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
@@ -125,10 +118,7 @@ class VolcanoDetailEndpoint(Endpoint):
     def delete(
         self, request: Request, organization_id: UUID, volcano_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user

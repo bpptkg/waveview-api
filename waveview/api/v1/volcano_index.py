@@ -4,14 +4,13 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 from waveview.volcano.models import Volcano
 from waveview.volcano.serializers import VolcanoPayloadSerializer, VolcanoSerializer
@@ -34,10 +33,7 @@ class VolcanoIndexEndpoint(Endpoint):
         },
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         volcanoes = Volcano.objects.filter(organization_id=organization_id)
@@ -59,10 +55,7 @@ class VolcanoIndexEndpoint(Endpoint):
         },
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user

@@ -14,6 +14,7 @@ from waveview.api.permissions import IsOrganizationMember
 from waveview.event.models import Event
 from waveview.event.serializers import EventDetailSerializer, EventPayloadSerializer
 from waveview.organization.permissions import PermissionType
+from waveview.tasks.notify_event_observer import OperationType, notify_event_observer
 
 
 class EventDetailEndpoint(Endpoint):
@@ -95,6 +96,11 @@ class EventDetailEndpoint(Endpoint):
         )
         serializer.is_valid(raise_exception=True)
         event = serializer.save()
+
+        notify_event_observer.delay(
+            OperationType.UPDATE, str(event.id), str(volcano.id)
+        )
+
         return Response(
             EventDetailSerializer(event, context={"request": request}).data,
             status=status.HTTP_200_OK,
@@ -134,8 +140,12 @@ class EventDetailEndpoint(Endpoint):
 
         try:
             event = Event.objects.get(catalog=catalog, id=event_id)
+            event.delete()
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
 
-        event.delete()
+        notify_event_observer.delay(
+            OperationType.DELETE, str(event.id), str(volcano.id)
+        )
+
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -48,7 +48,10 @@ class EventObserverRegistry:
 
 
 observer_registry = EventObserverRegistry()
-for name in settings.EVENT_OBSERVER_REGISTRY:
-    name: str
-    observer_class: Type[EventObserver] = import_string(name)
-    observer_registry.register(observer_class)
+
+
+def register_observers() -> None:
+    for name in settings.EVENT_OBSERVER_REGISTRY:
+        name: str
+        observer_class: Type[EventObserver] = import_string(name)
+        observer_registry.register(observer_class)

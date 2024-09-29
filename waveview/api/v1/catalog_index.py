@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -13,7 +13,6 @@ from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.event.models import Catalog
 from waveview.event.serializers import CatalogPayloadSerializer, CatalogSerializer
-from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 
 
@@ -39,13 +38,10 @@ class CatalogIndexEndpoint(Endpoint):
     def get(
         self, request: Request, organization_id: UUID, volcano_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
-
-        catalogs = Catalog.objects.filter(volcano_id=volcano_id)
+        volcano = self.get_volcano(organization, volcano_id)
+        catalogs = Catalog.objects.filter(volcano=volcano)
         serializer = CatalogSerializer(catalogs, many=True)
         return Response(serializer.data)
 
@@ -67,11 +63,9 @@ class CatalogIndexEndpoint(Endpoint):
     def post(
         self, request: Request, organization_id: UUID, volcano_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
+        volcano = self.get_volcano(organization, volcano_id)
 
         is_author = organization.author == request.user
         has_permission = is_author or request.user.has_permission(
@@ -82,7 +76,7 @@ class CatalogIndexEndpoint(Endpoint):
 
         serializer = CatalogPayloadSerializer(
             data=request.data,
-            context={"request": request, "volcano_id": volcano_id},
+            context={"request": request, "volcano_id": volcano.id},
         )
         serializer.is_valid(raise_exception=True)
         catalog = serializer.save()

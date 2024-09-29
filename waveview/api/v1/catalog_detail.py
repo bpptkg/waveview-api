@@ -4,16 +4,14 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.event.models import Catalog
 from waveview.event.serializers import CatalogPayloadSerializer, CatalogSerializer
-from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 
 
@@ -40,17 +38,10 @@ class CatalogDetailEndpoint(Endpoint):
         volcano_id: UUID,
         catalog_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
-
-        try:
-            catalog = Catalog.objects.get(volcano_id=volcano_id, id=catalog_id)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
-
+        volcano = self.get_volcano(organization, volcano_id)
+        catalog = self.get_catalog(volcano, catalog_id)
         serializer = CatalogSerializer(catalog)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -75,11 +66,10 @@ class CatalogDetailEndpoint(Endpoint):
         volcano_id: UUID,
         catalog_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
+        volcano = self.get_volcano(organization, volcano_id)
+        catalog = self.get_catalog(volcano, catalog_id)
 
         is_author = organization.author == request.user
         has_permission = is_author or request.user.has_permission(
@@ -87,11 +77,6 @@ class CatalogDetailEndpoint(Endpoint):
         )
         if not has_permission:
             raise PermissionDenied(_("You do not have permission to update catalogs."))
-
-        try:
-            catalog = Catalog.objects.get(volcano_id=volcano_id, id=catalog_id)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
 
         serializer = CatalogPayloadSerializer(catalog, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -118,11 +103,10 @@ class CatalogDetailEndpoint(Endpoint):
         volcano_id: UUID,
         catalog_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
+        volcano = self.get_volcano(organization, volcano_id)
+        catalog = self.get_catalog(volcano, catalog_id)
 
         is_author = organization.author == request.user
         has_permission = is_author or request.user.has_permission(
@@ -130,11 +114,6 @@ class CatalogDetailEndpoint(Endpoint):
         )
         if not has_permission:
             raise PermissionDenied(_("You do not have permission to delete catalogs."))
-
-        try:
-            catalog = Catalog.objects.get(volcano_id=volcano_id, id=catalog_id)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
 
         if catalog.is_default:
             raise PermissionDenied(_("You cannot delete the default catalog."))

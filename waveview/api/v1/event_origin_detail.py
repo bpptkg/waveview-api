@@ -13,7 +13,6 @@ from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.event.models import Event, Origin
 from waveview.event.serializers import OriginPayloadSerializer, OriginSerializer
-from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 
 
@@ -40,10 +39,7 @@ class EventOriginDetailEndpoint(Endpoint):
         event_id: UUID,
         origin_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         try:
@@ -80,10 +76,7 @@ class EventOriginDetailEndpoint(Endpoint):
         event_id: UUID,
         origin_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
@@ -130,10 +123,7 @@ class EventOriginDetailEndpoint(Endpoint):
         event_id: UUID,
         origin_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user

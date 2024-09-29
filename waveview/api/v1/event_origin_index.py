@@ -11,11 +11,9 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.event.models import Catalog, Event
+from waveview.event.models import Event
 from waveview.event.serializers import OriginPayloadSerializer, OriginSerializer
-from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
-from waveview.volcano.models import Volcano
 
 
 class EventOriginIndexEndpoint(Endpoint):
@@ -41,21 +39,10 @@ class EventOriginIndexEndpoint(Endpoint):
         catalog_id: UUID,
         event_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
-
-        try:
-            volcano = Volcano.objects.get(id=volcano_id)
-        except Volcano.DoesNotExist:
-            raise NotFound(_("Volcano not found."))
-
-        try:
-            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
+        volcano = self.get_volcano(organization, volcano_id)
+        catalog = self.get_catalog(volcano, catalog_id)
 
         try:
             event = Event.objects.get(catalog=catalog, id=event_id)
@@ -86,21 +73,10 @@ class EventOriginIndexEndpoint(Endpoint):
         catalog_id: UUID,
         event_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
-
-        try:
-            volcano = Volcano.objects.get(organization=organization, id=volcano_id)
-        except Volcano.DoesNotExist:
-            raise NotFound(_("Volcano not found."))
-
-        try:
-            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
+        volcano = self.get_volcano(organization, volcano_id)
+        catalog = self.get_catalog(volcano, catalog_id)
 
         is_author = organization.author == request.user
         has_permission = is_author or request.user.has_permission(

@@ -13,7 +13,6 @@ from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.inventory.models import Network
 from waveview.inventory.serializers import NetworkPayloadSerializer, NetworkSerializer
-from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 
 
@@ -34,10 +33,7 @@ class NetworkDetailEndpoint(Endpoint):
     def get(
         self, request: Request, organization_id: UUID, network_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         inventory = organization.inventory
@@ -66,10 +62,7 @@ class NetworkDetailEndpoint(Endpoint):
     def put(
         self, request: Request, organization_id: UUID, network_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
@@ -114,10 +107,7 @@ class NetworkDetailEndpoint(Endpoint):
     def delete(
         self, request: Request, organization_id: UUID, network_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user

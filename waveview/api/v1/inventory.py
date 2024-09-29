@@ -13,7 +13,6 @@ from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.inventory.models import Inventory
 from waveview.inventory.serializers import InventorySerializer
-from waveview.organization.models import Organization
 
 
 class InventoryEndpoint(Endpoint):
@@ -35,10 +34,7 @@ class InventoryEndpoint(Endpoint):
         },
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         try:

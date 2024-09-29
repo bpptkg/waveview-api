@@ -33,10 +33,7 @@ class NetworkIndexEndpoint(Endpoint):
         },
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         inventory = organization.inventory
@@ -59,10 +56,7 @@ class NetworkIndexEndpoint(Endpoint):
         },
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user

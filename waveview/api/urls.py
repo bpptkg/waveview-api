@@ -7,6 +7,7 @@ from .v1.auth import (
     TokenRefreshEndpoint,
     TokenVerifyEndpoint,
 )
+from .v1.bma_bulletin import BMABulletinEndpoint
 from .v1.catalog_detail import CatalogDetailEndpoint
 from .v1.catalog_index import CatalogIndexEndpoint
 from .v1.catchall import CatchallEndpoint
@@ -124,6 +125,11 @@ CATALOG_URLS = [
         "<uuid:catalog_id>/rfap-direction/",
         RfApDirectionEndpoint.as_view(),
         name="waveview-api-1-rfap-direction",
+    ),
+    path(
+        "<uuid:catalog_id>/bma-bulletin/<str:event_id>/",
+        BMABulletinEndpoint.as_view(),
+        name="waveview-api-1-bma-bulletin",
     ),
 ]
 

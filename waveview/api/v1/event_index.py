@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,16 +14,14 @@ from waveview.api.base import Endpoint
 from waveview.api.pagination import FlexiblePageNumberPagination
 from waveview.api.permissions import IsOrganizationMember
 from waveview.api.serializers import CommaSeparatedListField
-from waveview.event.models import Catalog, Event
+from waveview.event.models import Event
 from waveview.event.serializers import (
     EventDetailSerializer,
     EventPayloadSerializer,
     EventSerializer,
 )
-from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 from waveview.tasks.notify_new_event import notify_new_event
-from waveview.volcano.models import Volcano
 
 
 class OrderingType(models.TextChoices):
@@ -97,21 +95,10 @@ class EventIndexEndpoint(Endpoint):
         volcano_id: UUID,
         catalog_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
-
-        try:
-            volcano = Volcano.objects.get(id=volcano_id)
-        except Volcano.DoesNotExist:
-            raise NotFound(_("Volcano not found."))
-
-        try:
-            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
+        volcano = self.get_volcano(organization, volcano_id)
+        catalog = self.get_catalog(volcano, catalog_id)
 
         param = ParamSerializer(data=request.query_params)
         param.is_valid(raise_exception=True)
@@ -172,21 +159,10 @@ class EventIndexEndpoint(Endpoint):
         volcano_id: UUID,
         catalog_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
-
-        try:
-            volcano = Volcano.objects.get(id=volcano_id)
-        except Volcano.DoesNotExist:
-            raise NotFound(_("Volcano not found."))
-
-        try:
-            catalog = Catalog.objects.get(id=catalog_id, volcano=volcano)
-        except Catalog.DoesNotExist:
-            raise NotFound(_("Catalog not found."))
+        volcano = self.get_volcano(organization, volcano_id)
+        catalog = self.get_catalog(volcano, catalog_id)
 
         is_author = organization.author == request.user
         has_permission = is_author or request.user.has_permission(

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -31,13 +33,8 @@ class SeedLinkContainerStartEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK"),
         },
     )
-    def post(self, request: Request, organization_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+    def post(self, request: Request, organization_id: UUID) -> Response:
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
@@ -69,13 +66,8 @@ class SeedLinkContainerStopEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK"),
         },
     )
-    def post(self, request: Request, organization_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+    def post(self, request: Request, organization_id: UUID) -> Response:
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
@@ -107,13 +99,8 @@ class SeedLinkContainerRestartEndpoint(Endpoint):
             status.HTTP_200_OK: openapi.Response("OK"),
         },
     )
-    def post(self, request: Request, organization_id: str) -> Response:
-        self.validate_uuid(organization_id, "organization_id")
-
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+    def post(self, request: Request, organization_id: UUID) -> Response:
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user

@@ -4,14 +4,14 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.organization.models import Organization, OrganizationMember, OrganizationRole
+from waveview.organization.models import OrganizationMember, OrganizationRole
 from waveview.organization.permissions import PermissionType
 from waveview.organization.serializers import OrganizationMemberSerializer
 
@@ -63,10 +63,7 @@ class OrganizationMemberDetailEndpoint(Endpoint):
         },
     )
     def get(self, request: Request, organization_id: UUID, user_id: UUID) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization does not exist."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         organization_member = OrganizationMember.objects.get(
@@ -93,10 +90,7 @@ class OrganizationMemberDetailEndpoint(Endpoint):
         },
     )
     def put(self, request: Request, organization_id: UUID, user_id: UUID) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization does not exist."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user
@@ -137,10 +131,7 @@ class OrganizationMemberDetailEndpoint(Endpoint):
     def delete(
         self, request: Request, organization_id: UUID, user_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization does not exist."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         is_author = organization.author == request.user

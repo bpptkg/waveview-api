@@ -13,7 +13,6 @@ from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.inventory.models import Station
 from waveview.inventory.serializers import StationPayloadSerializer, StationSerializer
-from waveview.organization.models import Organization
 from waveview.organization.permissions import PermissionType
 
 
@@ -39,10 +38,7 @@ class StationDetailEndpoint(Endpoint):
         network_id: UUID,
         station_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found"))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         inventory = organization.inventory
@@ -75,10 +71,7 @@ class StationDetailEndpoint(Endpoint):
         network_id: UUID,
         station_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found"))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         inventory = organization.inventory
@@ -125,10 +118,7 @@ class StationDetailEndpoint(Endpoint):
         network_id: UUID,
         station_id: UUID,
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found"))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         inventory = organization.inventory

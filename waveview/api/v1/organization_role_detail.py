@@ -11,8 +11,11 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOwnerOrReadOnly
-from waveview.organization.models import Organization, OrganizationRole
-from waveview.organization.serializers import OrganizationRolePayloadSerializer, OrganizationRoleSerializer
+from waveview.organization.models import OrganizationRole
+from waveview.organization.serializers import (
+    OrganizationRolePayloadSerializer,
+    OrganizationRoleSerializer,
+)
 
 
 class OrganizationRoleDetailEndpoint(Endpoint):
@@ -32,10 +35,7 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         },
     )
     def get(self, request: Request, organization_id: UUID, role_id: UUID) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         try:
@@ -61,10 +61,7 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         },
     )
     def put(self, request: Request, organization_id: UUID, role_id: UUID) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         try:
@@ -76,7 +73,9 @@ class OrganizationRoleDetailEndpoint(Endpoint):
         serializer.is_valid(raise_exception=True)
 
         role = serializer.update(role, serializer.validated_data)
-        return Response(OrganizationRoleSerializer(role).data, status=status.HTTP_200_OK)
+        return Response(
+            OrganizationRoleSerializer(role).data, status=status.HTTP_200_OK
+        )
 
     @swagger_auto_schema(
         operation_id="Delete Organization Role",
@@ -94,10 +93,7 @@ class OrganizationRoleDetailEndpoint(Endpoint):
     def delete(
         self, request: Request, organization_id: UUID, role_id: UUID
     ) -> Response:
-        try:
-            organization = Organization.objects.get(id=organization_id)
-        except Organization.DoesNotExist:
-            raise NotFound(_("Organization not found."))
+        organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
 
         try:

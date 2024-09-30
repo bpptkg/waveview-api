@@ -36,14 +36,17 @@ def notify_event_observer(
             exec_async(
                 adapter.create,
                 args=(event_id, item.data),
+                kwargs=options,
             )
         elif operation == OperationType.UPDATE:
             exec_async(
                 adapter.update,
                 args=(event_id, item.data),
+                kwargs=options,
             )
         elif operation == OperationType.DELETE:
             exec_async(
                 adapter.delete,
                 args=(event_id, item.data),
+                kwargs=options,
             )

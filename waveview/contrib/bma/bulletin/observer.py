@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from waveview.contrib.bma.bulletin.client import BulletinClient
 from waveview.contrib.bma.bulletin.payload import BulletinPayloadBuilder
@@ -49,11 +50,15 @@ class BulletinObserver(EventObserver):
 
         logger.info(f"Bulletin updated for event {event_id}")
 
-    @delay(60)
     @retry(initial_delay=5)
-    def delete(self, event_id: str, data: dict) -> None:
+    def delete(self, event_id: str, data: dict, **options) -> None:
         conf = BulletinData.from_dict(data)
         client = BulletinClient(conf.server_url, conf.token)
+        refid = options.get("refid")
+        if refid:
+            event_id = str(refid)
+        else:
+            event_id = UUID(event_id).hex
         client.delete(event_id)
 
         logger.info(f"Bulletin deleted for event {event_id}")

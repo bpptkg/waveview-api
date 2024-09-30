@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _

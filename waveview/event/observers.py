@@ -14,13 +14,13 @@ class OperationType(enum.StrEnum):
 class EventObserver:
     name: str = ""
 
-    def create(self, event_id: str, data: dict) -> None:
+    def create(self, event_id: str, data: dict, **options) -> None:
         pass
 
-    def update(self, event_id: str, data: dict) -> None:
+    def update(self, event_id: str, data: dict, **options) -> None:
         pass
 
-    def delete(self, event_id: str, data: dict) -> None:
+    def delete(self, event_id: str, data: dict, **options) -> None:
         pass
 
 

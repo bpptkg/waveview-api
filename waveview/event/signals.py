@@ -3,12 +3,14 @@ from typing import Any, Dict
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from waveview.event.amplitude import register_amplitude_calculators
 from waveview.event.models import Attachment, Catalog
 from waveview.event.observers import register_observers
 from waveview.utils.media import MediaType
 from waveview.volcano.models import Volcano
 
 register_observers()
+register_amplitude_calculators()
 
 
 @receiver(post_save, sender=Volcano)

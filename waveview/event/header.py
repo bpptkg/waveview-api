@@ -25,6 +25,7 @@ class AmplitudeUnit(models.TextChoices):
     combinations of SI base units.
     """
 
+    UM = "um", "µm"
     MM = "mm", "mm"
     M = "m", "M"
     S = "s", "s"

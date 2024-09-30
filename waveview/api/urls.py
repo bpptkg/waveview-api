@@ -50,6 +50,7 @@ from .v1.seedlink import (
 )
 from .v1.seismic_network_status import SeismicNetworkStatusEndpoint
 from .v1.seismicity import SeismicityEndpoint
+from .v1.signal_amplitude import SignalAmplitudeEndpoint
 from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
@@ -246,6 +247,11 @@ VOLCANO_URLS = [
     path(
         "<uuid:volcano_id>/picker-config/",
         include(PICKER_CONFIG_URLS),
+    ),
+    path(
+        "<uuid:volcano_id>/signal-amplitude/",
+        SignalAmplitudeEndpoint.as_view(),
+        name="waveview-api-1-signal-amplitude",
     ),
 ]
 

@@ -194,14 +194,14 @@ class MagnitudeEstimator:
                 waveform=channel,
                 method=self.method,
                 defaults={
-                    "amplitude": amax * 1e3,  # Convert to mm
+                    "amplitude": amax * 1e6,  # Convert to micro-meter.
                     "type": "Amax",
                     "category": AmplitudeCategory.DURATION,
                     "time": event.time,
                     "begin": buffer,
                     "end": event.duration,
                     "snr": 0,
-                    "unit": AmplitudeUnit.MM,
+                    "unit": AmplitudeUnit.UM.label,
                     "evaluation_mode": EvaluationMode.AUTOMATIC,
                     "author_id": author_id,
                     "is_preferred": self.preferred_map.get(str(channel.id), False),

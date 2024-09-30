@@ -19,5 +19,27 @@
     "window_size": 5,
     "force_center": true,
     "helicorder_interval": 30,
-    "helicorder_duration": 12
+    "helicorder_duration": 12,
+    "magnitude_config": {
+        "magnitude_estimator": "bpptkg",
+        "amplitude_calculator": "bpptkg",
+        "channels": [
+            "VG.MEPAS.HHZ",
+            "VG.MEPAS.HHN",
+            "VG.MEPAS.HHE",
+            "VG.MELAB.HHZ",
+            "VG.MELAB.HHN",
+            "VG.MELAB.HHE",
+            "VG.MEKLA.HHZ",
+            "VG.MEKLA.HHN",
+            "VG.MEKLA.HHE",
+            "VG.MEGRA.HHZ",
+            "VG.MEGRA.HHN",
+            "VG.MEGRA.HHE",
+            "VG.MEPSL.HHZ",
+            "VG.MEPSL.HHN",
+            "VG.MEPSL.HHE"
+        ],
+        "preferred_channel": "VG.MEPAS.HHZ"
+    }
 }

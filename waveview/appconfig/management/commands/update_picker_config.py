@@ -10,6 +10,13 @@ from waveview.organization.models import Organization
 from waveview.volcano.models import Volcano
 
 
+class MagnitudeConfigSerializer(serializers.Serializer):
+    magnitude_estimator = serializers.CharField()
+    amplitude_calculator = serializers.CharField()
+    channels = serializers.ListField(child=serializers.CharField())
+    preferred_channel = serializers.CharField()
+
+
 class ChannelSerializer(serializers.Serializer):
     channel_id = serializers.CharField()
     color = serializers.CharField(allow_null=True, required=False)
@@ -37,6 +44,7 @@ class PickerConfigSerializer(serializers.Serializer):
     force_center = serializers.BooleanField()
     helicorder_interval = serializers.IntegerField()
     helicorder_duration = serializers.IntegerField()
+    magnitude_config = MagnitudeConfigSerializer()
 
 
 class Command(BaseCommand):

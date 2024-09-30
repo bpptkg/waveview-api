@@ -315,3 +315,7 @@ EVENT_OBSERVER_REGISTRY = [
     "waveview.contrib.bpptkg.magnitude.MagnitudeObserver",
     "waveview.contrib.bma.bulletin.BulletinObserver",
 ]
+
+AMPLITUDE_CALCULATOR_REGISTRY = [
+    "waveview.contrib.bpptkg.amplitude.BPPTKGAmplitudeCalculator",
+]

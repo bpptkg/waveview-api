@@ -3,9 +3,8 @@ Setup
 =====
 
 Once you have installed the package, we have to setup the application in the
-admin panel.
-
-Prior to setting up the application, you need to have the following information:
+admin panel. Prior to setting up the application, you need to have the following
+information:
 
 - Username and password of the superuser to access the admin panel.
 - Inventory files containing seismic network information in the Station XML
@@ -33,7 +32,7 @@ Prior to setting up the application, you need to have the following information:
     .. code-block:: json
 
         {
-            "server_url": "192.168.10.100:18000"
+            "server_url": "<seedlink_host>:<seedlink_port>",
         }
 
 
@@ -51,7 +50,7 @@ Prior to setting up the application, you need to have the following information:
    them to the picked events.
 
    You can see the example of the event type configuration in the
-   `fixture/event-types.json` file.
+   `fixtures/event-types.json` file.
 
    You can upload the event type configuration using the following command:
 
@@ -61,7 +60,7 @@ Prior to setting up the application, you need to have the following information:
 
 7. Create a new picker configuration for the particular organization and
    volcano. You can see the example of the picker configuration in the
-   `fixture/picker-config.json` file.
+   `fixtures/picker-config.json` file.
 
    You can upload the picker configuration using the following command:
 

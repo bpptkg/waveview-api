@@ -39,13 +39,18 @@ class BulletinObserver(EventObserver):
 
     @delay(60)
     @retry(initial_delay=5)
-    def update(self, event_id: str, data: dict) -> None:
+    def update(self, event_id: str, data: dict, **options) -> None:
         event = Event.objects.get(id=event_id)
         payload = BulletinPayloadBuilder(event).build()
         logger.debug(f"Updating bulletin for event {event_id} with payload: {payload}")
 
         conf = BulletinData.from_dict(data)
         client = BulletinClient(conf.server_url, conf.token)
+        refid = options.get("refid")
+        if refid:
+            event_id = str(refid)
+        else:
+            event_id = UUID(event_id).hex
         client.update(event_id, payload)
 
         logger.info(f"Bulletin updated for event {event_id}")

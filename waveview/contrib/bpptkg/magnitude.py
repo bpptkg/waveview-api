@@ -65,6 +65,8 @@ class MagnitudeEstimator:
 
     @transaction.atomic
     def calc_magnitude(self, data: MagnitudeEstimatorData) -> None:
+        logger.info(f"Calculating BPPTKG ML magnitude for event {data.event_id}...")
+
         organization_id = data.organization_id
         event_id = data.event_id
         author_id = data.author_id
@@ -93,6 +95,8 @@ class MagnitudeEstimator:
         self.calc_ML_magnitude(
             event, inventory, channels, author_id, is_preferred=is_preferred
         )
+
+        logger.info(f"BPPTKG ML magnitude calculation for event {event_id} is done.")
 
     def get_inventory(self, organization_id: str) -> Inventory:
         inventory = Inventory.objects.get(organization_id=organization_id)
@@ -181,9 +185,11 @@ class MagnitudeEstimator:
 
             amax = self.get_amax(stream)
             if amax is None:
+                logger.debug(f"Amax for channel {channel.stream_id} is None.")
                 continue
             zeropk = self.get_zeropk(stream)
             if zeropk is None:
+                logger.debug(f"Zero-to-peak for channel {channel.stream_id} is None.")
                 continue
             ml = calc_bpptkg_ml(zeropk)
             magnitude_values.append(ml)
@@ -226,9 +232,11 @@ class MagnitudeEstimator:
             )
 
         if not magnitude_values:
+            logger.debug("No magnitude values found.")
             return
         avg = np.mean(magnitude_values)
         if np.isnan(avg):
+            logger.debug("Average magnitude is NaN.")
             return
         magnitude.magnitude = avg
         magnitude.station_count = len(stations)

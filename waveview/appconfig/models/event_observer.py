@@ -17,6 +17,11 @@ class EventObserverConfig(models.Model):
         max_length=255,
         help_text=_("Name of the registered event observer adapter class."),
     )
+    description = models.TextField(
+        null=True,
+        blank=True,
+        help_text=_("Description of the event observer."),
+    )
     data = models.JSONField(
         null=True,
         blank=True,

@@ -208,8 +208,12 @@ class BulletinPayloadSerializer(serializers.Serializer):
 
         station_of_first_arrival_id = None
         method = "webobs"
-        evaluation_mode = EvaluationMode.MANUAL
-        evaluation_status = EvaluationStatus.CONFIRMED
+        if eventtype == "AUTO":
+            evaluation_mode = EvaluationMode.AUTOMATIC
+            evaluation_status = EvaluationStatus.PRELIMINARY
+        else:
+            evaluation_mode = EvaluationMode.MANUAL
+            evaluation_status = EvaluationStatus.CONFIRMED
         note = (
             f"Synched from BMA.\n"
             f"Event ID: {eventid}\n"

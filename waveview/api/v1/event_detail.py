@@ -140,12 +140,13 @@ class EventDetailEndpoint(Endpoint):
 
         try:
             event = Event.objects.get(catalog=catalog, id=event_id)
+            refid = event.refid
             event.delete()
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
 
         notify_event_observer.delay(
-            OperationType.DELETE, str(event.id), str(volcano.id)
+            OperationType.DELETE, str(event_id), str(volcano.id), refid=refid
         )
 
         return Response(status=status.HTTP_204_NO_CONTENT)

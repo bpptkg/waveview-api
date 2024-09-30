@@ -212,11 +212,11 @@ class BulletinPayloadSerializer(serializers.Serializer):
         evaluation_status = EvaluationStatus.CONFIRMED
         note = (
             f"Synched from BMA.\n"
-            f"Event ID: {eventid},\n"
-            f"Seiscomp ID: {seiscompid},\n"
-            f"Operator: {operator},\n"
-            f"Location Mode: {location_mode},\n"
-            f"Location Type: {location_type}."
+            f"Event ID: {eventid}\n"
+            f"Seiscomp ID: {seiscompid}\n"
+            f"Operator: {operator}\n"
+            f"Location Mode: {location_mode}\n"
+            f"Location Type: {location_type}"
         )
         event, created = Event.objects.update_or_create(
             catalog_id=catalog_id,

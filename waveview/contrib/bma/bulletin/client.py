@@ -1,4 +1,4 @@
-from urllib.parse import urljoin
+from urllib.parse import urljoin, quote
 
 import requests
 
@@ -25,7 +25,7 @@ class BulletinClient:
             raise Exception(f"Failed to create event: {response.text}")
 
     def update(self, id: str, payload: dict) -> None:
-        url = urljoin(self.base_url, f"api/v1/crud/bulletin/{id}/")
+        url = urljoin(self.base_url, f"api/v1/crud/bulletin/{quote(id)}/")
         try:
             response = self.api.put(url, json=payload)
         except requests.exceptions.RequestException as e:
@@ -34,7 +34,7 @@ class BulletinClient:
             raise Exception(f"Failed to update event: {response.text}")
 
     def delete(self, id: str) -> None:
-        url = urljoin(self.base_url, f"api/v1/crud/bulletin/{id}/")
+        url = urljoin(self.base_url, f"api/v1/crud/bulletin/{quote(id)}/")
         try:
             response = self.api.delete(url)
         except requests.exceptions.RequestException as e:

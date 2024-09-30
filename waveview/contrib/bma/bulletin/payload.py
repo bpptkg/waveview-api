@@ -102,8 +102,12 @@ class BulletinPayloadBuilder:
 
     def _get_id(self, event: Event) -> str:
         """
-        Get ID of the event in hex format. BMA limits the ID to 32 characters.
+        Get ID of the event. If `refid` is available, use it. Otherwise, use the
+        UUID of the event. WaveView uses `refid` to store the ID of the event
+        synced from BMA bulletin.
         """
+        if event.refid:
+            return str(event.refid)
         return str(event.id.hex)
 
     def build(self) -> dict:

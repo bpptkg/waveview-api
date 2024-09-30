@@ -90,6 +90,8 @@ class SignalAmplitudeEndpoint(Endpoint):
                 amplitudes.append(ampl)
 
         return Response(
-            SignalAmplitudeSerializer(amplitudes, many=True).data,
+            SignalAmplitudeSerializer(
+                sorted(amplitudes, key=lambda x: x.amplitude, reverse=True), many=True
+            ).data,
             status=status.HTTP_200_OK,
         )

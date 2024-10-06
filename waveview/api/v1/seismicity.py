@@ -153,7 +153,7 @@ class SeismicityEndpoint(Endpoint):
             queryset = Event.objects.filter(
                 catalog=catalog,
                 time__gte=start,
-                time__lte=end,
+                time__lt=end,
                 type=event_type,
             )
             if group_by == GroupByType.HOUR:

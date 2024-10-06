@@ -56,11 +56,12 @@ class VolcanoMedia(models.Model):
         related_name="media",
         related_query_name="media",
     )
-    file = models.FileField(upload_to=MediaPath("volcano-media"))
+    file = models.FileField(upload_to=MediaPath("volcano-media"), max_length=255)
     thumbnail = models.ImageField(
         upload_to=MediaPath("volcano-media"),
         null=True,
         blank=True,
+        max_length=255,
     )
     name = models.CharField(max_length=200, null=True, blank=True)
     size = models.PositiveBigIntegerField()
@@ -86,7 +87,9 @@ class DigitalElevationModel(models.Model):
         related_name="digital_elevation_models",
         related_query_name="digital_elevation_model",
     )
-    file = models.FileField(upload_to=MediaPath("digital-elevation-models"))
+    file = models.FileField(
+        upload_to=MediaPath("digital-elevation-models"), max_length=255
+    )
     type = models.CharField(max_length=50, null=True, blank=True)
     name = models.CharField(max_length=200, null=True, blank=True)
     size = models.PositiveBigIntegerField(null=True, blank=True)

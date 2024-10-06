@@ -209,11 +209,14 @@ class Attachment(models.Model):
         related_query_name="attachment",
     )
     media_type = models.CharField(max_length=255, choices=MediaType.choices)
-    file = models.FileField(upload_to=MediaPath("event-attachments/%Y/%m/%d"))
+    file = models.FileField(
+        upload_to=MediaPath("event-attachments/%Y/%m/%d"), max_length=255
+    )
     thumbnail = models.ImageField(
         upload_to=MediaPath("event-attachments/%Y/%m/%d"),
         null=True,
         blank=True,
+        max_length=255,
     )
     name = models.CharField(max_length=255)
     size = models.PositiveIntegerField()

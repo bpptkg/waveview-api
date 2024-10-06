@@ -64,7 +64,7 @@ class InventoryFile(models.Model):
         related_name="files",
         related_query_name="file",
     )
-    file = models.FileField(upload_to=MediaPath("inventories/"))
+    file = models.FileField(upload_to=MediaPath("inventories/"), max_length=255)
     name = models.CharField(max_length=200, null=True, blank=True)
     type = models.CharField(max_length=50, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

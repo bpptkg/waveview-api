@@ -86,7 +86,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('type', models.CharField(blank=True, max_length=50, null=True)),
-                ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('inventories/'))),
+                ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('inventories/'), max_length=255)),
                 ('name', models.CharField(blank=True, max_length=200, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),

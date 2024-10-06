@@ -52,8 +52,8 @@ class Migration(migrations.Migration):
             name='VolcanoMedia',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('volcano-media'))),
-                ('thumbnail', models.ImageField(blank=True, null=True, upload_to=waveview.utils.media.MediaPath('volcano-media'))),
+                ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('volcano-media'), max_length=255)),
+                ('thumbnail', models.ImageField(blank=True, null=True, upload_to=waveview.utils.media.MediaPath('volcano-media'), max_length=255)),
                 ('name', models.CharField(blank=True, max_length=200, null=True)),
                 ('size', models.PositiveBigIntegerField()),
                 ('media_type', models.CharField(choices=[('photo', 'Photo'), ('video', 'Video'), ('audio', 'Audio'), ('document', 'Document'), ('other', 'Other')], max_length=50)),
@@ -70,7 +70,7 @@ class Migration(migrations.Migration):
             name='DigitalElevationModel',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('digital-elevation-models'))),
+                ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('digital-elevation-models'), max_length=255)),
                 ('type', models.CharField(blank=True, max_length=50, null=True)),
                 ('name', models.CharField(blank=True, max_length=200, null=True)),
                 ('size', models.PositiveBigIntegerField(blank=True, null=True)),

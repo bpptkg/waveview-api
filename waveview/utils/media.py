@@ -13,8 +13,8 @@ class MediaPath(object):
         self.path = path
         self.prefix = prefix
 
-    def __call__(self, instance: Model, filename: str) -> str:
-        ext = filename.split(".")[-1]
+    def __call__(self, instance: Model, name: str) -> str:
+        ext = name.split(".")[-1]
         filename = "{}.{}".format(uuid4(), ext)
         today = timezone.now().date()
         path = today.strftime(self.path)

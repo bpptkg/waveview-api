@@ -22,6 +22,13 @@ class ChannelConfigSerializer(serializers.Serializer):
     )
 
 
+class AmplitudeConfigSerializer(serializers.Serializer):
+    amplitude_calculator = serializers.CharField(
+        max_length=255, help_text=_("Amplitude calculator.")
+    )
+    channels = ChannelConfigSerializer(help_text=_("Channels."), many=True)
+
+
 class PickerConfigDataSerializer(serializers.Serializer):
     helicorder_channel = ChannelConfigSerializer(help_text=_("Helicorder channel."))
     seismogram_channels = ChannelConfigSerializer(
@@ -29,6 +36,7 @@ class PickerConfigDataSerializer(serializers.Serializer):
     )
     force_center = serializers.BooleanField(help_text=_("Force center."))
     window_size = serializers.IntegerField(help_text=_("Selection window in minutes."))
+    amplitude_config = AmplitudeConfigSerializer(help_text=_("Amplitude config."))
 
 
 class PickerConfigSerializer(serializers.Serializer):

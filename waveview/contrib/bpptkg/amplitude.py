@@ -31,7 +31,7 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         return amplitude
 
     def calc(
-        self, time: datetime, duration: float, stream_id: str, organization_id: str
+        self, time: datetime, duration: float, channel_id: str, organization_id: str
     ) -> SignalAmplitude:
         inventory = Inventory.objects.get(organization_id=organization_id)
         starttime = time
@@ -53,7 +53,7 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
             raise Exception("No matching inventory found.")
 
         try:
-            channel = Channel.objects.get_by_stream_id(stream_id)
+            channel = Channel.objects.get(id=channel_id)
             stream = self.datastream.get_waveform(channel.id, starttime, endtime)
             stream = remove_response(stream)
             amax = self.get_amax(stream)
@@ -70,5 +70,6 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
             method=self.method,
             category=AmplitudeCategory.DURATION,
             unit=AmplitudeUnit.UM.label,
-            stream_id=stream_id,
+            channel_id=channel_id,
+            stream_id=channel.stream_id,
         )

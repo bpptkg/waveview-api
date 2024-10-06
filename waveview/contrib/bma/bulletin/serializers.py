@@ -14,6 +14,7 @@ from waveview.event.header import (
     MagnitudeType,
 )
 from waveview.event.models import Amplitude, Event, EventType, Magnitude, Origin
+from waveview.inventory.models import Channel
 
 logger = logging.getLogger(__name__)
 
@@ -255,6 +256,11 @@ class BulletinPayloadSerializer(serializers.Serializer):
             ),
         )
 
+        try:
+            amplitude_channel = Channel.objects.get_by_stream_id("VG.MEPAS.HHZ")
+        except Channel.DoesNotExist:
+            amplitude_channel = None
+
         Amplitude.objects.update_or_create(
             event=event,
             method="webobs",
@@ -267,9 +273,10 @@ class BulletinPayloadSerializer(serializers.Serializer):
                 end=duration,
                 snr=0,
                 unit=AmplitudeUnit.MM,
+                waveform=amplitude_channel,
                 evaluation_mode=EvaluationMode.MANUAL,
                 author=user,
-                is_preferred=True,
+                is_preferred=False,
             ),
         )
 

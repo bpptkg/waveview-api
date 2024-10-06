@@ -20,7 +20,7 @@ def deepmerge(source: dict, dest: dict) -> dict:
 @dataclass
 class ChannelConfigData:
     channel_id: str
-    color: str
+    color: str | None
 
     @classmethod
     def from_dict(cls, data: dict) -> "ChannelConfigData":
@@ -31,19 +31,18 @@ class ChannelConfigData:
 
 
 @dataclass
-class MagnitudeConfigData:
-    channels: list[str]
-    preferred_channel: str
-    magnitude_estimator: str
+class AmplitudeConfigData:
     amplitude_calculator: str
+    channels: list[ChannelConfigData]
 
     @classmethod
-    def from_dict(cls, data: dict) -> "MagnitudeConfigData":
+    def from_dict(cls, data: dict) -> "AmplitudeConfigData":
         return cls(
-            channels=data.get("channels", []),
-            preferred_channel=data.get("preferred_channel"),
-            magnitude_estimator=data.get("magnitude_estimator"),
             amplitude_calculator=data.get("amplitude_calculator"),
+            channels=[
+                ChannelConfigData.from_dict(channel)
+                for channel in data.get("channels", [])
+            ],
         )
 
 
@@ -55,7 +54,7 @@ class PickerConfigData:
     window_size: int
     helicorder_interval: int
     helicorder_duration: int
-    magnitude_config: MagnitudeConfigData
+    amplitude_config: AmplitudeConfigData
 
     @classmethod
     def from_dict(cls, data: dict) -> "PickerConfigData":
@@ -71,8 +70,8 @@ class PickerConfigData:
             window_size=data.get("window_size"),
             helicorder_interval=data.get("helicorder_interval"),
             helicorder_duration=data.get("helicorder_duration"),
-            magnitude_config=MagnitudeConfigData.from_dict(
-                data.get("magnitude_config")
+            amplitude_config=AmplitudeConfigData.from_dict(
+                data.get("amplitude_config")
             ),
         )
 

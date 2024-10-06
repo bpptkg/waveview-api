@@ -70,20 +70,20 @@ class SignalAmplitudeEndpoint(Endpoint):
         duration = serializer.validated_data["duration"]
 
         data = config.get_data()
-        method = data.magnitude_config.amplitude_calculator
+        method = data.amplitude_config.amplitude_calculator
         calculator = amplitude_registry.get(method)
         if calculator is None:
             raise NotFound(_("Amplitude calculator not found."))
 
         amplitudes: list[SignalAmplitude] = []
 
-        def calculate_amplitude(channel: str) -> SignalAmplitude:
-            return calculator.calc(time, duration, channel, organization_id)
+        def calculate_amplitude(channel_id: str) -> SignalAmplitude:
+            return calculator.calc(time, duration, channel_id, organization_id)
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(calculate_amplitude, channel)
-                for channel in data.magnitude_config.channels
+                executor.submit(calculate_amplitude, channel.channel_id)
+                for channel in data.amplitude_config.channels
             ]
             for future in concurrent.futures.as_completed(futures):
                 ampl = future.result()

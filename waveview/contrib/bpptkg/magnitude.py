@@ -138,7 +138,7 @@ class MagnitudeEstimator:
         author_id: str,
         is_preferred: bool = False,
     ) -> None:
-        buffer = 3  # Buffer in seconds.
+        buffer = 0  # Buffer in seconds.
         starttime = event.time - timedelta(seconds=buffer)
         endtime = starttime + timedelta(seconds=event.duration)
         magnitude_type = "ML"

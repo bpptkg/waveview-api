@@ -17,6 +17,7 @@ class SignalAmplitude:
     category: str
     unit: str
     stream_id: str
+    channel_id: str
     preferred: bool = False
 
 
@@ -27,7 +28,7 @@ class AmplitudeCalculator:
         self.datastream = DataStream(connection)
 
     def calc(
-        self, time: datetime, duration: float, stream_id: str, organization_id: str
+        self, time: datetime, duration: float, channel_id: str, organization_id: str
     ) -> SignalAmplitude:
         raise NotImplementedError
 

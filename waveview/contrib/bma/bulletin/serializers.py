@@ -252,7 +252,7 @@ class BulletinPayloadSerializer(serializers.Serializer):
                 station_count=0,
                 azimuthal_gap=0,
                 evaluation_status=EvaluationStatus.PRELIMINARY,
-                is_preferred=True,
+                is_preferred=False,
             ),
         )
 

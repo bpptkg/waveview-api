@@ -15,6 +15,7 @@ from waveview.api.permissions import IsOrganizationMember
 from waveview.contrib.bma.bulletin.serializers import BulletinPayloadSerializer
 from waveview.event.models import Event
 from waveview.organization.permissions import PermissionType
+from waveview.tasks.notify_event_observer import OperationType, notify_event_observer
 
 
 class BMABulletinResponseSerializer(serializers.Serializer):
@@ -71,7 +72,11 @@ class BMABulletinEndpoint(Endpoint):
             },
         )
         bulletin.is_valid(raise_exception=True)
-        bulletin.save()
+        event: Event = bulletin.save()
+
+        notify_event_observer.delay(
+            OperationType.UPDATE, str(event.id), str(volcano.id)
+        )
 
         return Response({"message": "Event updated."}, status=status.HTTP_200_OK)
 

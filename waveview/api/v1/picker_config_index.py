@@ -54,9 +54,12 @@ class PickerConfigIndexEndpoint(Endpoint):
         try:
             config = PickerConfig.objects.filter(user=user, volcano=volcano).get()
         except PickerConfig.DoesNotExist:
-            raise NotFound(_("Picker config not found."))
+            config = None
 
-        config.merge(orgconfig)
+        if config:
+            config.merge(orgconfig)
+        else:
+            config = orgconfig
         serializer = PickerConfigSerializer(config)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

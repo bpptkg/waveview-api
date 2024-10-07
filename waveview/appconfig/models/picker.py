@@ -36,9 +36,11 @@ class AmplitudeConfigData:
     channels: list[ChannelConfigData]
 
     @classmethod
-    def from_dict(cls, data: dict) -> "AmplitudeConfigData":
+    def from_dict(cls, data: dict | None) -> "AmplitudeConfigData":
+        if data is None:
+            return cls(amplitude_calculator="bpptkg", channels=[])
         return cls(
-            amplitude_calculator=data.get("amplitude_calculator"),
+            amplitude_calculator=data.get("amplitude_calculator", "bpptkg"),
             channels=[
                 ChannelConfigData.from_dict(channel)
                 for channel in data.get("channels", [])

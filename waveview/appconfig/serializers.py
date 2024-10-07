@@ -3,6 +3,7 @@ import uuid
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 
 from waveview.appconfig.models import PickerConfig, SeismicityConfig
 from waveview.event.serializers.event_type import EventTypeSerializer
@@ -63,8 +64,16 @@ class PickerConfigPayloadSerializer(serializers.Serializer):
     def create(self, validated_data: dict) -> PickerConfig:
         user = self.context["user"]
         volcano = self.context["volcano"]
+        organization = self.context["organization"]
+        try:
+            orgconfig = PickerConfig.objects.filter(
+                organization=organization, volcano=volcano
+            ).get()
+        except PickerConfig.DoesNotExist:
+            raise NotFound(_("Picker config not found."))
+
         data = json.loads(json.dumps(validated_data, cls=CustomJSONEncoder))
-        instance, __ = PickerConfig.objects.update_or_create(
+        config, __ = PickerConfig.objects.update_or_create(
             user=user,
             volcano=volcano,
             defaults={
@@ -72,14 +81,14 @@ class PickerConfigPayloadSerializer(serializers.Serializer):
                 "name": "Default",
             },
         )
-        return instance
+
+        config.merge(orgconfig).save()
+        return config
 
     def update(
         self, instance: SeismicityConfig, validated_data: dict
     ) -> SeismicityConfig:
-        instance.data = validated_data
-        instance.save()
-        return instance
+        raise NotImplementedError("Update method is not implemented.")
 
 
 class SeismicityConfigSerializer(serializers.ModelSerializer):

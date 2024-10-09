@@ -11,4 +11,4 @@ Volcano monitoring.
     :caption: Guides
 
     guides/installation
-    guides/setup
+    guides/configuration

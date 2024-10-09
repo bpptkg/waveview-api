@@ -1,6 +1,6 @@
-=====
-Setup
-=====
+=============
+Configuration
+=============
 
 Once you have installed the package, we have to setup the application in the
 admin panel. Prior to setting up the application, you need to have the following

@@ -13,6 +13,9 @@ def deepmerge(source: dict, dest: dict) -> dict:
         if isinstance(value, dict):
             node = dest.setdefault(key, {})
             deepmerge(value, node)
+        elif isinstance(value, list):
+            if value:
+                dest[key] = value
         else:
             dest[key] = value
     return dest

@@ -90,5 +90,4 @@ class PickerConfigIndexEndpoint(Endpoint):
         serializer.is_valid(raise_exception=True)
         config = serializer.save()
 
-        serializer = PickerConfigSerializer(config)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(PickerConfigSerializer(config).data, status=status.HTTP_200_OK)

@@ -1,6 +1,7 @@
 import json
 import uuid
 from dataclasses import asdict, dataclass
+from uuid import uuid4
 
 from django.conf import settings
 from django.db import models
@@ -49,6 +50,116 @@ class AmplitudeConfigData:
 
 
 @dataclass
+class BandpassFilterConfigData:
+    type: str
+    freqmin: float
+    freqmax: float
+    order: int
+    zerophase: bool
+    taper: str
+    taper_width: float
+    id: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "BandpassFilterConfigData":
+        freqmin = data.get("freqmin")
+        freqmax = data.get("freqmax")
+        order = data.get("order", 4)
+        zerophase = data.get("zerophase", False)
+        taper = data.get("taper", "hann")
+        taper_width = data.get("taper_width", 0.01)
+        if freqmin is None:
+            raise ValueError("freqmin is required")
+        if freqmax is None:
+            raise ValueError("freqmax is required")
+
+        return cls(
+            type="bandpass",
+            freqmin=freqmin,
+            freqmax=freqmax,
+            order=order,
+            zerophase=zerophase,
+            taper=taper,
+            taper_width=taper_width,
+            id=str(uuid4()),
+        )
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class LowpassFilterConfigData:
+    type: str
+    freq: float
+    order: int
+    zerophase: bool
+    taper: str
+    taper_width: float
+    id: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "LowpassFilterConfigData":
+        freq = data.get("freq")
+        if freq is None:
+            raise ValueError("freq is required")
+        order = data.get("order", 4)
+        zerophase = data.get("zerophase", False)
+        taper = data.get("taper", "hann")
+        taper_width = data.get("taper_width", 0.01)
+        return cls(
+            type="lowpass",
+            freq=freq,
+            order=order,
+            zerophase=zerophase,
+            taper=taper,
+            taper_width=taper_width,
+            id=str(uuid4()),
+        )
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class HighpassFilterConfigData:
+    type: str
+    freq: float
+    order: int
+    zerophase: bool
+    taper: str
+    taper_width: float
+    id: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "HighpassFilterConfigData":
+        freq = data.get("freq")
+        if freq is None:
+            raise ValueError("freq is required")
+        order = data.get("order", 4)
+        zerophase = data.get("zerophase", False)
+        taper = data.get("taper", "hann")
+        taper_width = data.get("taper_width", 0.01)
+        return cls(
+            type="highpass",
+            freq=freq,
+            order=order,
+            zerophase=zerophase,
+            taper=taper,
+            taper_width=taper_width,
+            id=str(uuid4()),
+        )
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+FiltersConfigData = list[
+    HighpassFilterConfigData | LowpassFilterConfigData | HighpassFilterConfigData
+]
+
+
+@dataclass
 class PickerConfigData:
     helicorder_channel: ChannelConfigData
     seismogram_channels: list[ChannelConfigData]
@@ -57,24 +168,47 @@ class PickerConfigData:
     helicorder_interval: int
     helicorder_duration: int
     amplitude_config: AmplitudeConfigData
+    filters: FiltersConfigData
 
     @classmethod
     def from_dict(cls, data: dict) -> "PickerConfigData":
+        helicorder_channel = data.get("helicorder_channel")
+        if helicorder_channel is None:
+            raise ValueError("helicorder_channel is required")
+
+        seismogram_channels = [
+            ChannelConfigData.from_dict(channel)
+            for channel in data.get("seismogram_channels", [])
+        ]
+
+        force_center = data.get("force_center", True)
+        window_size = data.get("window_size", 5)
+        helicorder_interval = data.get("helicorder_interval", 30)
+        helicorder_duration = data.get("helicorder_duration", 12)
+        amplitude_config = AmplitudeConfigData.from_dict(data.get("amplitude_config"))
+
+        raw_filters = data.get("filters", [])
+        filters: FiltersConfigData = []
+        for item in raw_filters:
+            if item.get("type") == "highpass":
+                fi = HighpassFilterConfigData.from_dict(item)
+            elif item.get("type") == "lowpass":
+                fi = LowpassFilterConfigData.from_dict(item)
+            elif item.get("type") == "bandpass":
+                fi = BandpassFilterConfigData.from_dict(item)
+            else:
+                raise ValueError("Invalid filter type")
+            filters.append(fi)
+
         return cls(
-            helicorder_channel=ChannelConfigData.from_dict(
-                data.get("helicorder_channel")
-            ),
-            seismogram_channels=[
-                ChannelConfigData.from_dict(channel)
-                for channel in data.get("seismogram_channels", [])
-            ],
-            force_center=data.get("force_center"),
-            window_size=data.get("window_size"),
-            helicorder_interval=data.get("helicorder_interval"),
-            helicorder_duration=data.get("helicorder_duration"),
-            amplitude_config=AmplitudeConfigData.from_dict(
-                data.get("amplitude_config")
-            ),
+            helicorder_channel=helicorder_channel,
+            seismogram_channels=seismogram_channels,
+            force_center=force_center,
+            window_size=window_size,
+            helicorder_interval=helicorder_interval,
+            helicorder_duration=helicorder_duration,
+            amplitude_config=amplitude_config,
+            filters=filters,
         )
 
     def to_dict(self) -> dict:

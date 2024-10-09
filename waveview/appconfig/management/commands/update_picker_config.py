@@ -5,6 +5,11 @@ from django.core.management.base import BaseCommand, CommandParser
 from rest_framework import serializers
 
 from waveview.appconfig.models import PickerConfig
+from waveview.appconfig.models.picker import (
+    BandpassFilterConfigData,
+    HighpassFilterConfigData,
+    LowpassFilterConfigData,
+)
 from waveview.inventory.models import Channel
 from waveview.organization.models import Organization
 from waveview.volcano.models import Volcano
@@ -43,6 +48,21 @@ class PickerConfigSerializer(serializers.Serializer):
     helicorder_interval = serializers.IntegerField()
     helicorder_duration = serializers.IntegerField()
     amplitude_config = AmplitudeConfigSerializer()
+    filters = serializers.JSONField(default=list)
+
+    def validate_filters(self, items: list) -> list[dict]:
+        validated = []
+        for item in items:
+            if item.get("type") == "lowpass":
+                fi = LowpassFilterConfigData.from_dict(item)
+            elif item.get("type") == "bandpass":
+                fi = BandpassFilterConfigData.from_dict(item)
+            elif item.get("type") == "highpass":
+                fi = HighpassFilterConfigData.from_dict(item)
+            else:
+                raise ValueError("Invalid filter type")
+            validated.append(fi.to_dict())
+        return validated
 
 
 class Command(BaseCommand):

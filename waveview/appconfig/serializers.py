@@ -6,6 +6,11 @@ from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
 from waveview.appconfig.models import PickerConfig, SeismicityConfig
+from waveview.appconfig.models.picker import (
+    BandpassFilterConfigData,
+    HighpassFilterConfigData,
+    LowpassFilterConfigData,
+)
 from waveview.event.serializers.event_type import EventTypeSerializer
 
 
@@ -38,6 +43,27 @@ class PickerConfigDataSerializer(serializers.Serializer):
     force_center = serializers.BooleanField(help_text=_("Force center."))
     window_size = serializers.IntegerField(help_text=_("Selection window in minutes."))
     amplitude_config = AmplitudeConfigSerializer(help_text=_("Amplitude config."))
+    filters = serializers.JSONField(help_text=_("Filter configuration."))
+    helicorder_interval = serializers.IntegerField(
+        help_text=_("Helicorder interval in seconds.")
+    )
+    helicorder_duration = serializers.IntegerField(
+        help_text=_("Helicorder duration in seconds.")
+    )
+
+    def validate_filters(self, items: list) -> list[dict]:
+        validated = []
+        for item in items:
+            if item.get("type") == "lowpass":
+                fi = LowpassFilterConfigData.from_dict(item)
+            elif item.get("type") == "bandpass":
+                fi = BandpassFilterConfigData.from_dict(item)
+            elif item.get("type") == "highpass":
+                fi = HighpassFilterConfigData.from_dict(item)
+            else:
+                raise ValueError("Invalid filter type")
+            validated.append(fi.to_dict())
+        return validated
 
 
 class PickerConfigSerializer(serializers.Serializer):

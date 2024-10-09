@@ -33,5 +33,32 @@
                 "channel_id": "VG.MEPAS.HHN"
             }
         ]
-    }
+    },
+    "filters": [
+        {
+            "type": "bandpass",
+            "freqmin": 0.5,
+            "freqmax": 15,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "type": "lowpass",
+            "freq": 3,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "type": "highpass",
+            "freq": 10,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        }
+    ]
 }

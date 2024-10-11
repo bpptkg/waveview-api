@@ -110,10 +110,11 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
         if len(st) == 0:
             return empty_packet.encode()
 
+        st.detrend("demean")
+
         if payload.taper_type != "none":
             st.taper(max_percentage=payload.taper_width, type=payload.taper_type)
 
-        st.detrend("demean")
         if payload.filter_type == FilterType.BANDPASS:
             filter_param = BandpassFilterParam(**payload.filter_options)
             st.filter(

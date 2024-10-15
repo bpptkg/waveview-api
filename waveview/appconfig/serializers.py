@@ -43,7 +43,7 @@ class PickerConfigDataSerializer(serializers.Serializer):
     force_center = serializers.BooleanField(help_text=_("Force center."))
     window_size = serializers.IntegerField(help_text=_("Selection window in minutes."))
     amplitude_config = AmplitudeConfigSerializer(help_text=_("Amplitude config."))
-    filters = serializers.JSONField(help_text=_("Filter configuration."))
+    seismogram_filters = serializers.JSONField(help_text=_("Filter configuration."))
     helicorder_interval = serializers.IntegerField(
         help_text=_("Helicorder interval in seconds.")
     )

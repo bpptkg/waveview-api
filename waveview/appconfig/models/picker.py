@@ -171,7 +171,7 @@ class PickerConfigData:
     helicorder_interval: int
     helicorder_duration: int
     amplitude_config: AmplitudeConfigData
-    filters: FiltersConfigData
+    seismogram_filters: FiltersConfigData
 
     @classmethod
     def from_dict(cls, data: dict) -> "PickerConfigData":
@@ -190,8 +190,8 @@ class PickerConfigData:
         helicorder_duration = data.get("helicorder_duration", 12)
         amplitude_config = AmplitudeConfigData.from_dict(data.get("amplitude_config"))
 
-        raw_filters = data.get("filters", [])
-        filters: FiltersConfigData = []
+        raw_filters = data.get("seismogram_filters", [])
+        seismogram_filters: FiltersConfigData = []
         for item in raw_filters:
             if item.get("type") == "highpass":
                 fi = HighpassFilterConfigData.from_dict(item)
@@ -201,7 +201,7 @@ class PickerConfigData:
                 fi = BandpassFilterConfigData.from_dict(item)
             else:
                 raise ValueError("Invalid filter type")
-            filters.append(fi)
+            seismogram_filters.append(fi)
 
         return cls(
             helicorder_channel=helicorder_channel,
@@ -211,7 +211,7 @@ class PickerConfigData:
             helicorder_interval=helicorder_interval,
             helicorder_duration=helicorder_duration,
             amplitude_config=amplitude_config,
-            filters=filters,
+            seismogram_filters=seismogram_filters,
         )
 
     def to_dict(self) -> dict:

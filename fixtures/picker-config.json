@@ -2,6 +2,19 @@
     "helicorder_channel": {
         "channel_id": "VG.MEPAS.HHZ"
     },
+    "helicorder_filters": [
+        {
+            "type": "bandpass",
+            "freqmin": 0.5,
+            "freqmax": 15,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        }
+    ],
+    "helicorder_interval": 30,
+    "helicorder_duration": 12,
     "seismogram_channels": [
         {
             "channel_id": "VG.MEPAS.HHZ"
@@ -16,25 +29,7 @@
             "channel_id": "VG.MEIJO.HHZ"
         }
     ],
-    "window_size": 5,
-    "force_center": true,
-    "helicorder_interval": 30,
-    "helicorder_duration": 12,
-    "amplitude_config": {
-        "amplitude_calculator": "bpptkg",
-        "channels": [
-            {
-                "channel_id": "VG.MEPUS.EHZ"
-            },
-            {
-                "channel_id": "VG.MEPSL.HHZ"
-            },
-            {
-                "channel_id": "VG.MEPAS.HHZ"
-            }
-        ]
-    },
-    "filters": [
+    "seismogram_filters": [
         {
             "type": "bandpass",
             "freqmin": 0.5,
@@ -60,5 +55,21 @@
             "taper": "hann",
             "width": 0.01
         }
-    ]
+    ],
+    "window_size": 5,
+    "force_center": true,
+    "amplitude_config": {
+        "amplitude_calculator": "bpptkg",
+        "channels": [
+            {
+                "channel_id": "VG.MEPUS.EHZ"
+            },
+            {
+                "channel_id": "VG.MEPSL.HHZ"
+            },
+            {
+                "channel_id": "VG.MEPAS.HHZ"
+            }
+        ]
+    }
 }

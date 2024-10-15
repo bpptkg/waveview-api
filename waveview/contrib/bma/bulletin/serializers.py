@@ -257,7 +257,7 @@ class BulletinPayloadSerializer(serializers.Serializer):
         )
 
         try:
-            amplitude_channel = Channel.objects.get_by_stream_id("VG.MEPAS.HHZ")
+            amplitude_channel = Channel.objects.get_by_stream_id("VG.MEPUS.EHZ")
         except Channel.DoesNotExist:
             amplitude_channel = None
 

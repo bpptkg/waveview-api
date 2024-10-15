@@ -24,13 +24,13 @@
         "amplitude_calculator": "bpptkg",
         "channels": [
             {
+                "channel_id": "VG.MEPUS.EHZ"
+            },
+            {
+                "channel_id": "VG.MEPSL.HHZ"
+            },
+            {
                 "channel_id": "VG.MEPAS.HHZ"
-            },
-            {
-                "channel_id": "VG.MEPAS.HHE"
-            },
-            {
-                "channel_id": "VG.MEPAS.HHN"
             }
         ]
     },

@@ -208,7 +208,7 @@ class BulletinPayloadSerializer(serializers.Serializer):
                 type_id = None
 
         try:
-            sof: Channel = Channel.objects.get_by_stream_id("VG.MEPUS.HHZ")
+            sof: Channel = Channel.objects.get_by_stream_id("VG.MEPSL.HHZ")
             station_of_first_arrival_id = str(sof.id)
         except Channel.DoesNotExist:
             station_of_first_arrival_id = None

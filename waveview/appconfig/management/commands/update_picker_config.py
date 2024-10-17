@@ -42,15 +42,30 @@ class AmplitudeConfigSerializer(serializers.Serializer):
 
 class PickerConfigSerializer(serializers.Serializer):
     helicorder_channel = ChannelSerializer()
+    helicorder_filters = serializers.JSONField(default=list)
+    seismogram_filters = serializers.JSONField(default=list)
     seismogram_channels = ChannelSerializer(many=True)
     window_size = serializers.IntegerField()
     force_center = serializers.BooleanField()
     helicorder_interval = serializers.IntegerField()
     helicorder_duration = serializers.IntegerField()
     amplitude_config = AmplitudeConfigSerializer()
-    seismogram_filters = serializers.JSONField(default=list)
 
     def validate_seismogram_filters(self, items: list) -> list[dict]:
+        validated = []
+        for item in items:
+            if item.get("type") == "lowpass":
+                fi = LowpassFilterConfigData.from_dict(item)
+            elif item.get("type") == "bandpass":
+                fi = BandpassFilterConfigData.from_dict(item)
+            elif item.get("type") == "highpass":
+                fi = HighpassFilterConfigData.from_dict(item)
+            else:
+                raise ValueError("Invalid filter type")
+            validated.append(fi.to_dict())
+        return validated
+
+    def validate_helicorder_filters(self, items: list) -> list[dict]:
         validated = []
         for item in items:
             if item.get("type") == "lowpass":

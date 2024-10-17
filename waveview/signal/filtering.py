@@ -155,6 +155,11 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
         )
         b = st[0].data.astype(np.float64)
 
+        # start and end time of the packet need to be the same as the original
+        # request as the client uses these values to cache the data. If the data
+        # is resampled, the start and end time of the packet will be different
+        # from the original request. But it should not affect the caching
+        # mechanism as the point will be plotted at the same time.
         packet = Packet(
             request_id=request_id,
             channel_id=channel_id,

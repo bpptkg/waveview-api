@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.appconfig.models import PickerConfig
+from waveview.appconfig.models.picker import PickerConfigData
 from waveview.event.amplitude import SignalAmplitude, amplitude_registry
 
 
@@ -69,7 +70,7 @@ class SignalAmplitudeEndpoint(Endpoint):
         time = serializer.validated_data["time"]
         duration = serializer.validated_data["duration"]
 
-        data = config.get_data()
+        data = PickerConfigData.from_dict(config.data)
         method = data.amplitude_config.amplitude_calculator
         calculator = amplitude_registry.get(method)
         if calculator is None:

@@ -14,7 +14,7 @@ from waveview.event.header import (
     MagnitudeType,
 )
 from waveview.event.models import Amplitude, Event, EventType, Magnitude, Origin
-from waveview.inventory.models import Channel
+from waveview.inventory.models import Channel, Station
 
 logger = logging.getLogger(__name__)
 
@@ -208,7 +208,7 @@ class BulletinPayloadSerializer(serializers.Serializer):
                 type_id = None
 
         try:
-            sof: Channel = Channel.objects.get_by_stream_id("VG.MEPSL.HHZ")
+            sof: Station = Station.objects.filter(code="MEPSL").get()
             station_of_first_arrival_id = str(sof.id)
         except Channel.DoesNotExist:
             station_of_first_arrival_id = None

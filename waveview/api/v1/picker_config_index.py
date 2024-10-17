@@ -16,6 +16,7 @@ from waveview.appconfig.serializers import (
     PickerConfigPayloadSerializer,
     PickerConfigSerializer,
 )
+from waveview.appconfig.models.picker import merge_picker_configs
 
 
 class PickerConfigIndexEndpoint(Endpoint):
@@ -57,7 +58,7 @@ class PickerConfigIndexEndpoint(Endpoint):
             config = None
 
         if config:
-            config.merge(orgconfig)
+            config = merge_picker_configs(orgconfig, config)
         else:
             config = orgconfig
         serializer = PickerConfigSerializer(config)

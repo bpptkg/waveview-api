@@ -1,7 +1,6 @@
 import json
 import uuid
 from dataclasses import asdict, dataclass
-from uuid import uuid4
 
 from django.conf import settings
 from django.db import models
@@ -29,9 +28,12 @@ class ChannelConfigData:
     @classmethod
     def from_dict(cls, data: dict) -> "ChannelConfigData":
         return cls(
-            channel_id=data.get("channel_id"),
+            channel_id=data.get("channel_id", ""),
             color=data.get("color"),
         )
+
+    def to_dict(self) -> dict:
+        return asdict(self)
 
 
 @dataclass
@@ -50,6 +52,12 @@ class AmplitudeConfigData:
                 for channel in data.get("channels", [])
             ],
         )
+
+    def to_dict(self) -> dict:
+        return {
+            "amplitude_calculator": self.amplitude_calculator,
+            "channels": [channel.to_dict() for channel in self.channels],
+        }
 
 
 @dataclass
@@ -84,7 +92,7 @@ class BandpassFilterConfigData:
             zerophase=zerophase,
             taper=taper,
             taper_width=taper_width,
-            id=str(uuid4()),
+            id=data["id"],
         )
 
     def to_dict(self) -> dict:
@@ -117,7 +125,7 @@ class LowpassFilterConfigData:
             zerophase=zerophase,
             taper=taper,
             taper_width=taper_width,
-            id=str(uuid4()),
+            id=data["id"],
         )
 
     def to_dict(self) -> dict:
@@ -150,34 +158,85 @@ class HighpassFilterConfigData:
             zerophase=zerophase,
             taper=taper,
             taper_width=taper_width,
-            id=str(uuid4()),
+            id=data["id"],
         )
 
     def to_dict(self) -> dict:
         return asdict(self)
 
 
-FiltersConfigData = list[
-    HighpassFilterConfigData | LowpassFilterConfigData | HighpassFilterConfigData
-]
+FilterConfigData = (
+    BandpassFilterConfigData | HighpassFilterConfigData | LowpassFilterConfigData
+)
+FiltersConfigData = list[FilterConfigData]
+
+
+def build_filter_config(cfg: dict) -> FilterConfigData:
+    if cfg.get("type") == "highpass":
+        return HighpassFilterConfigData.from_dict(cfg)
+    elif cfg.get("type") == "lowpass":
+        return LowpassFilterConfigData.from_dict(cfg)
+    elif cfg.get("type") == "bandpass":
+        return BandpassFilterConfigData.from_dict(cfg)
+    else:
+        raise ValueError("Invalid filter type")
+
+
+@dataclass
+class UserPickerConfigData:
+    helicorder_channel: ChannelConfigData
+    seismogram_channels: list[ChannelConfigData]
+    window_size: int
+    force_center: bool
+    helicorder_filter: FilterConfigData
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "UserPickerConfigData":
+        helicorder_channel = data.get("helicorder_channel")
+        if helicorder_channel is None:
+            raise ValueError("helicorder_channel is required")
+        helicorder_channel = ChannelConfigData.from_dict(helicorder_channel)
+
+        seismogram_channels = [
+            ChannelConfigData.from_dict(channel)
+            for channel in data.get("seismogram_channels", [])
+        ]
+
+        window_size = data.get("window_size", 5)
+        force_center = data.get("force_center", True)
+
+        helicorder_filter = data.get("helicorder_filter")
+        if helicorder_filter is not None:
+            helicorder_filter = build_filter_config(helicorder_filter)
+
+        return cls(
+            helicorder_channel=helicorder_channel,
+            seismogram_channels=seismogram_channels,
+            window_size=window_size,
+            force_center=force_center,
+            helicorder_filter=helicorder_filter,
+        )
 
 
 @dataclass
 class PickerConfigData:
     helicorder_channel: ChannelConfigData
     seismogram_channels: list[ChannelConfigData]
+    helicorder_filters: FiltersConfigData
+    seismogram_filters: FiltersConfigData
+    helicorder_filter: FilterConfigData | None
     force_center: bool
     window_size: int
     helicorder_interval: int
     helicorder_duration: int
     amplitude_config: AmplitudeConfigData
-    seismogram_filters: FiltersConfigData
 
     @classmethod
     def from_dict(cls, data: dict) -> "PickerConfigData":
         helicorder_channel = data.get("helicorder_channel")
         if helicorder_channel is None:
             raise ValueError("helicorder_channel is required")
+        helicorder_channel = ChannelConfigData.from_dict(helicorder_channel)
 
         seismogram_channels = [
             ChannelConfigData.from_dict(channel)
@@ -190,18 +249,21 @@ class PickerConfigData:
         helicorder_duration = data.get("helicorder_duration", 12)
         amplitude_config = AmplitudeConfigData.from_dict(data.get("amplitude_config"))
 
-        raw_filters = data.get("seismogram_filters", [])
+        raw_seismogram_filters = data.get("seismogram_filters", [])
         seismogram_filters: FiltersConfigData = []
-        for item in raw_filters:
-            if item.get("type") == "highpass":
-                fi = HighpassFilterConfigData.from_dict(item)
-            elif item.get("type") == "lowpass":
-                fi = LowpassFilterConfigData.from_dict(item)
-            elif item.get("type") == "bandpass":
-                fi = BandpassFilterConfigData.from_dict(item)
-            else:
-                raise ValueError("Invalid filter type")
+        for item in raw_seismogram_filters:
+            fi = build_filter_config(item)
             seismogram_filters.append(fi)
+
+        raw_helicorder_filters = data.get("helicorder_filters", [])
+        helicorder_filters: FiltersConfigData = []
+        for item in raw_helicorder_filters:
+            fi = build_filter_config(item)
+            helicorder_filters.append(fi)
+
+        helicorder_filter = data.get("helicorder_filter")
+        if helicorder_filter is not None:
+            helicorder_filter = build_filter_config(helicorder_filter)
 
         return cls(
             helicorder_channel=helicorder_channel,
@@ -212,19 +274,39 @@ class PickerConfigData:
             helicorder_duration=helicorder_duration,
             amplitude_config=amplitude_config,
             seismogram_filters=seismogram_filters,
+            helicorder_filters=helicorder_filters,
+            helicorder_filter=helicorder_filter,
         )
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        return {
+            "helicorder_channel": self.helicorder_channel.to_dict(),
+            "seismogram_channels": [
+                channel.to_dict() for channel in self.seismogram_channels
+            ],
+            "force_center": self.force_center,
+            "window_size": self.window_size,
+            "helicorder_interval": self.helicorder_interval,
+            "helicorder_duration": self.helicorder_duration,
+            "amplitude_config": self.amplitude_config.to_dict(),
+            "seismogram_filters": [
+                filter.to_dict() for filter in self.seismogram_filters
+            ],
+            "helicorder_filters": [
+                filter.to_dict() for filter in self.helicorder_filters
+            ],
+            "helicorder_filter": (
+                self.helicorder_filter.to_dict() if self.helicorder_filter else None
+            ),
+        }
 
-    def to_json(self) -> str:
-        return json.dumps(self.to_dict())
-
-    def merge(self, data: dict) -> "PickerConfigData":
-        source = self.to_dict()
-        dest = data
-        merged = deepmerge(source, dest)
-        return PickerConfigData.from_dict(merged)
+    def merge(self, source: UserPickerConfigData) -> "PickerConfigData":
+        self.helicorder_channel = source.helicorder_channel
+        self.seismogram_channels = source.seismogram_channels
+        self.force_center = source.force_center
+        self.window_size = source.window_size
+        self.helicorder_filter = source.helicorder_filter
+        return self
 
 
 class SeismogramComponent(models.TextChoices):
@@ -265,13 +347,12 @@ class PickerConfig(models.Model):
     def __str__(self) -> str:
         return f"{self.volcano}"
 
-    def merge(self, other: "PickerConfig") -> "PickerConfig":
-        data = PickerConfigData.from_dict(self.data).merge(other.data)
-        self.data = data.to_dict()
-        return self
 
-    def get_raw_data(self) -> dict:
-        return self.data
-
-    def get_data(self) -> PickerConfigData:
-        return PickerConfigData.from_dict(self.data)
+def merge_picker_configs(
+    orgconfig: PickerConfig, userconfig: PickerConfig
+) -> PickerConfig:
+    userdata = UserPickerConfigData.from_dict(userconfig.data)
+    orgdata = PickerConfigData.from_dict(orgconfig.data)
+    orgdata.merge(userdata)
+    orgconfig.data = orgdata.to_dict()
+    return orgconfig

@@ -6,11 +6,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
 from waveview.appconfig.models import PickerConfig, SeismicityConfig
-from waveview.appconfig.models.picker import (
-    BandpassFilterConfigData,
-    HighpassFilterConfigData,
-    LowpassFilterConfigData,
-)
+from waveview.appconfig.models.picker import build_filter_config, merge_picker_configs
 from waveview.event.serializers.event_type import EventTypeSerializer
 
 
@@ -43,27 +39,21 @@ class PickerConfigDataSerializer(serializers.Serializer):
     force_center = serializers.BooleanField(help_text=_("Force center."))
     window_size = serializers.IntegerField(help_text=_("Selection window in minutes."))
     amplitude_config = AmplitudeConfigSerializer(help_text=_("Amplitude config."))
-    seismogram_filters = serializers.JSONField(help_text=_("Filter configuration."))
+    seismogram_filters = serializers.JSONField(
+        help_text=_("Seismogram filter options.")
+    )
+    helicorder_filters = serializers.JSONField(
+        help_text=_("Helicorder filter options.")
+    )
     helicorder_interval = serializers.IntegerField(
         help_text=_("Helicorder interval in seconds.")
     )
     helicorder_duration = serializers.IntegerField(
         help_text=_("Helicorder duration in seconds.")
     )
-
-    def validate_filters(self, items: list) -> list[dict]:
-        validated = []
-        for item in items:
-            if item.get("type") == "lowpass":
-                fi = LowpassFilterConfigData.from_dict(item)
-            elif item.get("type") == "bandpass":
-                fi = BandpassFilterConfigData.from_dict(item)
-            elif item.get("type") == "highpass":
-                fi = HighpassFilterConfigData.from_dict(item)
-            else:
-                raise ValueError("Invalid filter type")
-            validated.append(fi.to_dict())
-        return validated
+    helicorder_filter = serializers.JSONField(
+        help_text=_("Helicorder applied filter."), allow_null=True
+    )
 
 
 class PickerConfigSerializer(serializers.Serializer):
@@ -86,6 +76,14 @@ class PickerConfigPayloadSerializer(serializers.Serializer):
     )
     force_center = serializers.BooleanField(help_text=_("Force center."))
     window_size = serializers.IntegerField(help_text=_("Selection window in minutes."))
+    helicorder_filter = serializers.JSONField(
+        help_text=_("Helicorder applied filter."), allow_null=True
+    )
+
+    def validate_helicorder_filter(self, value: dict | None) -> dict | None:
+        if value is not None:
+            return build_filter_config(value).to_dict()
+        return None
 
     def create(self, validated_data: dict) -> PickerConfig:
         user = self.context["user"]
@@ -107,9 +105,7 @@ class PickerConfigPayloadSerializer(serializers.Serializer):
                 "name": "Default",
             },
         )
-
-        config.merge(orgconfig).save()
-        return config
+        return merge_picker_configs(orgconfig, config)
 
     def update(
         self, instance: SeismicityConfig, validated_data: dict

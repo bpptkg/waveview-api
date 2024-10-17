@@ -4,9 +4,28 @@
     },
     "helicorder_filters": [
         {
+            "id": "bp,0.5,15",
             "type": "bandpass",
             "freqmin": 0.5,
             "freqmax": 15,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "id": "lp,3",
+            "type": "lowpass",
+            "freq": 3,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "id": "hp,10",
+            "type": "highpass",
+            "freq": 10,
             "order": 4,
             "zerophase": false,
             "taper": "hann",
@@ -31,6 +50,7 @@
     ],
     "seismogram_filters": [
         {
+            "id": "bp,0.5,15",
             "type": "bandpass",
             "freqmin": 0.5,
             "freqmax": 15,
@@ -40,6 +60,7 @@
             "width": 0.01
         },
         {
+            "id": "lp,3",
             "type": "lowpass",
             "freq": 3,
             "order": 4,
@@ -48,6 +69,7 @@
             "width": 0.01
         },
         {
+            "id": "hp,10",
             "type": "highpass",
             "freq": 10,
             "order": 4,

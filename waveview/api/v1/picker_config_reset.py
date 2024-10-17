@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -37,20 +38,14 @@ class PickerConfigResetEndpoint(Endpoint):
         volcano = self.get_volcano(organization, volcano_id)
         user = request.user
 
+        PickerConfig.objects.filter(user=user, volcano=volcano).delete()
+
         try:
-            org_config = PickerConfig.objects.filter(
+            orgconfig = PickerConfig.objects.filter(
                 organization=organization, volcano=volcano
             ).get()
         except PickerConfig.DoesNotExist:
-            org_config = None
+            raise NotFound(_("Picker config not found."))
 
-        if org_config:
-            data = org_config.data
-        else:
-            data = {}
-        config, __ = PickerConfig.objects.update_or_create(
-            user=user, volcano=volcano, defaults={"data": data}
-        )
-
-        serializer = PickerConfigSerializer(config)
+        serializer = PickerConfigSerializer(orgconfig)
         return Response(serializer.data, status=status.HTTP_200_OK)

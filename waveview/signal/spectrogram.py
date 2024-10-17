@@ -370,12 +370,11 @@ class TimescaleSpectrogramAdapter(BaseSpectrogramAdapter):
             delta = st[0].stats.delta
             endtime = starttime + npts * delta
             data = st[0].data
-            npoints = len(data)
 
         packet = SpectrogramData(
             request_id=request_id,
             channel_id=channel_id,
-            npoints=npoints,
+            npoints=npts,
             sample_rate=sample_rate,
             data=specgram,
             time=time,

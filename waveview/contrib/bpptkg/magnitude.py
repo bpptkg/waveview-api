@@ -223,9 +223,9 @@ class MagnitudeEstimator:
                 },
             )
             StationMagnitudeContribution.objects.update_or_create(
-                magnitude=magnitude,
                 station_magnitude=station_magnitude,
                 defaults={
+                    "magnitude": magnitude,
                     "weight": 1,
                     "residual": 0,
                 },

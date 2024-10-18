@@ -107,7 +107,7 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
             return empty_packet.encode()
 
         st = self.datastream.get_waveform(channel_id, start, end)
-        if len(st) == 0:
+        if len(st) == 0 or st[0].stats.npts == 0:
             return empty_packet.encode()
 
         st.detrend("demean")

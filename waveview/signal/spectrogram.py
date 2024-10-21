@@ -10,6 +10,7 @@ from django.db import connection
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 from obspy import read
 
+from waveview.data.sample import get_sample_file_path
 from waveview.inventory.datastream import DataStream
 from waveview.inventory.models import Channel
 from waveview.settings import BASE_DIR
@@ -272,8 +273,7 @@ class DummySpectrogramAdapter(BaseSpectrogramAdapter):
         start = datetime.fromtimestamp(payload.start / 1000, timezone.utc)
         end = datetime.fromtimestamp(payload.end / 1000, timezone.utc)
 
-        fixtures_dir = BASE_DIR / "fixtures"
-        filename = fixtures_dir / f"sample.mseed"
+        filename = get_sample_file_path("sample.mseed")
         st = read(str(filename))
         data = st[0].data
         sample_rate = st[0].stats.sampling_rate

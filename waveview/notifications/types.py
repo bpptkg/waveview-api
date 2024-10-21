@@ -31,10 +31,8 @@ class NotificationMessage:
 class NotifyEventData:
     organization_id: str
     event_id: str
-    author_id: str
-    author_name: str
-    event_type_code: str
     event_time: str
+    event_type_code: str
     event_duration: float
     actor_id: str
 
@@ -46,18 +44,11 @@ class NotifyEventData:
     def from_event(
         cls, actor_id: str, organization_id: str, event: Event
     ) -> "NotifyEventData":
-        author = event.author
-        if author.name:
-            author_name = author.name
-        else:
-            author_name = author.username
         return cls(
             organization_id=organization_id,
             event_id=str(event.id),
-            author_id=str(event.author_id),
-            author_name=author_name,
-            event_type_code=event.type.code,
             event_time=event.time.isoformat(),
+            event_type_code=event.type.code,
             event_duration=event.duration,
             actor_id=actor_id,
         )

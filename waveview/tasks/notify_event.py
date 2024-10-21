@@ -29,122 +29,102 @@ def get_participants(organization: Organization, excluded: list[str]) -> list:
     return [member for member in members if str(member.pk) not in excluded]
 
 
-def notify_new_event(organization: Organization, data: NotifyEventData) -> None:
-    author_name = data.author_name
-    event_type_code = data.event_type_code
-    event_time = data.event_time
-    actor_id = data.actor_id
-
-    participants = get_participants(organization, [actor_id])
-
+def get_event(event_id: str) -> Event:
     try:
-        event = Event.objects.get(pk=data.event_id)
-        payload = NewEventNotificationDataSerializer({"event": event}).data
+        event = Event.objects.get(pk=event_id)
     except Event.DoesNotExist:
-        logger.error(f"Event not found: {data.event_id}")
-        return
+        raise ValueError(f"Event not found: {event_id}")
+    return event
 
-    channel_layer = get_channel_layer()
-    for participant in participants:
-        channel = user_channel(participant.pk)
 
+def get_actor(actor_id: str) -> User:
+    try:
+        actor = User.objects.get(pk=actor_id)
+    except User.DoesNotExist:
+        raise ValueError(f"Actor not found: {actor_id}")
+    return actor
+
+
+def get_event_type(event_type_code: str) -> EventType:
+    try:
+        event_type = EventType.objects.get(code=event_type_code)
+    except EventType.DoesNotExist:
+        raise ValueError(f"Event type not found: {event_type_code}")
+    return event_type
+
+
+def get_actor_name(actor: User) -> str:
+    if actor.name is not None:
+        return actor.name
+    return actor.username
+
+
+def build_message(operation: OperationType, data: NotifyEventData) -> dict:
+    actor_id = data.actor_id
+    event_id = data.event_id
+    event_time = data.event_time
+    event_type_code = data.event_type_code
+
+    if operation == OperationType.CREATE:
+        event = get_event(event_id)
+        actor = get_actor(actor_id)
+        actor_name = get_actor_name(actor)
+        payload = NewEventNotificationDataSerializer(
+            {"event": event, "actor": actor}
+        ).data
         message = NotificationMessage(
             type=NotificationType.NEW_EVENT.value,
             title=f"New Event ({event_type_code})",
-            body=f"Time {event_time} UTC by {author_name}",
+            body=f"Time {event_time} UTC by {actor_name}",
             data=payload,
         ).to_dict()
 
-        async_to_sync(channel_layer.group_send)(
-            channel,
-            {
-                "type": "notify",
-                "data": message,
-            },
-        )
-
-
-def notify_event_update(organization: Organization, data: NotifyEventData) -> None:
-    author_name = data.author_name
-    event_type_code = data.event_type_code
-    event_time = data.event_time
-    actor_id = data.actor_id
-
-    participants = get_participants(organization, [actor_id])
-
-    try:
-        event = Event.objects.get(pk=data.event_id)
-        payload = EventUpdateNotificationDataSerializer({"event": event}).data
-    except Event.DoesNotExist:
-        logger.error(f"Event not found: {data.event_id}")
-        return
-
-    channel_layer = get_channel_layer()
-    for participant in participants:
-        channel = user_channel(participant.pk)
-
+    elif operation == OperationType.UPDATE:
+        event = get_event(event_id)
+        actor = get_actor(actor_id)
+        actor_name = get_actor_name(actor)
+        payload = EventUpdateNotificationDataSerializer(
+            {"event": event, "actor": actor}
+        ).data
         message = NotificationMessage(
             type=NotificationType.EVENT_UPDATE.value,
             title=f"Event Updated ({event_type_code})",
-            body=f"Time {event_time} UTC by {author_name}",
+            body=f"Time {event_time} UTC by {actor_name}",
             data=payload,
         ).to_dict()
 
-        async_to_sync(channel_layer.group_send)(
-            channel,
+    elif operation == OperationType.DELETE:
+        actor = get_actor(actor_id)
+        actor_name = get_actor_name(actor)
+        event_type = get_event_type(event_type_code)
+        payload = EventDeleteNotificationDataSerializer(
             {
-                "type": "notify",
-                "data": message,
-            },
-        )
-
-
-def notify_event_delete(organization: Organization, data: NotifyEventData) -> None:
-    event_id = data.event_id
-    author_id = data.author_id
-    author_name = data.author_name
-    event_type_code = data.event_type_code
-    event_time = data.event_time
-    actor_id = data.actor_id
-
-    participants = get_participants(organization, [actor_id])
-
-    try:
-        type = EventType.objects.get(code=event_type_code)
-    except EventType.DoesNotExist:
-        logger.error(f"Event type not found: {event_type_code}")
-        return
-
-    try:
-        author = User.objects.get(pk=author_id)
-    except User.DoesNotExist:
-        logger.error(f"Author not found: {author_id}")
-        return
-
-    payload = EventDeleteNotificationDataSerializer(
-        {
-            "event": {
-                "id": event_id,
-                "time": event_time,
-                "type": type,
-                "duration": data.event_duration,
-                "author": author,
-                "deleted_at": timezone.now(),
+                "event": {
+                    "id": event_id,
+                    "time": event_time,
+                    "type": event_type,
+                    "duration": data.event_duration,
+                    "deleted_at": timezone.now(),
+                },
+                "actor": actor,
             }
-        }
-    ).data
-
-    channel_layer = get_channel_layer()
-    for participant in participants:
-        channel = user_channel(participant.pk)
-
+        ).data
         message = NotificationMessage(
             type=NotificationType.EVENT_DELETE.value,
             title=f"Event Deleted ({event_type_code})",
-            body=f"Time {event_time} UTC by {author_name}",
+            body=f"Time {event_time} UTC by {actor_name}",
             data=payload,
         ).to_dict()
+    else:
+        raise ValueError(f"Invalid operation: {operation}")
 
+    return message
+
+
+def send_message(participants: list[User], message: NotificationMessage) -> None:
+    channel_layer = get_channel_layer()
+    for participant in participants:
+        channel = user_channel(participant.pk)
         async_to_sync(channel_layer.group_send)(
             channel,
             {
@@ -168,9 +148,10 @@ def notify_event(operation: OperationType, payload: dict) -> None:
         logger.error(f"Organization not found: {organization_id}")
         return
 
-    if operation == OperationType.CREATE:
-        notify_new_event(organization, data)
-    elif operation == OperationType.UPDATE:
-        notify_event_update(organization, data)
-    elif operation == OperationType.DELETE:
-        notify_event_delete(organization, data)
+    try:
+        actor_id = data.actor_id
+        participants = get_participants(organization, [actor_id])
+        msg = build_message(operation, data)
+        send_message(participants, msg)
+    except Exception as e:
+        logger.error(f"Error sending notification: {e}")

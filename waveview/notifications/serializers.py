@@ -6,10 +6,12 @@ from waveview.users.serializers import UserSerializer
 
 class NewEventNotificationDataSerializer(serializers.Serializer):
     event = EventSerializer()
+    actor = UserSerializer()
 
 
 class EventUpdateNotificationDataSerializer(serializers.Serializer):
     event = EventSerializer()
+    actor = UserSerializer()
 
 
 class DeletedEvent(serializers.Serializer):
@@ -17,9 +19,9 @@ class DeletedEvent(serializers.Serializer):
     type = EventTypeSerializer()
     time = serializers.DateTimeField()
     duration = serializers.FloatField()
-    author = UserSerializer()
     deleted_at = serializers.DateTimeField()
 
 
 class EventDeleteNotificationDataSerializer(serializers.Serializer):
     event = DeletedEvent()
+    actor = UserSerializer()

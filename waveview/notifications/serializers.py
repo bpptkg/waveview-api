@@ -1,7 +1,25 @@
 from rest_framework import serializers
 
-from waveview.event.serializers import EventSerializer
+from waveview.event.serializers import EventSerializer, EventTypeSerializer
+from waveview.users.serializers import UserSerializer
 
 
 class NewEventNotificationDataSerializer(serializers.Serializer):
     event = EventSerializer()
+
+
+class EventUpdateNotificationDataSerializer(serializers.Serializer):
+    event = EventSerializer()
+
+
+class DeletedEvent(serializers.Serializer):
+    id = serializers.UUIDField()
+    type = EventTypeSerializer()
+    time = serializers.DateTimeField()
+    duration = serializers.FloatField()
+    author = UserSerializer()
+    deleted_at = serializers.DateTimeField()
+
+
+class EventDeleteNotificationDataSerializer(serializers.Serializer):
+    event = DeletedEvent()

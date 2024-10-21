@@ -15,14 +15,16 @@ from waveview.api.pagination import FlexiblePageNumberPagination
 from waveview.api.permissions import IsOrganizationMember
 from waveview.api.serializers import CommaSeparatedListField
 from waveview.event.models import Event
+from waveview.event.observers import OperationType
 from waveview.event.serializers import (
     EventDetailSerializer,
     EventPayloadSerializer,
     EventSerializer,
 )
+from waveview.notifications.types import NotifyEventData
 from waveview.organization.permissions import PermissionType
-from waveview.tasks.notify_event_observer import OperationType, notify_event_observer
-from waveview.tasks.notify_new_event import notify_new_event
+from waveview.tasks.notify_event_observer import notify_event_observer
+from waveview.tasks.notify_event import notify_event
 
 
 class OrderingType(models.TextChoices):
@@ -181,9 +183,11 @@ class EventIndexEndpoint(Endpoint):
         notify_event_observer.delay(
             OperationType.CREATE, str(event.id), str(volcano.id)
         )
-        notify_new_event.delay(
-            organization_id=str(organization.id), event_id=str(event.id)
+
+        payload = NotifyEventData.from_event(
+            str(request.user.id), str(organization.id), event
         )
+        notify_event.delay(OperationType.CREATE, payload.to_dict())
 
         return Response(
             EventDetailSerializer(event, context={"request": request}).data,

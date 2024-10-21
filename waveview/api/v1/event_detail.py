@@ -12,8 +12,11 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.event.models import Event
+from waveview.event.observers import OperationType
 from waveview.event.serializers import EventDetailSerializer, EventPayloadSerializer
+from waveview.notifications.types import NotifyEventData
 from waveview.organization.permissions import PermissionType
+from waveview.tasks.notify_event import notify_event
 from waveview.tasks.notify_event_observer import OperationType, notify_event_observer
 
 
@@ -101,6 +104,11 @@ class EventDetailEndpoint(Endpoint):
             OperationType.UPDATE, str(event.id), str(volcano.id)
         )
 
+        payload = NotifyEventData.from_event(
+            str(request.user.id), str(organization.id), event
+        )
+        notify_event.delay(OperationType.UPDATE, payload.to_dict())
+
         return Response(
             EventDetailSerializer(event, context={"request": request}).data,
             status=status.HTTP_200_OK,
@@ -141,6 +149,9 @@ class EventDetailEndpoint(Endpoint):
         try:
             event = Event.objects.get(catalog=catalog, id=event_id)
             refid = event.refid
+            payload = NotifyEventData.from_event(
+                str(request.user.id), str(organization.id), event
+            )
             event.delete()
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
@@ -148,5 +159,6 @@ class EventDetailEndpoint(Endpoint):
         notify_event_observer.delay(
             OperationType.DELETE, str(event_id), str(volcano.id), refid=refid
         )
+        notify_event.delay(OperationType.DELETE, payload.to_dict())
 
         return Response(status=status.HTTP_204_NO_CONTENT)

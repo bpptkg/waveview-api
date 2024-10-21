@@ -56,7 +56,7 @@ information:
 
     .. code-block:: bash
 
-        python manage.py update_eventtypes fixture/event-types.json <org_slug>
+        python manage.py update_eventtypes fixtures/event-types.json <org_slug>
 
 7. Create a new picker configuration for the particular organization and
    volcano. You can see the example of the picker configuration in the
@@ -66,4 +66,4 @@ information:
 
     .. code-block:: bash
 
-        python manage.py update_picker_config fixture/picker-config.json <org_slug> <volcano_slug>
+        python manage.py update_picker_config fixtures/picker-config.json <org_slug> <volcano_slug>

@@ -7,9 +7,9 @@ import numpy as np
 from django.db import connection
 from obspy import Stream, Trace, read
 
-from waveview.inventory.db.schema import TimescaleSchemaEditor
+from waveview.data.sample import get_sample_file_path
 from waveview.inventory.datastream import mergebuffer, preparebuffer
-from waveview.settings import BASE_DIR
+from waveview.inventory.db.schema import TimescaleSchemaEditor
 
 
 class DataStreamIOTest(unittest.TestCase):
@@ -27,7 +27,7 @@ class DataStreamIOTest(unittest.TestCase):
         is_table_created = self.schema.assert_table_exists(self.table)
         self.assertTrue(is_table_created)
 
-        path = str(BASE_DIR / "fixtures" / "sample.mseed")
+        path = get_sample_file_path("sample.mseed")
         reclen = 512
         chunksize = reclen
 

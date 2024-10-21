@@ -13,7 +13,8 @@ class TestTimescaleSchemaEditor(unittest.TestCase):
     def test_table_size(self) -> None:
         table = f"datastream_{uuid.uuid4().hex}"
         self.schema_editor.create_table(table)
-        size = self.schema_editor.table_size(table)
+        self.schema_editor.create_hypertable(table)
+        size = self.schema_editor.hypertable_size(table)
         self.assertIsInstance(size, int)
 
         self.schema_editor.drop_table(table)

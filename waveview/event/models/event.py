@@ -175,6 +175,12 @@ class Event(models.Model):
         db_index=True,
         help_text=_("Reference ID."),
     )
+    collaborators = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="collaborated_events",
+        related_query_name="collaborated_event",
+        blank=True,
+    )
 
     class Meta:
         verbose_name = _("Event")

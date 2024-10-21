@@ -49,6 +49,7 @@ class EventSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(help_text=_("Event creation timestamp."))
     updated_at = serializers.DateTimeField(help_text=_("Event update timestamp."))
     author = UserSerializer()
+    collaborators = UserSerializer(many=True)
     preferred_origin = OriginSerializer(allow_null=True)
     preferred_magnitude = MagnitudeSerializer(allow_null=True)
     preferred_amplitude = AmplitudeSerializer(allow_null=True)
@@ -182,16 +183,20 @@ class EventPayloadSerializer(serializers.Serializer):
             evaluation_mode=evaluation_mode,
             evaluation_status=evaluation_status,
         )
+        event.collaborators.add(user)
         Attachment.objects.filter(id__in=attachment_ids).update(event=event)
         self.update_observation(event, observation)
         return event
 
     @transaction.atomic
     def update(self, instance: Event, validated_data: dict) -> Event:
+        user = self.context["request"].user
         attachment_ids = validated_data.pop("attachment_ids", [])
         observation = validated_data.pop("observation", None)
         for key, value in validated_data.items():
             setattr(instance, key, value)
+        if user not in instance.collaborators.all():
+            instance.collaborators.add(user)
         instance.save()
 
         Attachment.objects.filter(id__in=attachment_ids).update(event=instance)

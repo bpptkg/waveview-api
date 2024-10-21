@@ -196,7 +196,8 @@ class BulletinPayloadSerializer(serializers.Serializer):
         location_type = validated_data.get("location_type", "not_defined")
 
         time: datetime = eventdate
-        duration = duration or 0
+        if not duration:
+            duration = 30
         try:
             event_type = EventType.objects.get(code=eventtype)
             type_id = event_type.id

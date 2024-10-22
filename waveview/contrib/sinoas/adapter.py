@@ -14,10 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class Sinoas:
-    def __init__(self, organization: Organization, volcano: Volcano) -> None:
+    def __init__(
+        self,
+        organization: Organization,
+        volcano: Volcano,
+        interval: int = 1,
+        max_timeout: int = 60,
+    ) -> None:
         self.organization = organization
         self.volcano = volcano
         self.is_running = True
+        self.interval = interval
+        self.max_timeout = max_timeout
 
     def stop(self) -> None:
         self.is_running = False
@@ -28,15 +36,21 @@ class Sinoas:
         url = build_rsam_url(WinstonChannel.VG_MEPAS_HHZ)
         fetcher = Fetcher()
 
+        sleep_duration = self.interval
+        max_sleep_duration = self.max_timeout
+
         while self.is_running:
             try:
                 raw = fetcher.fetch(url)
                 detector.detect(raw)
+                sleep_duration = self.interval
             except KeyboardInterrupt:
                 break
             except Exception as e:
                 logger.error(f"Error processing data: {e}")
-            time.sleep(1)
+                sleep_duration = min(sleep_duration * 2, max_sleep_duration)
+
+            time.sleep(sleep_duration)
 
 
 def run_sinoas(organization: Organization, volcano: Volcano) -> None:

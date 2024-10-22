@@ -244,6 +244,7 @@ class BulletinPayloadSerializer(serializers.Serializer):
                 author=user,
             ),
         )
+        event.collaborators.add(user)
         if created:
             logger.info(f"Event {eventid} successfully created.")
         else:

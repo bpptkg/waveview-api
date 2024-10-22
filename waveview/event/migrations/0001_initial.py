@@ -77,6 +77,7 @@ class Migration(migrations.Migration):
                 ('author', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='events', related_query_name='event', to=settings.AUTH_USER_MODEL)),
                 ('bookmarked_by', models.ManyToManyField(blank=True, related_name='bookmarked_events', related_query_name='bookmarked_event', to=settings.AUTH_USER_MODEL)),
                 ('catalog', models.ForeignKey(help_text='Catalog to which the event belongs.', on_delete=django.db.models.deletion.CASCADE, related_name='events', related_query_name='event', to='event.catalog')),
+                ('collaborators', models.ManyToManyField(blank=True, related_name='collaborated_events', related_query_name='collaborated_event', to=settings.AUTH_USER_MODEL)),
                 ('station_of_first_arrival', models.ForeignKey(blank=True, help_text='Station of first arrival.', null=True, on_delete=django.db.models.deletion.SET_NULL, to='inventory.station')),
             ],
             options={
@@ -199,8 +200,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('media_type', models.CharField(choices=[('photo', 'Photo'), ('video', 'Video'), ('audio', 'Audio'), ('document', 'Document'), ('other', 'Other')], max_length=255)),
-                ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('event-attachments/%Y/%m/%d'), max_length=255)),
-                ('thumbnail', models.ImageField(blank=True, null=True, upload_to=waveview.utils.media.MediaPath('event-attachments/%Y/%m/%d'), max_length=255)),
+                ('file', models.FileField(max_length=255, upload_to=waveview.utils.media.MediaPath('event-attachments/%Y/%m/%d'))),
+                ('thumbnail', models.ImageField(blank=True, max_length=255, null=True, upload_to=waveview.utils.media.MediaPath('event-attachments/%Y/%m/%d'))),
                 ('name', models.CharField(max_length=255)),
                 ('size', models.PositiveIntegerField()),
                 ('uploaded_at', models.DateTimeField(auto_now_add=True)),

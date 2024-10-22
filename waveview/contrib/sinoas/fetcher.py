@@ -18,7 +18,7 @@ class Fetcher:
         df = pd.read_csv(buf, names=["time", "rsam", "comment"], usecols=[0, 1])
         df["time"] = pd.to_datetime(df["time"], utc=True)
         df["rsam"] = df["rsam"].abs()
-        return df.iloc[:-1]
+        return df
 
     def fetch(self, url: str) -> pd.DataFrame:
         response = requests.get(url, timeout=self.timeout)

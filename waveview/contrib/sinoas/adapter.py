@@ -35,22 +35,22 @@ class Sinoas:
         detector = Detector(context=context)
         url = build_rsam_url(WinstonChannel.VG_MEPAS_HHZ)
         fetcher = Fetcher()
-
-        sleep_duration = self.interval
-        max_sleep_duration = self.max_timeout
+        retry_duration = self.interval
 
         while self.is_running:
             try:
                 raw = fetcher.fetch(url)
                 detector.detect(raw)
-                sleep_duration = self.interval
+
+                time.sleep(self.interval)
+                retry_duration = self.interval
             except KeyboardInterrupt:
-                break
+                logger.info("Stopping SINOAS event detection.")
+                self.stop()
             except Exception as e:
                 logger.error(f"Error processing data: {e}")
-                sleep_duration = min(sleep_duration * 2, max_sleep_duration)
-
-            time.sleep(sleep_duration)
+                retry_duration = min(retry_duration * 2, self.max_timeout)
+                time.sleep(retry_duration)
 
 
 def run_sinoas(organization: Organization, volcano: Volcano) -> None:

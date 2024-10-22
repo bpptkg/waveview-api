@@ -45,41 +45,29 @@ class Detector:
         median = df["rsam"].median()
         median = round(median)
 
-        logger.debug(f"Time: {df['time'].iloc[-1]}, Median: {median}")
-
         if self.triggered:
             self.duration = (datetime.now(UTC) - self.time).total_seconds()
-            logger.debug(f"On Triggered: Duration: {self.duration}, Median: {median}")
 
             if self.mepas_rsam < median:
                 self.mepas_rsam = median
-                logger.debug(f"Updated MEPAS RSAM to {self.mepas_rsam}")
 
             if median <= 750:
                 is_event = (self.mepas_rsam > 2500 and self.duration > 10) or (
                     self.mepas_rsam <= 2500 and self.duration > 25
                 )
-                logger.debug(
-                    f"Is event: {is_event}, MEPAS RSAM: {self.mepas_rsam}, Duration: {self.duration}"
-                )
                 if is_event:
-
                     event = DetectedEvent(
                         time=self.time,
                         duration=self.duration,
                         mepas_rsam=self.mepas_rsam,
                     )
                     self.on_detected(event)
-
-                logger.debug(f"Resetting at {df['time'].iloc[-1]}")
                 self.reset()
         else:
             if median > 3000:
                 self.time = df["time"].iloc[-1]
                 self.mepas_rsam = median
                 self.triggered = True
-
-                logger.debug(f"Triggered at {self.time} with RSAM {self.mepas_rsam}")
 
     def on_detected(self, event: DetectedEvent) -> None:
         logger.info(

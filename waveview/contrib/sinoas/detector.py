@@ -45,9 +45,11 @@ class Detector:
         median = df["rsam"].median()
         median = round(median)
 
+        logger.debug(f"Time: {df['time'].iloc[-1]}, Median: {median}")
+
         if self.triggered:
             self.duration = (datetime.now(UTC) - self.time).total_seconds()
-            logger.debug(f"Duration: {self.duration}, Median: {median}")
+            logger.debug(f"On Triggered: Duration: {self.duration}, Median: {median}")
 
             if self.mepas_rsam < median:
                 self.mepas_rsam = median

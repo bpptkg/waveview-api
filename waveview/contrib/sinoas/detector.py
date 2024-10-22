@@ -60,7 +60,7 @@ class Detector:
                         duration=self.duration,
                         mepas_rsam=self.mepas_rsam,
                     )
-                    self.on_detected(event.time, event.duration, event.mepas_rsam)
+                    self.on_detected(event)
                 self.reset()
         else:
             if median > 3000:

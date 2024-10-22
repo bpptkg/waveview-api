@@ -5,11 +5,7 @@ from django.core.management.base import BaseCommand, CommandParser
 from rest_framework import serializers
 
 from waveview.appconfig.models import PickerConfig
-from waveview.appconfig.models.picker import (
-    BandpassFilterConfigData,
-    HighpassFilterConfigData,
-    LowpassFilterConfigData,
-)
+from waveview.appconfig.models.picker import build_filter_config
 from waveview.inventory.models import Channel
 from waveview.organization.models import Organization
 from waveview.volcano.models import Volcano
@@ -42,6 +38,7 @@ class AmplitudeConfigSerializer(serializers.Serializer):
 
 class PickerConfigSerializer(serializers.Serializer):
     helicorder_channel = ChannelSerializer()
+    helicorder_filter = serializers.JSONField(default=dict)
     helicorder_filters = serializers.JSONField(default=list)
     seismogram_filters = serializers.JSONField(default=list)
     seismogram_channels = ChannelSerializer(many=True)
@@ -51,31 +48,22 @@ class PickerConfigSerializer(serializers.Serializer):
     helicorder_duration = serializers.IntegerField()
     amplitude_config = AmplitudeConfigSerializer()
 
+    def validate_helicorder_filter(self, value: dict | None) -> dict | None:
+        if value is not None:
+            return build_filter_config(value).to_dict()
+        return None
+
     def validate_seismogram_filters(self, items: list) -> list[dict]:
         validated = []
         for item in items:
-            if item.get("type") == "lowpass":
-                fi = LowpassFilterConfigData.from_dict(item)
-            elif item.get("type") == "bandpass":
-                fi = BandpassFilterConfigData.from_dict(item)
-            elif item.get("type") == "highpass":
-                fi = HighpassFilterConfigData.from_dict(item)
-            else:
-                raise ValueError("Invalid filter type")
+            fi = build_filter_config(item)
             validated.append(fi.to_dict())
         return validated
 
     def validate_helicorder_filters(self, items: list) -> list[dict]:
         validated = []
         for item in items:
-            if item.get("type") == "lowpass":
-                fi = LowpassFilterConfigData.from_dict(item)
-            elif item.get("type") == "bandpass":
-                fi = BandpassFilterConfigData.from_dict(item)
-            elif item.get("type") == "highpass":
-                fi = HighpassFilterConfigData.from_dict(item)
-            else:
-                raise ValueError("Invalid filter type")
+            fi = build_filter_config(item)
             validated.append(fi.to_dict())
         return validated
 

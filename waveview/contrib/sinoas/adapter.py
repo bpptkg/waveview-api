@@ -19,13 +19,13 @@ class Sinoas:
         organization: Organization,
         volcano: Volcano,
         interval: int = 1,
-        max_timeout: int = 60,
+        max_sleep: int = 60,
     ) -> None:
         self.organization = organization
         self.volcano = volcano
         self.is_running = True
         self.interval = interval
-        self.max_timeout = max_timeout
+        self.max_sleep = max_sleep
 
     def stop(self) -> None:
         self.is_running = False
@@ -49,7 +49,7 @@ class Sinoas:
                 self.stop()
             except Exception as e:
                 logger.error(f"Error processing data: {e}")
-                retry_duration = min(retry_duration * 2, self.max_timeout)
+                retry_duration = min(retry_duration * 2, self.max_sleep)
                 time.sleep(retry_duration)
 
 

@@ -2,6 +2,16 @@
     "helicorder_channel": {
         "channel_id": "VG.MEPAS.HHZ"
     },
+    "helicorder_filter": {
+        "id": "bp,0.5,15",
+        "type": "bandpass",
+        "freqmin": 0.5,
+        "freqmax": 15,
+        "order": 4,
+        "zerophase": false,
+        "taper": "hann",
+        "width": 0.01
+    },
     "helicorder_filters": [
         {
             "id": "bp,0.5,15",

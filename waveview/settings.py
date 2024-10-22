@@ -319,3 +319,5 @@ EVENT_OBSERVER_REGISTRY = [
 AMPLITUDE_CALCULATOR_REGISTRY = [
     "waveview.contrib.bpptkg.amplitude.BPPTKGAmplitudeCalculator",
 ]
+
+SINOAS_WINSTON_URL = env("SINOAS_WINSTON_URL", default="http://127.0.0.1:16030")

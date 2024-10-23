@@ -43,7 +43,7 @@ information:
 
     .. code-block:: bash
 
-        python manage.py seedlink <inventory_id>
+        python manage.py seedlink <organization_slug>
 
 6. Create event types in the Event Type section. Event types are used to
    categorize the picked events. You can create multiple event types and assign

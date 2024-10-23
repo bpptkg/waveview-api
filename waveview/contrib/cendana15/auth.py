@@ -1,9 +1,11 @@
+import logging
 from dataclasses import dataclass
 
 import requests
 from django.contrib.auth.backends import BaseBackend
 from django.http import HttpRequest
 
+from waveview.organization.models import Organization, OrganizationMember
 from waveview.users.models import User
 
 BASE_URL = "https://auth.cendana15.com"
@@ -11,6 +13,8 @@ TOKEN_URL = f"{BASE_URL}/login"
 REFRESH_URL = f"{BASE_URL}/refresh"
 REVOKE_URL = f"{BASE_URL}/revoke"
 USER_URL = f"https://cendana15.com/user"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,21 +40,23 @@ class Cendana15Backend(BaseBackend):
         password: str | None = None,
     ) -> User | None:
         try:
-            token = self.get_jwt_token(username, password)
+            self.get_jwt_token(username, password)
         except requests.HTTPError as e:
             if e.response.status_code == 401:
                 return None
             raise
-        cendana15_user = self.get_user_info(token.access_token)
+        cendana15_user = self.get_user_info(username)
 
         try:
             user, created = User.objects.get_or_create(
                 username=self.clean_username(cendana15_user.username),
+                defaults={"email": cendana15_user.email, "name": cendana15_user.name},
             )
             if created:
-                self.configure_user(user, cendana15_user)
+                self.configure_user(user)
         except User.DoesNotExist:
             return None
+        return user
 
     def get_user(self, user_id: str) -> User | None:
         try:
@@ -83,32 +89,30 @@ class Cendana15Backend(BaseBackend):
         )
         response.raise_for_status()
 
-    def get_user_info(self, access_token: str) -> Cendana15User:
-        response = requests.get(
-            USER_URL,
-            headers={"Authorization": f"Bearer {access_token}"},
-        )
-        response.raise_for_status()
-        data = response.json()
+    def get_user_info(self, username: str) -> Cendana15User:
         return Cendana15User(
-            id=data["id"],
-            username=data["username"],
-            name=data.get("name", ""),
-            email=data.get("email"),
-            phone=data.get("phone"),
+            id=username,
+            username=username,
+            name=username,
+            phone=None,
+            email=f"{username}@cendana15.com",
         )
 
     def clean_username(self, username: str) -> str:
         return username.lower().strip()
 
-    def configure_user(self, user: User, cendana15_user: Cendana15User) -> None:
-        username = self.clean_username(cendana15_user.username)
-        email = cendana15_user.email
-        if email is None:
-            email = f"{username}@cendana15.com"
-        phone = cendana15_user.phone
-        user.username = username
-        user.email = email
-        user.name = cendana15_user.name
-        user.phone_number = phone
-        user.save()
+    def configure_user(self, user: User) -> None:
+        self.add_user_to_organization(user)
+
+    def add_user_to_organization(self, user: User) -> None:
+        try:
+            organization = Organization.objects.get(slug="bpptkg")
+        except Organization.DoesNotExist:
+            logger.error("Organization with slug 'bpptkg' does not exist")
+            return
+        if not (
+            OrganizationMember.objects.filter(
+                user=user, organization=organization
+            ).exists()
+        ):
+            OrganizationMember.objects.create(user=user, organization=organization)

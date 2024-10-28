@@ -20,6 +20,14 @@
         "VG.MEPLA.EHZ",
         "VG.MEPUS.EHZ"
     ],
+    "analogs": [
+        {
+            "channel_id": "VG.MEPUS.EHZ",
+            "label": "PUS Paper",
+            "slope": 30,
+            "offset": 0
+        }
+    ],
     "is_preferred": true,
     "preferred_channel": "VG.MEPAS.HHZ"
 }

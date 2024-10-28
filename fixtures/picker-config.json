@@ -101,6 +101,14 @@
             },
             {
                 "channel_id": "VG.MEPAS.HHZ"
+            },
+            {
+                "channel_id": "VG.MEPUS.EHZ",
+                "label": "PUS Paper",
+                "channel_ref": "VG.MEPUS.EHZ",
+                "is_analog": true,
+                "slope": 30,
+                "offset": 0
             }
         ]
     }

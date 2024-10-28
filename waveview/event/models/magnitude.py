@@ -73,6 +73,12 @@ class Amplitude(models.Model):
             "Identifies the waveform stream on which the amplitude was measured."
         ),
     )
+    label = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text=_("Label of the amplitude value."),
+    )
     method = models.CharField(max_length=255, null=True, blank=True)
     evaluation_mode = models.CharField(
         max_length=255, null=True, blank=True, choices=EvaluationMode.choices

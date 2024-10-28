@@ -24,6 +24,7 @@ class AmplitudeSerializer(serializers.Serializer):
     snr = serializers.FloatField(help_text=_("Signal-to-noise ratio."))
     unit = serializers.CharField(help_text=_("Amplitude unit."))
     waveform_id = serializers.UUIDField(help_text=_("Waveform ID."))
+    label = serializers.CharField(help_text=_("Amplitude label."))
     method = serializers.CharField(help_text=_("Amplitude method."))
     evaluation_mode = serializers.ChoiceField(
         help_text=_("Evaluation mode."), choices=EvaluationMode.choices

@@ -15,11 +15,16 @@ from waveview.api.permissions import IsOrganizationMember
 from waveview.appconfig.models import PickerConfig
 from waveview.appconfig.models.picker import PickerConfigData
 from waveview.event.amplitude import SignalAmplitude, amplitude_registry
+from waveview.event.header import AmplitudeCategory, AmplitudeUnit
 
 
 class SignalAmplitudePayloadSerializer(serializers.Serializer):
     time = serializers.DateTimeField(help_text=_("The time of the event."))
     duration = serializers.FloatField(help_text=_("The duration of the event."))
+    use_median_filter = serializers.BooleanField(
+        help_text=_("Whether to use a median filter to smooth the signal."),
+        default=False,
+    )
 
 
 class SignalAmplitudeSerializer(serializers.Serializer):
@@ -32,6 +37,9 @@ class SignalAmplitudeSerializer(serializers.Serializer):
     category = serializers.CharField(help_text=_("The category of the amplitude."))
     time = serializers.DateTimeField(help_text=_("The time of the event."))
     duration = serializers.FloatField(help_text=_("The duration of the event."))
+    label = serializers.CharField(
+        help_text=_("The label of the event."), required=False, allow_null=True
+    )
 
 
 class SignalAmplitudeEndpoint(Endpoint):
@@ -69,6 +77,7 @@ class SignalAmplitudeEndpoint(Endpoint):
         serializer.is_valid(raise_exception=True)
         time = serializer.validated_data["time"]
         duration = serializer.validated_data["duration"]
+        use_median_filter = serializer.validated_data["use_median_filter"]
 
         data = PickerConfigData.from_dict(config.data)
         method = data.amplitude_config.amplitude_calculator
@@ -79,16 +88,51 @@ class SignalAmplitudeEndpoint(Endpoint):
         amplitudes: list[SignalAmplitude] = []
 
         def calculate_amplitude(channel_id: str) -> SignalAmplitude:
-            return calculator.calc(time, duration, channel_id, organization_id)
+            return calculator.calc(
+                time,
+                duration,
+                channel_id,
+                organization_id,
+                use_median_filter=use_median_filter,
+            )
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [
                 executor.submit(calculate_amplitude, channel.channel_id)
                 for channel in data.amplitude_config.channels
+                if not channel.is_analog
             ]
             for future in concurrent.futures.as_completed(futures):
                 ampl = future.result()
                 amplitudes.append(ampl)
+
+        def calc_analog_amplitude(
+            channel_id: str, slope: float, offset: float
+        ) -> float:
+            filtered = list(filter(lambda x: x.channel_id == channel_id, amplitudes))
+            if not filtered:
+                return 0
+            ampl: SignalAmplitude = filtered[0]
+            return ampl.amplitude * slope + offset
+
+        for channel in data.amplitude_config.channels:
+            if not channel.is_analog:
+                continue
+            slope = channel.slope or 1
+            offset = channel.offset or 0
+            amplitude = calc_analog_amplitude(channel.channel_id, slope, offset)
+            ampl = SignalAmplitude(
+                time=time,
+                duration=duration,
+                amplitude=amplitude,
+                method=method,
+                category=AmplitudeCategory.DURATION,
+                unit=AmplitudeUnit.MM,
+                stream_id=channel.label,
+                channel_id=channel.channel_id,
+                label=channel.label,
+            )
+            amplitudes.append(ampl)
 
         return Response(
             SignalAmplitudeSerializer(

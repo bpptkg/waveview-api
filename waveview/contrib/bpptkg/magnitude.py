@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import numpy as np
 from django.db import connection, transaction
@@ -46,14 +46,32 @@ def calc_bpptkg_ml(amplitude: float) -> float:
 
 
 @dataclass
+class AnalogChannel:
+    channel_id: str
+    label: str
+    slope: float
+    offset: float
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "AnalogChannel":
+        return cls(
+            channel_id=data.get("channel_id"),
+            label=data.get("label"),
+            slope=data.get("slope", 1),
+            offset=data.get("offset", 0),
+        )
+
+
+@dataclass
 class MagnitudeEstimatorData:
     organization_id: str
     volcano_id: str
     event_id: str
     author_id: str
     channels: list[str]
-    preferred_channel: str = ""
-    is_preferred: bool = False
+    analogs: list[AnalogChannel]
+    preferred_channel: str
+    is_preferred: bool
 
 
 class MagnitudeEstimator:
@@ -72,6 +90,7 @@ class MagnitudeEstimator:
         author_id = data.author_id
         is_preferred = data.is_preferred
         preferred_channel = data.preferred_channel
+        analogs = data.analogs
 
         channels: list[Channel] = []
         for network_station_channel in data.channels:
@@ -93,7 +112,7 @@ class MagnitudeEstimator:
         event = Event.objects.get(id=event_id)
 
         self.calc_ML_magnitude(
-            event, inventory, channels, author_id, is_preferred=is_preferred
+            event, inventory, channels, analogs, author_id, is_preferred=is_preferred
         )
 
         logger.info(f"BPPTKG ML magnitude calculation for event {event_id} is done.")
@@ -130,11 +149,27 @@ class MagnitudeEstimator:
             return None
         return amplitude
 
+    def remove_response(self, inventory: Inventory, st: Stream) -> Stream:
+        for inv_file in inventory.files.all():
+            inv: ObspyInventory = read_inventory(inv_file.file)
+            try:
+                st.merge(fill_value=0)
+                st.detrend("demean")
+                pre_filt = [0.001, 0.005, 45, 50]
+                st.remove_response(
+                    inventory=inv, pre_filt=pre_filt, output="DISP", water_level=60
+                )
+                return st
+            except Exception:
+                pass
+        raise Exception("No matching inventory found.")
+
     def calc_ML_magnitude(
         self,
         event: Event,
         inventory: Inventory,
         channels: list[Channel],
+        analogs: list[AnalogChannel],
         author_id: str,
         is_preferred: bool = False,
     ) -> None:
@@ -159,26 +194,12 @@ class MagnitudeEstimator:
 
         magnitude_values: list[float] = []
         stations: set[str] = set()
-
-        def remove_response(st: Stream) -> Stream:
-            for inv_file in inventory.files.all():
-                inv: ObspyInventory = read_inventory(inv_file.file)
-                try:
-                    st.merge(fill_value=0)
-                    st.detrend("demean")
-                    pre_filt = [0.001, 0.005, 45, 50]
-                    st.remove_response(
-                        inventory=inv, pre_filt=pre_filt, output="DISP", water_level=60
-                    )
-                    return st
-                except Exception:
-                    pass
-            raise Exception("No matching inventory found.")
+        amplitude_map: dict[str, Amplitude] = {}
 
         for channel in channels:
             stream = self.datastream.get_waveform(channel.id, starttime, endtime)
             try:
-                stream = remove_response(stream)
+                stream = self.remove_response(inventory, stream)
             except Exception as e:
                 logger.error(f"Failed to remove response: {e}")
                 continue
@@ -213,6 +234,8 @@ class MagnitudeEstimator:
                     "is_preferred": self.preferred_map.get(str(channel.id), False),
                 },
             )
+            amplitude_map[channel.id] = amplitude
+
             station_magnitude, _ = StationMagnitude.objects.update_or_create(
                 amplitude=amplitude,
                 defaults={
@@ -241,6 +264,62 @@ class MagnitudeEstimator:
         magnitude.magnitude = avg
         magnitude.station_count = len(stations)
         magnitude.save()
+
+        for analog in analogs:
+            self.calc_analog_amplitude(
+                event, inventory, analog, starttime, endtime, author_id
+            )
+
+    def calc_analog_amplitude(
+        self,
+        event: Event,
+        inventory: Inventory,
+        analog: AnalogChannel,
+        starttime: datetime,
+        endtime: datetime,
+        author_id: str,
+    ) -> None:
+        network, station, channel = analog.channel_id.split(".")
+        try:
+            channel = Channel.objects.filter(
+                code=channel, station__code=station, station__network__code=network
+            ).get()
+        except Channel.DoesNotExist:
+            logger.error(f"Channel {analog.channel_id} does not exist.")
+            return
+
+        stream = self.datastream.get_waveform(channel.id, starttime, endtime)
+        try:
+            stream = self.remove_response(inventory, stream)
+        except Exception as e:
+            logger.error(f"Failed to remove response: {e}")
+            return
+
+        amax = self.get_amax(stream)
+        if amax is None:
+            logger.debug(f"Amax for channel {channel.stream_id} is None.")
+            return
+
+        value = analog.slope * (amax * 1e6) + analog.offset
+        Amplitude.objects.update_or_create(
+            event=event,
+            waveform=channel,
+            method="analog",
+            defaults={
+                "amplitude": value,
+                "type": "Amax",
+                "category": AmplitudeCategory.DURATION,
+                "time": event.time,
+                "begin": 0,
+                "end": event.duration,
+                "snr": 0,
+                "unit": AmplitudeUnit.MM.label,
+                "evaluation_mode": EvaluationMode.AUTOMATIC,
+                "author_id": author_id,
+                "is_preferred": False,
+                "label": analog.label,
+            },
+        )
 
 
 class MagnitudeObserver(EventObserver):
@@ -273,6 +352,9 @@ class MagnitudeObserver(EventObserver):
         channels = data.get("channels", [])
         is_preferred = data.get("is_preferred", False)
         preferred_channel = data.get("preferred_channel", "")
+        analogs = [
+            AnalogChannel.from_dict(analog) for analog in data.get("analogs", [])
+        ]
 
         estimator = MagnitudeEstimator()
         estimator.calc_magnitude(
@@ -282,6 +364,7 @@ class MagnitudeObserver(EventObserver):
                 event_id=event_id,
                 author_id=author_id,
                 channels=channels,
+                analogs=analogs,
                 is_preferred=is_preferred,
                 preferred_channel=preferred_channel,
             )

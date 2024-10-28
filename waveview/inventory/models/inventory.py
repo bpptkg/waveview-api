@@ -58,6 +58,7 @@ class InventoryFile(models.Model):
     This class describes an inventory file.
     """
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     inventory = models.ForeignKey(
         "inventory.Inventory",
         on_delete=models.CASCADE,

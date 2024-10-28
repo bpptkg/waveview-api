@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='InventoryFile',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('type', models.CharField(blank=True, max_length=50, null=True)),
                 ('file', models.FileField(upload_to=waveview.utils.media.MediaPath('inventories/'), max_length=255)),
                 ('name', models.CharField(blank=True, max_length=200, null=True)),

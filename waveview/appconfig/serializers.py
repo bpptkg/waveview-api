@@ -22,6 +22,10 @@ class ChannelConfigSerializer(serializers.Serializer):
     color = serializers.CharField(
         max_length=32, required=False, help_text=_("Default color.")
     )
+    label = serializers.CharField(allow_null=True, required=False)
+    is_analog = serializers.BooleanField(allow_null=True, required=False)
+    slope = serializers.FloatField(allow_null=True, required=False)
+    offset = serializers.FloatField(allow_null=True, required=False)
 
 
 class AmplitudeConfigSerializer(serializers.Serializer):

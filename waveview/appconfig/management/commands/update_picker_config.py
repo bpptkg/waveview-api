@@ -14,6 +14,10 @@ from waveview.volcano.models import Volcano
 class ChannelSerializer(serializers.Serializer):
     channel_id = serializers.CharField()
     color = serializers.CharField(allow_null=True, required=False)
+    label = serializers.CharField(allow_null=True, required=False)
+    is_analog = serializers.BooleanField(allow_null=True, required=False)
+    slope = serializers.FloatField(allow_null=True, required=False)
+    offset = serializers.FloatField(allow_null=True, required=False)
 
     def validate_channel_id(self, value: str) -> str:
         network, station, channel = value.split(".")
@@ -22,7 +26,7 @@ class ChannelSerializer(serializers.Serializer):
                 code=channel, station__code=station, station__network__code=network
             ).get()
         except Channel.DoesNotExist:
-            raise serializers.ValidationError("Channel does not exist.")
+            raise serializers.ValidationError(f"Channel does not exist: {value}")
         return str(instance.id)
 
     def validate_color(self, value: str | None) -> str | None:

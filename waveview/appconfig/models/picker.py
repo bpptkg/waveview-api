@@ -24,12 +24,20 @@ def deepmerge(source: dict, dest: dict) -> dict:
 class ChannelConfigData:
     channel_id: str
     color: str | None
+    label: str | None
+    is_analog: bool | None
+    slope: float | None
+    offset: float | None
 
     @classmethod
     def from_dict(cls, data: dict) -> "ChannelConfigData":
         return cls(
             channel_id=data.get("channel_id", ""),
             color=data.get("color"),
+            label=data.get("label"),
+            is_analog=data.get("is_analog"),
+            slope=data.get("slope"),
+            offset=data.get("offset"),
         )
 
     def to_dict(self) -> dict:

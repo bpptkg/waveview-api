@@ -19,6 +19,8 @@ class MediaPath(object):
         today = timezone.now().date()
         path = today.strftime(self.path)
         if self.prefix:
+            if instance.id is None:
+                instance.id = uuid4()
             return os.path.join(path, str(instance.id), filename)
         return os.path.join(path, filename)
 

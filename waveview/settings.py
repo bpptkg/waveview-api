@@ -20,7 +20,7 @@ STORAGE_DIR = Path(env("STORAGE_DIR", default=str(BASE_DIR / "storage")))
 if not STORAGE_DIR.exists():
     STORAGE_DIR.mkdir()
 
-RUN_DIR = BASE_DIR / "run"
+RUN_DIR = STORAGE_DIR / "run"
 if not RUN_DIR.exists():
     RUN_DIR.mkdir()
 

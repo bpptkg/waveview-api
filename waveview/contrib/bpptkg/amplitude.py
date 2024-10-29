@@ -69,7 +69,11 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
                 raise Exception("No matching data found.")
             data = stream[0].data
             if use_median_filter:
-                data = self.medfilt(data, 5)
+                sample_rate = stream[0].stats.sampling_rate
+                window_size = int(10 * sample_rate)
+                if window_size % 2 == 0:
+                    window_size += 1
+                data = self.medfilt(data, window_size)
 
             amax = self.get_amax(data)
             if amax is None:

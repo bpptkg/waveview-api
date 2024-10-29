@@ -16,7 +16,17 @@ DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
-STORAGE_DIR = BASE_DIR / "storage"
+STORAGE_DIR = Path(env("STORAGE_DIR", default=str(BASE_DIR / "storage")))
+if not STORAGE_DIR.exists():
+    STORAGE_DIR.mkdir()
+
+RUN_DIR = BASE_DIR / "run"
+if not RUN_DIR.exists():
+    RUN_DIR.mkdir()
+
+DB_DIR = STORAGE_DIR / "db"
+if not DB_DIR.exists():
+    DB_DIR.mkdir()
 
 PREREQUISITE_APPS = [
     "daphne",
@@ -134,7 +144,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
-STATIC_ROOT = env("STATIC_ROOT", default=str(STORAGE_DIR / "static"))
+STATIC_ROOT = STORAGE_DIR / "static"
+if not STATIC_ROOT.exists():
+    STATIC_ROOT.mkdir()
 STATICFILES_DIRS = [
     BASE_DIR / "waveview" / "static",
 ]
@@ -145,7 +157,9 @@ STATICFILES_FINDERS = (
 )
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = env("MEDIA_ROOT", default=str(STORAGE_DIR / "media"))
+MEDIA_ROOT = STORAGE_DIR / "media"
+if not MEDIA_ROOT.exists():
+    MEDIA_ROOT.mkdir()
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -179,7 +193,9 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 }
 
-LOGGING_ROOT = env("LOGGING_ROOT", default=str(STORAGE_DIR / "logs"))
+LOGGING_ROOT = STORAGE_DIR / "logs"
+if not LOGGING_ROOT.exists():
+    LOGGING_ROOT.mkdir()
 LOG_LEVEL = env("LOG_LEVEL", default="info").upper()
 LOGGING = {
     "version": 1,

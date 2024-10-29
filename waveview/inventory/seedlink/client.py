@@ -3,18 +3,17 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import lxml
+from django.conf import settings
 from django.db import connection
 from obspy.clients.seedlink.client.seedlinkconnection import SeedLinkConnection
 from obspy.clients.seedlink.client.slstate import SLState
 from obspy.clients.seedlink.slpacket import SLPacket
 
 from waveview.inventory.db.schema import TimescaleSchemaEditor
-from waveview.settings import STORAGE_DIR
 
 logger = logging.getLogger(__name__)
 
-RUN_DIR = STORAGE_DIR / "run"
-STATE_FILE = RUN_DIR / "seedlink.state"
+STATE_FILE = settings.RUN_DIR / "seedlink.state"
 
 
 def get_statefile() -> Path:

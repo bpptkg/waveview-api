@@ -66,7 +66,7 @@ class BMABulletinEndpoint(Endpoint):
         bulletin = BulletinPayloadSerializer(
             data=request.data,
             context={
-                "request": request,
+                "user": request.user,
                 "catalog_id": catalog.id,
                 "event_id": event_id,
             },

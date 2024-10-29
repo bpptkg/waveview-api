@@ -337,3 +337,5 @@ AMPLITUDE_CALCULATOR_REGISTRY = [
 ]
 
 SINOAS_WINSTON_URL = env("SINOAS_WINSTON_URL", default="http://127.0.0.1:16030")
+BMA_URL = env("BMA_URL", default="https://bma.cendana15.com")
+BMA_API_KEY = env("BMA_API_KEY", default="")

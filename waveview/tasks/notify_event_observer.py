@@ -22,9 +22,20 @@ def notify_event_observer(
     """
     Notify an event observer based on the operation type.
     """
-    items = EventObserverConfig.objects.filter(
-        volcano_id=volcano_id, is_enabled=True
-    ).all()
+    names = options.pop("names", None)
+    if names:
+        if isinstance(names, str):
+            names = [names]
+        else:
+            names = list(names)
+        items = EventObserverConfig.objects.filter(
+            volcano_id=volcano_id, name__in=names, is_enabled=True
+        ).all()
+    else:
+        items = EventObserverConfig.objects.filter(
+            volcano_id=volcano_id, is_enabled=True
+        ).all()
+
     for item in items:
         if not observer_registry.has(item.name):
             logger.error(

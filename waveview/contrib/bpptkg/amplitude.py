@@ -2,10 +2,10 @@ import logging
 from datetime import datetime, timedelta
 
 import numpy as np
-from obspy import Stream, read_inventory
-from obspy.core.inventory import Inventory as ObspyInventory
+from obspy import Stream
 
 from waveview.contrib.bpptkg.outliers import remove_outliers
+from waveview.contrib.bpptkg.response import remove_instrument_response
 from waveview.event.amplitude import AmplitudeCalculator, SignalAmplitude
 from waveview.event.header import AmplitudeCategory, AmplitudeUnit
 from waveview.inventory.models import Channel, Inventory
@@ -43,19 +43,7 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         use_outlier_filter = options.get("use_outlier_filter", False)
 
         def remove_response(st: Stream) -> Stream:
-            for inv_file in inventory.files.all():
-                inv: ObspyInventory = read_inventory(inv_file.file)
-                try:
-                    st.merge(fill_value=0)
-                    st.detrend("demean")
-                    pre_filt = [0.001, 0.005, 45, 50]
-                    st.remove_response(
-                        inventory=inv, pre_filt=pre_filt, output="DISP", water_level=60
-                    )
-                    return st
-                except Exception:
-                    pass
-            raise Exception("No matching inventory found.")
+            return remove_instrument_response(inventory, st)
 
         try:
             channel = Channel.objects.get(id=channel_id)

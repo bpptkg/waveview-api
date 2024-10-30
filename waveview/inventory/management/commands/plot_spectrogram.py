@@ -16,23 +16,21 @@ class Command(BaseCommand):
     help = "Plot spectrogram for certain channel."
 
     def add_arguments(self, parser: CommandParser) -> None:
-        parser.add_argument("channel", type=str, help="Channel code.")
+        parser.add_argument("stream_id", type=str, help="Stream ID.")
         parser.add_argument("start", type=str, help="Start time of the spectrogram.")
         parser.add_argument("end", type=str, help="End time of the spectrogram.")
 
     def handle(self, *args: Any, **options: Any) -> None:
         start: str = options["start"]
         end: str = options["end"]
-        channel: str = options["channel"]
+        stream_id: str = options["stream_id"]
 
-        network, station, channel = channel.split(".")
         try:
-            instance = Channel.objects.filter(
-                code=channel, station__code=station, station__network__code=network
-            ).get()
+            channel = Channel.objects.get_by_stream_id(stream_id)
         except Channel.DoesNotExist:
-            raise serializers.ValidationError("Channel does not exist.")
-        channel_id = str(instance.id)
+            self.stderr.write(f"Channel with ID {stream_id} does not exist.")
+            return
+        channel_id = str(channel.id)
 
         starttime = parser.parse(start)
         endtime = parser.parse(end)

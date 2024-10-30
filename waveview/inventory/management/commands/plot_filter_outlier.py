@@ -28,7 +28,8 @@ class Command(BaseCommand):
         try:
             channel = Channel.objects.get_by_stream_id(stream_id)
         except Channel.DoesNotExist:
-            raise serializers.ValidationError("Channel does not exist.")
+            self.stderr.write(f"Channel with ID {stream_id} does not exist.")
+            return
         channel_id = str(channel.id)
 
         starttime = parser.parse(start)

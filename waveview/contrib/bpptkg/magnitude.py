@@ -325,11 +325,6 @@ class MagnitudeObserver(EventObserver):
 
     The observer calculates ML magnitude for each channel and then computes the
     average magnitude value.
-
-    Required data are:
-
-    - channels: list of channels to calculate ML magnitude, e.g.
-      ["network.station.channel", ...]
     """
 
     name = "bpptkg.magnitude"

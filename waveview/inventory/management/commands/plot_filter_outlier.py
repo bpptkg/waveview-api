@@ -30,6 +30,11 @@ class Command(BaseCommand):
             type=str,
             help="Organization slug.",
         )
+        parser.add_argument(
+            "--filter-before",
+            action="store_true",
+            help="Filter data before removing response.",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         start: str = options["start"]
@@ -52,6 +57,16 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("No data found."))
             return
 
+        st_copy = st.copy()
+        raw = st_copy[0].data
+        sample_rate = st_copy[0].stats.sampling_rate
+        ts = np.arange(len(raw)) / sample_rate
+
+        w, h = 10, 4
+        fig, ax = plt.subplots(figsize=(w, h), nrows=2, sharex=True)
+        ax[0].plot(ts, raw, color="k")
+        ax[0].set_ylabel("Original", color="k")
+
         if options["remove_response"]:
             try:
                 organization = Organization.objects.get(slug=options["org_slug"])
@@ -60,19 +75,18 @@ class Command(BaseCommand):
                     f"Organization with slug {options['org_slug']} does not exist."
                 )
                 return
-            st = remove_instrument_response(organization.inventory, st)
+            if options["filter_before"]:
+                data = remove_outliers(st[0].data)
+                st[0].data = data
+                st = remove_instrument_response(organization.inventory, st)
+                after = st[0].data
+            else:
+                st = remove_instrument_response(organization.inventory, st)
+                after = remove_outliers(st[0].data)
+        else:
+            after = remove_outliers(raw)
 
-        y = st[0].data
-        sample_rate = st[0].stats.sampling_rate
-        x = np.arange(len(y)) / sample_rate
-
-        w, h = 10, 4
-        fig, ax = plt.subplots(figsize=(w, h), nrows=2, sharex=True)
-        ax[0].plot(x, y, color="k")
-        ax[0].set_ylabel("Original", color="k")
-
-        filtered = remove_outliers(y)
-        ax[1].plot(x, filtered, color="k")
+        ax[1].plot(ts, after, color="k")
         ax[1].set_ylabel("Filtered", color="k")
 
         ax[0].set_title(stream_id)

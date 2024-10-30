@@ -4,7 +4,7 @@ import time
 from obspy import Trace
 from obspy.clients.seedlink.slpacket import SLPacket
 
-from waveview.inventory.datastream import preparebuffer
+from waveview.inventory.datastream import prepare_buffer
 from waveview.inventory.models import Channel, Inventory
 from waveview.inventory.models.datasource import DataSource, DataSourceType
 from waveview.inventory.seedlink.client import EasySeedLinkClient, get_statefile
@@ -35,7 +35,7 @@ class SeedLinkClient(EasySeedLinkClient):
             return
 
         table = instance.get_datastream_id()
-        st, et, sr, dtype, buf = preparebuffer(trace)
+        st, et, sr, dtype, buf = prepare_buffer(trace)
         self.schema.insert(table, st, et, sr, dtype, buf)
 
 

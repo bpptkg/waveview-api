@@ -8,7 +8,7 @@ from django.db import connection
 from obspy import Stream, Trace, read
 
 from waveview.data.sample import get_sample_file_path
-from waveview.inventory.datastream import mergebuffer, preparebuffer
+from waveview.inventory.datastream import merge_buffer, prepare_buffer
 from waveview.inventory.db.schema import TimescaleSchemaEditor
 
 
@@ -46,7 +46,7 @@ class DataStreamIOTest(unittest.TestCase):
 
                 for trace in stream:
                     trace: Trace
-                    st, et, sr, dtype, buf = preparebuffer(trace)
+                    st, et, sr, dtype, buf = prepare_buffer(trace)
                     self.schema.insert(self.table, st, et, sr, dtype, buf)
                     npts += len(trace.data)
                     compressed += len(buf)
@@ -59,7 +59,7 @@ class DataStreamIOTest(unittest.TestCase):
         qst = st[0].stats.starttime.datetime + timedelta(seconds=-10)
         qet = st[-1].stats.endtime.datetime + timedelta(seconds=10)
         rows = self.schema.query(self.table, qst, qet)
-        data = mergebuffer(rows)
+        data = merge_buffer(rows)
 
         tr: Trace = st[0]
         self.assertEqual(len(tr.data), len(data))

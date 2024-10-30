@@ -1,3 +1,4 @@
+import io
 import logging
 import zlib
 from datetime import datetime
@@ -7,7 +8,7 @@ import numpy as np
 import psycopg2
 import zstandard as zstd
 from django.utils import timezone
-from obspy import Stream, Trace, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import Stats
 
 from waveview.inventory.db.schema import TimescaleSchemaEditor
@@ -16,9 +17,13 @@ from waveview.inventory.models import Channel
 logger = logging.getLogger(__name__)
 
 UUIDType = UUID | str
+BufferType = tuple[datetime, datetime, float, str, bytes]
 
 
-def preparebuffer(trace: Trace) -> tuple[datetime, datetime, float, str, bytes]:
+def prepare_buffer(trace: Trace) -> BufferType:
+    """
+    Prepare trace data for insertion into the database.
+    """
     starttime: UTCDateTime = trace.stats.starttime
     endtime: UTCDateTime = trace.stats.endtime
     sample_rate = trace.stats.sampling_rate
@@ -30,13 +35,59 @@ def preparebuffer(trace: Trace) -> tuple[datetime, datetime, float, str, bytes]:
     return st, et, sample_rate, dtype, buf
 
 
-def mergebuffer(rows: tuple[datetime, datetime, float, str, bytes]) -> np.ndarray:
-    if len(rows) == 0:
-        return np.array([])
+def merge_buffer(rows: list[BufferType]) -> np.ndarray:
+    """
+    Merge buffer data into a single numpy array.
+    """
     decompressor = zstd.ZstdDecompressor()
     return np.frombuffer(
         b"".join([decompressor.decompress(row[4]) for row in rows]), dtype=rows[0][3]
     )
+
+
+def build_trace(
+    row: BufferType, network: str, station: str, location: str, channel: str
+) -> Trace:
+    """
+    Build an ObsPy Trace object from a row of buffer data.
+    """
+    st, et, sr, dtype, buf = row
+    decompressor = zstd.ZstdDecompressor()
+    data = np.frombuffer(decompressor.decompress(buf), dtype=dtype)
+    starttime = UTCDateTime(st)
+
+    stats = Stats()
+    stats.network = network
+    stats.station = station
+    stats.location = location
+    stats.channel = channel
+    stats.starttime = starttime
+    stats.sampling_rate = sr
+    stats.npts = len(data)
+
+    trace = Trace(data=data, header=stats)
+    return trace
+
+
+def build_traces(rows: BufferType, channel: Channel) -> Stream:
+    """
+    Build an ObsPy Stream object from a list of buffer data.
+    """
+    if len(rows) == 0:
+        return Stream()
+    traces = [
+        build_trace(
+            row=row,
+            network=channel.station.network.code,
+            station=channel.station.code,
+            location=channel.location_code,
+            channel=channel.code,
+        )
+        for row in rows
+    ]
+    st = Stream(traces=traces)
+    st.merge(method=1, fill_value=0)
+    return st
 
 
 class DataStream:
@@ -49,52 +100,17 @@ class DataStream:
         self.db = TimescaleSchemaEditor(connection)
 
     def get_waveform(
-        self, channel_id: UUIDType | list[UUIDType], start: datetime, end: datetime
+        self, channel_id: UUIDType, start: datetime, end: datetime
     ) -> Stream:
-        if isinstance(channel_id, list):
-            traces = self.get_multi_trace(channel_id, start, end)
-        else:
-            traces = self.get_trace(channel_id, start, end)
-        return Stream(traces=traces)
-
-    def get_multi_trace(
-        self, channel_ids: list[UUIDType], start: datetime, end: datetime
-    ) -> Trace:
-        traces = []
-        for channel_id in channel_ids:
-            trace = self.get_trace(channel_id, start, end)
-            traces.append(trace)
-        return traces
-
-    def get_trace(self, channel_id: UUIDType, start: datetime, end: datetime) -> Trace:
         try:
             channel = Channel.objects.get(id=channel_id)
         except Channel.DoesNotExist:
             raise ValueError(f"Channel {channel_id} does not exist")
 
-        sample_rate = channel.sample_rate
-        if sample_rate is None:
-            raise ValueError(f"Channel {channel_id} does not have a sample rate")
-
         table = channel.get_datastream_id()
         rows = self.db.query(table, start, end)
-        data = mergebuffer(rows)
-        if len(rows) > 0:
-            starttime = UTCDateTime(rows[0][0])
-        else:
-            starttime = UTCDateTime(start)
-
-        stats = Stats()
-        stats.network = channel.station.network.code
-        stats.station = channel.station.code
-        stats.location = channel.location_code
-        stats.channel = channel.code
-        stats.starttime = starttime
-        stats.sampling_rate = sample_rate
-        stats.npts = len(data)
-
-        trace = Trace(data=data, header=stats)
-        return trace
+        st = build_traces(rows, channel)
+        return st
 
     def insert_stream(self, stream: Stream) -> None:
         for trace in stream:
@@ -114,5 +130,30 @@ class DataStream:
             logger.error(f"Channel {network}.{station}.{channel} not found.")
             return
         table = obj.get_datastream_id()
-        st, et, sample_rate, dtype, buf = preparebuffer(trace)
+        st, et, sample_rate, dtype, buf = prepare_buffer(trace)
         self.db.insert(table, st, et, sample_rate, dtype, buf)
+
+    def load_stream(
+        self, table: str, path: str, reclen: int = 512, chunksize: int = 1
+    ) -> None:
+        size = reclen * chunksize
+
+        nbytes = 0
+        compressed = 0
+        with io.open(path, "rb") as f:
+            while True:
+                with io.BytesIO() as chunk:
+                    c = f.read(size)
+                    if not c:
+                        break
+                    chunk.write(c)
+                    chunk.seek(0, 0)
+                    stream = read(chunk)
+
+                for trace in stream:
+                    trace: Trace
+                    st, et, sr, dtype, buf = prepare_buffer(trace)
+                    self.db.insert(table, st, et, sr, dtype, buf)
+
+                    nbytes += trace.data.nbytes
+                    compressed += len(buf)

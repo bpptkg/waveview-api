@@ -16,7 +16,7 @@ class FetcherTest(unittest.TestCase):
         fetcher = Fetcher()
         csv = "2024-10-22 04:41:30,930.2862,\n2024-10-22 04:41:31,486.569267,\n"
         df = fetcher.process_csv(csv)
-        self.assertEqual(len(df), 1)
+        self.assertEqual(len(df), 2)
 
 
 if __name__ == "__main__":

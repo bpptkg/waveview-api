@@ -8,7 +8,7 @@ from obspy import Trace, read
 
 from waveview.inventory.db.schema import TimescaleSchemaEditor
 from waveview.inventory.models import Channel
-from waveview.inventory.datastream import preparebuffer
+from waveview.inventory.datastream import prepare_buffer
 
 
 class Command(BaseCommand):
@@ -82,7 +82,7 @@ class Command(BaseCommand):
 
                 for trace in stream:
                     trace: Trace
-                    st, et, sr, dtype, buf = preparebuffer(trace)
+                    st, et, sr, dtype, buf = prepare_buffer(trace)
                     schema.insert(table, st, et, sr, dtype, buf)
 
                     nbytes += trace.data.nbytes

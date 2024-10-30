@@ -126,7 +126,10 @@ class BulletinLoader:
         ).exclude(refid__in=refids).delete()
 
     def update_amplitudes(self, events: list[Event]) -> None:
-        for event in events:
+        for index, event in enumerate(events):
+            logger.info(
+                f"Updating amplitudes for event {event.id} ({index + 1}/{len(events)})..."
+            )
             notify_event_observer(
                 OperationType.UPDATE,
                 str(event.id),

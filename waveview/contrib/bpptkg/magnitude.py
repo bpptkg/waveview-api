@@ -187,21 +187,21 @@ class MagnitudeEstimator:
 
         for channel in channels:
             stream = self.datastream.get_waveform(channel.id, starttime, endtime)
+            if len(stream) == 0:
+                logger.debug(f"No matching data found for channel {channel.id}.")
+                continue
+
             try:
+                stream[0].data = remove_outliers(stream.copy()[0].data)
                 stream = self.remove_response(inventory, stream)
             except Exception as e:
                 logger.error(f"Failed to remove response: {e}")
                 continue
 
-            if len(stream) == 0:
-                amax = 0
-                zeropk = 0
-                ml = 0
-            else:
-                data = remove_outliers(stream[0].data)
-                amax = self.get_amax(data)
-                zeropk = self.get_zeropk(data)
-                ml = calc_bpptkg_ml(zeropk)
+            data = stream[0].data
+            amax = self.get_amax(data)
+            zeropk = self.get_zeropk(data)
+            ml = calc_bpptkg_ml(zeropk)
 
             magnitude_values.append(ml)
             stations.add(channel.station.code)

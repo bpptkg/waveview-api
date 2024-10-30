@@ -7,7 +7,6 @@ import toronado
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.mail.utils import DNS_NAME
-from django.utils.encoding import force_text
 
 from waveview.utils.template import render_to_string
 
@@ -17,6 +16,12 @@ logger = logging.getLogger("waveview.mail")
 
 
 MAX_RECIPIENTS = 5
+
+
+def force_text(value: Any) -> str:
+    if isinstance(value, str):
+        return value
+    return str(value)
 
 
 def inline_css(value: str) -> str:

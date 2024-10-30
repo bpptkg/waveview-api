@@ -5,7 +5,6 @@ import numpy as np
 from dateutil import parser
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import connection
-from rest_framework import serializers
 
 from waveview.inventory.datastream import DataStream
 from waveview.inventory.models import Channel

@@ -1,0 +1,94 @@
+[
+    {
+        "name": "Utara",
+        "azimuth": 0
+    },
+    {
+        "name": "Timur Laut",
+        "azimuth": 45
+    },
+    {
+        "name": "Timur",
+        "azimuth": 90
+    },
+    {
+        "name": "Tenggara",
+        "azimuth": 135
+    },
+    {
+        "name": "Gendol",
+        "azimuth": 135
+    },
+    {
+        "name": "Woro",
+        "azimuth": 135
+    },
+    {
+        "name": "Selatan",
+        "azimuth": 180
+    },
+    {
+        "name": "Kuning",
+        "azimuth": 180
+    },
+    {
+        "name": "Opak",
+        "azimuth": 180
+    },
+    {
+        "name": "Barat Daya",
+        "azimuth": 225
+    },
+    {
+        "name": "Sat/Putih",
+        "azimuth": 225
+    },
+    {
+        "name": "Krasak",
+        "azimuth": 225
+    },
+    {
+        "name": "Bebeng",
+        "azimuth": 225
+    },
+    {
+        "name": "Boyong",
+        "azimuth": 225
+    },
+    {
+        "name": "Barat",
+        "azimuth": 270
+    },
+    {
+        "name": "Senowo2",
+        "azimuth": 270
+    },
+    {
+        "name": "Senowo3",
+        "azimuth": 270
+    },
+    {
+        "name": "Batang",
+        "azimuth": 270
+    },
+    {
+        "name": "Lamat",
+        "azimuth": 270
+    },
+    {
+        "name": "Barat Laut",
+        "azimuth": 315
+    },
+    {
+        "name": "Apu",
+        "azimuth": 315
+    },
+    {
+        "name": "Trising",
+        "azimuth": 315
+    },
+    {
+        "name": "Senowo1",
+        "azimuth": 315
+    }
+]

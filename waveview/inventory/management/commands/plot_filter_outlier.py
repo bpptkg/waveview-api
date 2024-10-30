@@ -5,11 +5,12 @@ import numpy as np
 from dateutil import parser
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import connection
-from rest_framework import serializers
 
 from waveview.contrib.bpptkg.outliers import remove_outliers
+from waveview.contrib.bpptkg.response import remove_instrument_response
 from waveview.inventory.datastream import DataStream
 from waveview.inventory.models import Channel
+from waveview.organization.models import Organization
 
 
 class Command(BaseCommand):
@@ -19,6 +20,16 @@ class Command(BaseCommand):
         parser.add_argument("stream_id", type=str, help="Stream ID.")
         parser.add_argument("start", type=str, help="Start time of the query.")
         parser.add_argument("end", type=str, help="End time of the query.")
+        parser.add_argument(
+            "--remove-response",
+            action="store_true",
+            help="Remove instrument response.",
+        )
+        parser.add_argument(
+            "--org-slug",
+            type=str,
+            help="Organization slug.",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         start: str = options["start"]
@@ -40,6 +51,16 @@ class Command(BaseCommand):
         if len(st) == 0 or len(st[0].data) == 0:
             self.stdout.write(self.style.ERROR("No data found."))
             return
+
+        if options["remove_response"]:
+            try:
+                organization = Organization.objects.get(slug=options["org_slug"])
+            except Organization.DoesNotExist:
+                self.stderr.write(
+                    f"Organization with slug {options['org_slug']} does not exist."
+                )
+                return
+            st = remove_instrument_response(organization.inventory, st)
 
         y = st[0].data
         sample_rate = st[0].stats.sampling_rate

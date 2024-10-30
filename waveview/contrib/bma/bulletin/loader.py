@@ -127,7 +127,7 @@ class BulletinLoader:
 
     def update_amplitudes(self, events: list[Event]) -> None:
         for event in events:
-            notify_event_observer.delay(
+            notify_event_observer(
                 OperationType.UPDATE,
                 str(event.id),
                 str(self.context.volcano.id),

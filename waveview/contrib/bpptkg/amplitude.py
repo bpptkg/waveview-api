@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import numpy as np
 from obspy import Stream, read_inventory
 from obspy.core.inventory import Inventory as ObspyInventory
-from scipy.signal import medfilt
 
 from waveview.event.amplitude import AmplitudeCalculator, SignalAmplitude
 from waveview.event.header import AmplitudeCategory, AmplitudeUnit
@@ -20,6 +19,8 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         """
         Get Amax (peak-to-peak/2) value from stream in m.
         """
+        if len(data) == 0:
+            return 0
         minval = np.min(data)
         maxval = np.max(data)
         amplitude = (maxval - minval) / 2
@@ -27,11 +28,18 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
             return None
         return amplitude
 
-    def medfilt(self, x: np.ndarray, k: int) -> np.ndarray:
-        """
-        Apply median filter to data.
-        """
-        return medfilt(x, k)
+    def remove_outliers(self, data: np.ndarray) -> np.ndarray:
+        if len(data) == 0:
+            return data
+        q1 = np.quantile(data, 0.1)
+        q3 = np.quantile(data, 0.9)
+        iqr = q3 - q1
+        threshold = 1.5 * iqr
+
+        lower_bound = q1 - threshold
+        upper_bound = q3 + threshold
+        data[(data <= lower_bound) | (data >= upper_bound)] = 0
+        return data
 
     def calc(
         self,
@@ -44,7 +52,7 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         inventory = Inventory.objects.get(organization_id=organization_id)
         starttime = time
         endtime = starttime + timedelta(seconds=duration)
-        use_median_filter = options.get("use_median_filter", False)
+        use_outlier_filter = options.get("use_outlier_filter", False)
 
         def remove_response(st: Stream) -> Stream:
             for inv_file in inventory.files.all():
@@ -68,12 +76,8 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
             if len(stream) == 0:
                 raise Exception("No matching data found.")
             data = stream[0].data
-            if use_median_filter:
-                sample_rate = stream[0].stats.sampling_rate
-                window_size = int(10 * sample_rate)
-                if window_size % 2 == 0:
-                    window_size += 1
-                data = self.medfilt(data, window_size)
+            if use_outlier_filter:
+                data = self.remove_outliers(data)
 
             amax = self.get_amax(data)
             if amax is None:

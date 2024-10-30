@@ -21,8 +21,8 @@ from waveview.event.header import AmplitudeCategory, AmplitudeUnit
 class SignalAmplitudePayloadSerializer(serializers.Serializer):
     time = serializers.DateTimeField(help_text=_("The time of the event."))
     duration = serializers.FloatField(help_text=_("The duration of the event."))
-    use_median_filter = serializers.BooleanField(
-        help_text=_("Whether to use a median filter to smooth the signal."),
+    use_outlier_filter = serializers.BooleanField(
+        help_text=_("Whether to use a outlier filter to smooth the signal."),
         default=False,
     )
 
@@ -77,7 +77,7 @@ class SignalAmplitudeEndpoint(Endpoint):
         serializer.is_valid(raise_exception=True)
         time = serializer.validated_data["time"]
         duration = serializer.validated_data["duration"]
-        use_median_filter = serializer.validated_data["use_median_filter"]
+        use_outlier_filter = serializer.validated_data["use_outlier_filter"]
 
         data = PickerConfigData.from_dict(config.data)
         method = data.amplitude_config.amplitude_calculator
@@ -93,7 +93,7 @@ class SignalAmplitudeEndpoint(Endpoint):
                 duration,
                 channel_id,
                 organization_id,
-                use_median_filter=use_median_filter,
+                use_outlier_filter=use_outlier_filter,
             )
 
         with concurrent.futures.ThreadPoolExecutor() as executor:

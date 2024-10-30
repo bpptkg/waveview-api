@@ -5,6 +5,7 @@ import numpy as np
 from obspy import Stream, read_inventory
 from obspy.core.inventory import Inventory as ObspyInventory
 
+from waveview.contrib.bpptkg.outliers import remove_outliers
 from waveview.event.amplitude import AmplitudeCalculator, SignalAmplitude
 from waveview.event.header import AmplitudeCategory, AmplitudeUnit
 from waveview.inventory.models import Channel, Inventory
@@ -27,19 +28,6 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         if np.isnan(amplitude):
             return None
         return amplitude
-
-    def remove_outliers(self, data: np.ndarray) -> np.ndarray:
-        if len(data) == 0:
-            return data
-        q1 = np.quantile(data, 0.1)
-        q3 = np.quantile(data, 0.9)
-        iqr = q3 - q1
-        threshold = 1.5 * iqr
-
-        lower_bound = q1 - threshold
-        upper_bound = q3 + threshold
-        data[(data <= lower_bound) | (data >= upper_bound)] = 0
-        return data
 
     def calc(
         self,
@@ -77,7 +65,7 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
                 raise Exception("No matching data found.")
             data = stream[0].data
             if use_outlier_filter:
-                data = self.remove_outliers(data)
+                data = remove_outliers(data)
 
             amax = self.get_amax(data)
             if amax is None:

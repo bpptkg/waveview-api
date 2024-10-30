@@ -7,6 +7,7 @@ from django.db import connection, transaction
 from obspy import Inventory as ObspyInventory
 from obspy import Stream, read_inventory
 
+from waveview.contrib.bpptkg.outliers import remove_outliers
 from waveview.event.header import (
     AmplitudeCategory,
     AmplitudeUnit,
@@ -41,6 +42,8 @@ def calc_bpptkg_ml(amplitude: float) -> float:
 
     where log10(A0) equal to -1.4 and ml is Richter local magnitude scale.
     """
+    if amplitude <= 0:
+        return 0
     ampl = amplitude * 1e6  # Convert to micro-meter.
     return np.log10(ampl) + 1.4
 
@@ -121,32 +124,30 @@ class MagnitudeEstimator:
         inventory = Inventory.objects.get(organization_id=organization_id)
         return inventory
 
-    def get_amax(self, stream: Stream) -> float:
+    def get_amax(self, data: np.ndarray) -> float:
         """
         Get Amax (peak-to-peak/2) value from stream in m.
         """
-        if len(stream) == 0:
-            return None
+        if len(data) == 0:
+            return 0
 
-        data: np.ndarray = stream[0].data
         minval = np.min(data)
         maxval = np.max(data)
         amplitude = (maxval - minval) / 2
         if np.isnan(amplitude):
-            return None
+            return 0
         return amplitude
 
-    def get_zeropk(self, stream: Stream) -> float:
+    def get_zeropk(self, data: np.ndarray) -> float:
         """
         Get zero-to-peak value from stream in m.
         """
-        if len(stream) == 0:
-            return None
+        if len(data) == 0:
+            return 0
 
-        data: np.ndarray = stream[0].data
         amplitude = np.max(np.abs(data))
         if np.isnan(amplitude):
-            return None
+            return 0
         return amplitude
 
     def remove_response(self, inventory: Inventory, st: Stream) -> Stream:
@@ -204,15 +205,16 @@ class MagnitudeEstimator:
                 logger.error(f"Failed to remove response: {e}")
                 continue
 
-            amax = self.get_amax(stream)
-            if amax is None:
-                logger.debug(f"Amax for channel {channel.stream_id} is None.")
-                continue
-            zeropk = self.get_zeropk(stream)
-            if zeropk is None:
-                logger.debug(f"Zero-to-peak for channel {channel.stream_id} is None.")
-                continue
-            ml = calc_bpptkg_ml(zeropk)
+            if len(stream) == 0:
+                amax = 0
+                zeropk = 0
+                ml = 0
+            else:
+                data = remove_outliers(stream[0].data)
+                amax = self.get_amax(data)
+                zeropk = self.get_zeropk(data)
+                ml = calc_bpptkg_ml(zeropk)
+
             magnitude_values.append(ml)
             stations.add(channel.station.code)
 
@@ -295,10 +297,11 @@ class MagnitudeEstimator:
             logger.error(f"Failed to remove response: {e}")
             return
 
-        amax = self.get_amax(stream)
-        if amax is None:
-            logger.debug(f"Amax for channel {channel.stream_id} is None.")
-            return
+        if len(stream) == 0:
+            amax = 0
+        else:
+            data = remove_outliers(stream[0].data)
+            amax = self.get_amax(data)
 
         value = analog.slope * (amax * 1e6) + analog.offset
         Amplitude.objects.update_or_create(

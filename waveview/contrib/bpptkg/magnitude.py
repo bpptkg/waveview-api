@@ -6,7 +6,6 @@ import numpy as np
 from django.db import connection, transaction
 from obspy import Stream
 
-from waveview.contrib.bpptkg.outliers import remove_outliers
 from waveview.contrib.bpptkg.response import remove_instrument_response
 from waveview.event.header import (
     AmplitudeCategory,
@@ -187,21 +186,22 @@ class MagnitudeEstimator:
 
         for channel in channels:
             stream = self.datastream.get_waveform(channel.id, starttime, endtime)
-            if len(stream) == 0:
-                logger.debug(f"No matching data found for channel {channel.id}.")
-                continue
 
             try:
-                stream[0].data = remove_outliers(stream.copy()[0].data)
                 stream = self.remove_response(inventory, stream)
             except Exception as e:
                 logger.error(f"Failed to remove response: {e}")
                 continue
 
-            data = stream[0].data
-            amax = self.get_amax(data)
-            zeropk = self.get_zeropk(data)
-            ml = calc_bpptkg_ml(zeropk)
+            if len(stream) == 0:
+                amax = 0
+                zeropk = 0
+                ml = 0
+            else:
+                data = stream[0].data
+                amax = self.get_amax(data)
+                zeropk = self.get_zeropk(data)
+                ml = calc_bpptkg_ml(zeropk)
 
             magnitude_values.append(ml)
             stations.add(channel.station.code)
@@ -279,6 +279,7 @@ class MagnitudeEstimator:
             return
 
         stream = self.datastream.get_waveform(channel.id, starttime, endtime)
+
         try:
             stream = self.remove_response(inventory, stream)
         except Exception as e:
@@ -288,7 +289,7 @@ class MagnitudeEstimator:
         if len(stream) == 0:
             amax = 0
         else:
-            data = remove_outliers(stream[0].data)
+            data = stream[0].data
             amax = self.get_amax(data)
 
         value = analog.slope * (amax * 1e6) + analog.offset

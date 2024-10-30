@@ -26,7 +26,7 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         maxval = np.max(data)
         amplitude = (maxval - minval) / 2
         if np.isnan(amplitude):
-            return None
+            return 0
         return amplitude
 
     def calc(
@@ -50,13 +50,11 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
             stream = self.datastream.get_waveform(channel.id, starttime, endtime)
             if len(stream) == 0:
                 raise Exception("No matching data found.")
-            if use_outlier_filter:
-                stream[0].data = remove_outliers(stream.copy()[0].data)
             stream = remove_response(stream)
             data = stream[0].data
+            if use_outlier_filter:
+                data = remove_outliers(data)
             amax = self.get_amax(data)
-            if amax is None:
-                raise Exception("Amax is none.")
         except Exception as e:
             logger.error(f"Failed to calculate amplitude: {e}")
             amax = 0

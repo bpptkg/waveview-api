@@ -65,19 +65,19 @@ Install TimescaleDB using Docker:
 
 .. code-block:: bash
 
-    docker run --name timescale -p 5432:5432 -v waveview-api/storage/db/data:/home/postgres/pgdata/data -e POSTGRES_PASSWORD=test -d timescale/timescaledb-ha:pg16
+    docker run --name timescale --restart unless-stopped -p 5432:5432 -v waveview-api/storage/db/data:/home/postgres/pgdata/data -e POSTGRES_PASSWORD=test -d timescale/timescaledb-ha:pg16
 
 Install Redis using Docker:
 
 .. code-block:: bash
 
-    docker run --name redis -p 6379:6379 -d redis
+    docker run --name redis --restart unless-stopped -p 6379:6379 -d redis
 
 Install RabbitMQ using Docker:
 
 .. code-block:: bash
 
-    docker run -d --hostname rabbitmq --name rabbitmq -e RABBITMQ_DEFAULT_USER=user -e RABBITMQ_DEFAULT_PASS=password -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+    docker run -d --restart unless-stopped --hostname rabbitmq --name rabbitmq -e RABBITMQ_DEFAULT_USER=user -e RABBITMQ_DEFAULT_PASS=password -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 
 Run the migrations:
 

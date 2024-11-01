@@ -65,7 +65,7 @@ Install TimescaleDB using Docker:
 
 .. code-block:: bash
 
-    docker run --name timescaledb --restart unless-stopped -p 5432:5432 -v waveview-api/storage/db/data:/home/postgres/pgdata/data -e POSTGRES_PASSWORD=test -d timescale/timescaledb-ha:pg16
+    docker run --name timescaledb --restart unless-stopped -p 5432:5432 -v /path/to/waveview-api/storage/db/data:/home/postgres/pgdata/data -e POSTGRES_PASSWORD=test -d timescale/timescaledb-ha:pg16
 
 Install Redis using Docker:
 

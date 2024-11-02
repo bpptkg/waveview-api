@@ -164,7 +164,7 @@ class MagnitudeEstimator:
     ) -> None:
         buffer = 5  # Buffer in seconds.
         starttime = event.time - timedelta(seconds=buffer)
-        endtime = starttime + timedelta(seconds=event.duration + buffer)
+        endtime = event.time + timedelta(seconds=event.duration + buffer)
         magnitude_type = "ML"
 
         magnitude, _ = Magnitude.objects.get_or_create(

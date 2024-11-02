@@ -6,6 +6,7 @@ import numpy as np
 from django.db import connection, transaction
 from obspy import Stream
 
+from waveview.contrib.bpptkg.outliers import remove_outliers
 from waveview.contrib.bpptkg.response import remove_instrument_response
 from waveview.event.header import (
     AmplitudeCategory,
@@ -161,9 +162,9 @@ class MagnitudeEstimator:
         author_id: str,
         is_preferred: bool = False,
     ) -> None:
-        buffer = 0  # Buffer in seconds.
+        buffer = 5  # Buffer in seconds.
         starttime = event.time - timedelta(seconds=buffer)
-        endtime = starttime + timedelta(seconds=event.duration)
+        endtime = starttime + timedelta(seconds=event.duration + buffer)
         magnitude_type = "ML"
 
         magnitude, _ = Magnitude.objects.get_or_create(
@@ -198,7 +199,7 @@ class MagnitudeEstimator:
                 zeropk = 0
                 ml = 0
             else:
-                data = stream[0].data
+                data = remove_outliers(stream[0].data)
                 amax = self.get_amax(data)
                 zeropk = self.get_zeropk(data)
                 ml = calc_bpptkg_ml(zeropk)
@@ -216,7 +217,7 @@ class MagnitudeEstimator:
                     "category": AmplitudeCategory.DURATION,
                     "time": event.time,
                     "begin": buffer,
-                    "end": event.duration,
+                    "end": event.duration + buffer,
                     "snr": 0,
                     "unit": AmplitudeUnit.UM.label,
                     "evaluation_mode": EvaluationMode.AUTOMATIC,
@@ -257,7 +258,7 @@ class MagnitudeEstimator:
 
         for analog in analogs:
             self.calc_analog_amplitude(
-                event, inventory, analog, starttime, endtime, author_id
+                event, inventory, analog, starttime, endtime, author_id, buffer
             )
 
     def calc_analog_amplitude(
@@ -268,6 +269,7 @@ class MagnitudeEstimator:
         starttime: datetime,
         endtime: datetime,
         author_id: str,
+        buffer: int,
     ) -> None:
         network, station, channel = analog.channel_id.split(".")
         try:
@@ -289,7 +291,7 @@ class MagnitudeEstimator:
         if len(stream) == 0:
             amax = 0
         else:
-            data = stream[0].data
+            data = remove_outliers(stream[0].data)
             amax = self.get_amax(data)
 
         value = analog.slope * (amax * 1e6) + analog.offset
@@ -302,8 +304,8 @@ class MagnitudeEstimator:
                 "type": "Amax",
                 "category": AmplitudeCategory.DURATION,
                 "time": event.time,
-                "begin": 0,
-                "end": event.duration,
+                "begin": buffer,
+                "end": event.duration + buffer,
                 "snr": 0,
                 "unit": AmplitudeUnit.MM.label,
                 "evaluation_mode": EvaluationMode.AUTOMATIC,

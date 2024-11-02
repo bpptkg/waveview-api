@@ -38,8 +38,8 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         **options,
     ) -> SignalAmplitude:
         inventory = Inventory.objects.get(organization_id=organization_id)
-        starttime = time
-        endtime = starttime + timedelta(seconds=duration)
+        starttime = time - timedelta(seconds=5)
+        endtime = starttime + timedelta(seconds=duration + 10)
         use_outlier_filter = options.get("use_outlier_filter", False)
 
         def remove_response(st: Stream) -> Stream:

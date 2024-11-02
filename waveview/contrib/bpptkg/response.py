@@ -10,7 +10,7 @@ def remove_instrument_response(inventory: Inventory, st: Stream) -> Stream:
         try:
             st.merge(fill_value=0)
             st.detrend("demean")
-            pre_filt = [0.001, 0.005, 45, 50]
+            pre_filt = [0.001, 0.005, 10, 20]
             st.remove_response(
                 inventory=inv, pre_filt=pre_filt, output="DISP", water_level=60
             )

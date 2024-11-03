@@ -61,11 +61,30 @@ Edit the `.env` file and set the environment variables:
 
     vim .env
 
+Create a new Docker volume for TimescaleDB:
+
+.. code-block:: bash
+
+    docker volume create --name=waveview-data
+
+.. warning::
+
+    Store the volume in a safe location. If you delete the volume, all the data
+    will be lost. You can also use a bind mount to store the data in a specific
+    location on your host machine. For more information, see the Docker
+    documentation.
+
 Install TimescaleDB using Docker:
 
 .. code-block:: bash
 
-    docker run --name timescaledb --restart unless-stopped -p 5432:5432 -v /path/to/waveview-api/storage/db/data:/home/postgres/pgdata/data -e POSTGRES_PASSWORD=test -d timescale/timescaledb-ha:pg16
+    docker run --name timescaledb --restart unless-stopped -p 5432:5432 -v waveview-data:/home/postgres/pgdata/data -e POSTGRES_PASSWORD=test -d timescale/timescaledb-ha:pg16
+
+Install Memcached using Docker:
+
+.. code-block:: bash
+
+    docker run -d --restart unless-stopped --name memcached -p 11211:11211 memcached:1.6.32
 
 Install Redis using Docker:
 

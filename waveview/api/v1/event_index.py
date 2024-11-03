@@ -136,10 +136,10 @@ class EventIndexEndpoint(Endpoint):
         queryset = events.distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = EventSerializer(page, many=True, context={"request": request})
+            serializer = EventSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = EventSerializer(queryset, many=True, context={"request": request})
+        serializer = EventSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -190,6 +190,6 @@ class EventIndexEndpoint(Endpoint):
         notify_event.delay(OperationType.CREATE, payload.to_dict())
 
         return Response(
-            EventDetailSerializer(event, context={"request": request}).data,
+            EventDetailSerializer(event).data,
             status=status.HTTP_201_CREATED,
         )

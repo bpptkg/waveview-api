@@ -23,7 +23,7 @@ class AccountEndpoint(Endpoint):
         responses={status.HTTP_200_OK: openapi.Response("OK", UserDetailSerializer)},
     )
     def get(self, request: Request) -> Response:
-        serializer = UserDetailSerializer(request.user, context={"request": request})
+        serializer = UserDetailSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -44,6 +44,6 @@ class AccountEndpoint(Endpoint):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
-            UserDetailSerializer(request.user, context={"request": request}).data,
+            UserDetailSerializer(request.user).data,
             status=status.HTTP_200_OK,
         )

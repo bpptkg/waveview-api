@@ -43,9 +43,7 @@ class OrganizationIndexEndpoint(Endpoint):
         organizations = Organization.objects.filter(
             Q(members=request.user) | Q(author=request.user)
         ).all()
-        serializer = OrganizationSerializer(
-            organizations, many=True, context={"request": request}
-        )
+        serializer = OrganizationSerializer(organizations, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(

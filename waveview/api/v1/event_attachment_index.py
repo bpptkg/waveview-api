@@ -37,6 +37,6 @@ class EventAttachmentUploadEndpoint(Endpoint):
         serializer.is_valid(raise_exception=True)
         attachment = serializer.save()
         return Response(
-            AttachmentSerializer(attachment, context={"request": request}).data,
+            AttachmentSerializer(attachment).data,
             status=status.HTTP_201_CREATED,
         )

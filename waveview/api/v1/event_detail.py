@@ -53,7 +53,7 @@ class EventDetailEndpoint(Endpoint):
         except Event.DoesNotExist:
             raise NotFound(_("Event not found."))
 
-        serializer = EventDetailSerializer(event, context={"request": request})
+        serializer = EventDetailSerializer(event)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -110,7 +110,7 @@ class EventDetailEndpoint(Endpoint):
         notify_event.delay(OperationType.UPDATE, payload.to_dict())
 
         return Response(
-            EventDetailSerializer(event, context={"request": request}).data,
+            EventDetailSerializer(event).data,
             status=status.HTTP_200_OK,
         )
 

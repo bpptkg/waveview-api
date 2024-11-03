@@ -163,3 +163,4 @@ TODO
 .DS_Store
 nocommit/
 testing.py
+backup.sh

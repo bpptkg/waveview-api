@@ -34,6 +34,7 @@ zstandard = "^0.23.0"
 sphinx = "7.4.7"
 sphinx-rtd-theme = "^2.0.0"
 gunicorn = "^23.0.0"
+django-dbbackup = "^4.2.1"
 
 
 [build-system]

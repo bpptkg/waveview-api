@@ -43,6 +43,7 @@ PREREQUISITE_APPS = [
     "drf_yasg",
     "drf_standardized_errors",
     "phonenumber_field",
+    "dbbackup",
 ]
 
 PROJECT_APPS = [
@@ -340,3 +341,9 @@ AMPLITUDE_CALCULATOR_REGISTRY = [
 SINOAS_WINSTON_URL = env("SINOAS_WINSTON_URL", default="http://127.0.0.1:16030")
 BMA_URL = env("BMA_URL", default="https://bma.cendana15.com")
 BMA_API_KEY = env("BMA_API_KEY", default="")
+
+DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
+DBBACKUP_DIR = STORAGE_DIR / "dbbackup"
+if not DBBACKUP_DIR.exists():
+    DBBACKUP_DIR.mkdir()
+DBBACKUP_STORAGE_OPTIONS = {"location": str(DBBACKUP_DIR)}

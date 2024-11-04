@@ -15,16 +15,13 @@ logger = logging.getLogger(__name__)
 
 class StreamConsumer(AsyncWebsocketConsumer):
     async def connect(self) -> None:
+        await self.accept()
         self.subscribed_channels = set()
         user = self.scope.get("user")
-        if not user:
-            await self.close()
-            return
-
-        if user.is_authenticated:
-            await self.accept()
+        if user and user.is_authenticated:
+            pass
         else:
-            await self.close()
+            await self.close(code=4001)
 
     async def disconnect(self, code: int) -> None:
         for channel_id in self.subscribed_channels:

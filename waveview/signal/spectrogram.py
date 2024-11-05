@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import zstandard as zstd
 from django.db import connection
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 from obspy import read
@@ -13,7 +14,6 @@ from obspy import read
 from waveview.data.sample import get_sample_file_path
 from waveview.inventory.datastream import DataStream
 from waveview.inventory.models import Channel
-from waveview.settings import BASE_DIR
 from waveview.signal.packet import pad
 
 matplotlib.use("Agg")
@@ -251,7 +251,7 @@ class SpectrogramData:
             dtype=np.float64,
         ).tobytes()
 
-        return b"".join(
+        data = b"".join(
             [
                 request_id,
                 command,
@@ -260,6 +260,9 @@ class SpectrogramData:
                 image,
             ]
         )
+        compressor = zstd.ZstdCompressor()
+        compressed = compressor.compress(data)
+        return compressed
 
 
 class DummySpectrogramAdapter(BaseSpectrogramAdapter):

@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 
 import numpy as np
-import uuid
+import zstandard as zstd
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class Packet:
             ],
             dtype=np.uint64,
         )
-        return b"".join(
+        data = b"".join(
             [
                 request_id,
                 command,
@@ -50,6 +50,9 @@ class Packet:
                 self.y.tobytes(),
             ]
         )
+        compressor = zstd.ZstdCompressor()
+        compressed = compressor.compress(data)
+        return compressed
 
     @classmethod
     def decode(cls: "Packet", data: bytes) -> "Packet":

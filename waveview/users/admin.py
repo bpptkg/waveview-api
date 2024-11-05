@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.http import HttpRequest
 
 from waveview.users.forms import UserChangeForm
 from waveview.users.models import User
@@ -42,3 +43,6 @@ class UserManager(UserAdmin):
             },
         ),
     )
+
+    def has_delete_permission(self, request: HttpRequest, obj: User = None) -> None:
+        return False

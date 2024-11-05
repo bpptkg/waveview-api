@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import HttpRequest
 
 from waveview.event.models import (
     Amplitude,
@@ -24,6 +25,9 @@ class CatalogAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+    def has_delete_permission(self, request: HttpRequest, obj: Catalog = None) -> None:
+        return False
 
 
 @admin.register(EventType)

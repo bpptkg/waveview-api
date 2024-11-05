@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import HttpRequest
 
 from waveview.volcano.models import DigitalElevationModel, Volcano, VolcanoMedia
 
@@ -17,6 +18,9 @@ class VolcanoAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+    def has_delete_permission(self, request: HttpRequest, obj: Volcano = None) -> None:
+        return False
 
 
 @admin.register(VolcanoMedia)

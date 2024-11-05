@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import HttpRequest
 
 from waveview.organization.models import (
     Organization,
@@ -21,6 +22,11 @@ class OrganizationAdmin(admin.ModelAdmin):
         "updated_at",
     )
     search_fields = ("name",)
+
+    def has_delete_permission(
+        self, request: HttpRequest, obj: Organization = None
+    ) -> None:
+        return False
 
 
 @admin.register(OrganizationMember)

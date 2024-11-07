@@ -251,12 +251,11 @@ class MagnitudeEstimator:
                 logger.error(f"Channel {analog.stream_id} does not exist.")
                 continue
 
-            amplitude = amplitude_map.get(channel.id)
-            if amplitude is None:
-                logger.error(f"Amplitude for channel {channel.stream_id} is not found.")
-                continue
-
-            value = analog.slope * (amax * 1e6) + analog.offset
+            ampl = amplitude_map.get(channel.id)
+            if ampl is None:
+                value = 0
+            else:
+                value = analog.slope * ampl.amplitude + analog.offset
             Amplitude.objects.update_or_create(
                 event=event,
                 waveform=channel,

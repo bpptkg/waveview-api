@@ -96,6 +96,8 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
             command="stream.filter",
             start=timestamp.to_milliseconds(start),
             end=timestamp.to_milliseconds(end),
+            time=0,
+            sample_rate=1,
             x=np.array([]),
             y=np.array([]),
         )
@@ -166,6 +168,8 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
             command="stream.filter",
             start=start.timestamp() * 1000,
             end=end.timestamp() * 1000,
+            time=starttime.timestamp * 1000,
+            sample_rate=1 / delta,
             x=a,
             y=b,
         )

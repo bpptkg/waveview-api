@@ -74,6 +74,8 @@ class DummyStreamFetcher(BaseStreamFetcher):
             channel_id=channel_id,
             start=start.timestamp() * 1000,
             end=end.timestamp() * 1000,
+            time=starttime.timestamp() * 1000,
+            sample_rate=1,
             x=x,
             y=y,
         )
@@ -100,6 +102,8 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
             command="stream.fetch",
             start=timestamp.to_milliseconds(start),
             end=timestamp.to_milliseconds(end),
+            time=0,
+            sample_rate=1,
             x=np.array([]),
             y=np.array([]),
         )
@@ -140,6 +144,8 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
             command="stream.fetch",
             start=start.timestamp() * 1000,
             end=end.timestamp() * 1000,
+            time=starttime.timestamp * 1000,
+            sample_rate=1 / delta,
             x=a,
             y=b,
         )

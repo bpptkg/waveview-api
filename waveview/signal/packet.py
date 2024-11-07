@@ -19,6 +19,8 @@ class Packet:
     y: np.ndarray
     start: int
     end: int
+    time: int
+    sample_rate: int
     channel_id: str
     request_id: str
     command: str
@@ -31,9 +33,9 @@ class Packet:
             [
                 int(self.start),
                 int(self.end),
-                len(self.x),
                 len(self.y),
-                0,
+                int(self.time),
+                int(self.sample_rate),
                 0,
                 0,
                 0,
@@ -46,7 +48,6 @@ class Packet:
                 command,
                 channel_id,
                 header.tobytes(),
-                self.x.tobytes(),
                 self.y.tobytes(),
             ]
         )

@@ -33,6 +33,15 @@
             "width": 0.01
         },
         {
+            "id": "lp,5",
+            "type": "lowpass",
+            "freq": 5,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
             "id": "hp,10",
             "type": "highpass",
             "freq": 10,
@@ -73,6 +82,15 @@
             "id": "lp,3",
             "type": "lowpass",
             "freq": 3,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "id": "lp,5",
+            "type": "lowpass",
+            "freq": 5,
             "order": 4,
             "zerophase": false,
             "taper": "hann",

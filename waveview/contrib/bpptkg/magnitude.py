@@ -212,7 +212,7 @@ class MagnitudeEstimator:
                     "is_preferred": channel.matches_stream_id(preferred_stream_id),
                 },
             )
-            amplitude_map[channel.id] = amplitude
+            amplitude_map[str(channel.id)] = amplitude
 
             station_magnitude, _ = StationMagnitude.objects.update_or_create(
                 amplitude=amplitude,
@@ -242,7 +242,7 @@ class MagnitudeEstimator:
             magnitude.save()
 
         for analog in analogs:
-            network, station, channel = analog.stream_id.split(".")
+            network, station, __, channel = analog.stream_id.split(".")
             try:
                 channel = Channel.objects.filter(
                     code=channel, station__code=station, station__network__code=network
@@ -251,7 +251,7 @@ class MagnitudeEstimator:
                 logger.error(f"Channel {analog.stream_id} does not exist.")
                 continue
 
-            ampl = amplitude_map.get(channel.id)
+            ampl = amplitude_map.get(str(channel.id))
             if ampl is None:
                 value = 0
             else:

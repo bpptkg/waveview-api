@@ -56,12 +56,4 @@ class Packet:
 
     @classmethod
     def decode(cls: "Packet", data: bytes) -> "Packet":
-        channel_id = data[:64].decode("utf-8").strip("\0")
-        header = np.frombuffer(data[64 : 64 + 8 * 8], dtype=np.uint64)
-        start = int(header[0])
-        end = int(header[1])
-        x = np.frombuffer(
-            data[64 + 8 * 8 : 64 + 8 * 8 + 8 * header[2]], dtype=np.float64
-        )
-        y = np.frombuffer(data[64 + 8 * 8 + 8 * header[2] :], dtype=np.float64)
-        return cls(x=x, y=y, start=start, end=end, channel_id=channel_id)
+        raise NotImplementedError("decode method must be implemented")

@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import numpy as np
 from django.db import connection, transaction
@@ -28,13 +28,52 @@ from waveview.inventory.models import Channel, Inventory
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class AnalogChannel:
+    stream_id: str
+    label: str
+    slope: float
+    offset: float
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "AnalogChannel":
+        return cls(
+            stream_id=data.get("stream_id"),
+            label=data.get("label"),
+            slope=data.get("slope", 1),
+            offset=data.get("offset", 0),
+        )
+
+
+@dataclass
+class MagnitudeObserverData:
+    stream_ids: list[str] | str
+    analogs: list[AnalogChannel]
+    preferred_stream_id: str
+    is_preferred: bool
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "MagnitudeObserverData":
+        stream_ids: str | None = data.get("stream_ids")
+        if stream_ids != "all":
+            stream_ids = stream_ids or []
+        analogs = [AnalogChannel.from_dict(a) for a in data.get("analogs", [])]
+        preferred_stream_id = data.get("preferred_stream_id", "")
+        is_preferred = data.get("is_preferred", False)
+        return cls(
+            stream_ids=stream_ids,
+            analogs=analogs,
+            preferred_stream_id=preferred_stream_id,
+            is_preferred=is_preferred,
+        )
+
+
 def calc_bpptkg_ml(amplitude: float) -> float:
     """
     Compute BPPTKG Richter local magnitude scale (ML) from amplitude.
 
-    Note that amplitude zero to peak amplitude is in meter, but in calculation,
-    it uses micro-meter. Calibration function log10(A0) for BPPTKG seismic
-    network is -1.4.
+    Note that amplitude is in meter, but in calculation, it uses micro-meter.
+    Calibration function log10(A0) for BPPTKG seismic network is -1.4.
 
     Richter magnitude scale is computed using the following equation:
 
@@ -49,32 +88,9 @@ def calc_bpptkg_ml(amplitude: float) -> float:
 
 
 @dataclass
-class AnalogChannel:
-    channel_id: str
-    label: str
-    slope: float
-    offset: float
-
-    @classmethod
-    def from_dict(cls, data: dict) -> "AnalogChannel":
-        return cls(
-            channel_id=data.get("channel_id"),
-            label=data.get("label"),
-            slope=data.get("slope", 1),
-            offset=data.get("offset", 0),
-        )
-
-
-@dataclass
 class MagnitudeEstimatorData:
-    organization_id: str
-    volcano_id: str
-    event_id: str
-    author_id: str
-    channels: list[str]
-    analogs: list[AnalogChannel]
-    preferred_channel: str
-    is_preferred: bool
+    event: Event
+    data: MagnitudeObserverData
 
 
 class MagnitudeEstimator:
@@ -83,42 +99,6 @@ class MagnitudeEstimator:
     def __init__(self) -> None:
         self.datastream = DataStream(connection)
         self.preferred_map: dict[str, bool] = {}
-
-    @transaction.atomic
-    def calc_magnitude(self, data: MagnitudeEstimatorData) -> None:
-        logger.info(f"Calculating BPPTKG ML magnitude for event {data.event_id}...")
-
-        organization_id = data.organization_id
-        event_id = data.event_id
-        author_id = data.author_id
-        is_preferred = data.is_preferred
-        preferred_channel = data.preferred_channel
-        analogs = data.analogs
-
-        channels: list[Channel] = []
-        for network_station_channel in data.channels:
-            network, station, channel = network_station_channel.split(".")
-            try:
-                instance = Channel.objects.filter(
-                    code=channel, station__code=station, station__network__code=network
-                ).get()
-                channels.append(instance)
-                channel_id = str(instance.id)
-                if network_station_channel == preferred_channel:
-                    self.preferred_map[channel_id] = True
-                else:
-                    self.preferred_map[channel_id] = False
-            except Channel.DoesNotExist:
-                logger.error(f"Channel {network_station_channel} does not exist.")
-
-        inventory = self.get_inventory(organization_id)
-        event = Event.objects.get(id=event_id)
-
-        self.calc_ML_magnitude(
-            event, inventory, channels, analogs, author_id, is_preferred=is_preferred
-        )
-
-        logger.info(f"BPPTKG ML magnitude calculation for event {event_id} is done.")
 
     def get_inventory(self, organization_id: str) -> Inventory:
         inventory = Inventory.objects.get(organization_id=organization_id)
@@ -153,15 +133,21 @@ class MagnitudeEstimator:
     def remove_response(self, inventory: Inventory, st: Stream) -> Stream:
         return remove_instrument_response(inventory, st)
 
-    def calc_ML_magnitude(
-        self,
-        event: Event,
-        inventory: Inventory,
-        channels: list[Channel],
-        analogs: list[AnalogChannel],
-        author_id: str,
-        is_preferred: bool = False,
-    ) -> None:
+    @transaction.atomic
+    def calc_magnitude(self, data: MagnitudeEstimatorData) -> None:
+        event = data.event
+        organization_id = event.catalog.volcano.organization.id
+        inventory = self.get_inventory(organization_id)
+
+        options = data.data
+        author_id = event.author.id
+        is_preferred = options.is_preferred
+        preferred_stream_id = options.preferred_stream_id
+        analogs = options.analogs
+        stream_ids = options.stream_ids
+
+        logger.info(f"Calculating BPPTKG ML magnitude for event {event.id}...")
+
         buffer = 5  # Buffer in seconds.
         starttime = event.time - timedelta(seconds=buffer)
         endtime = event.time + timedelta(seconds=event.duration + buffer)
@@ -185,27 +171,28 @@ class MagnitudeEstimator:
         stations: set[str] = set()
         amplitude_map: dict[str, Amplitude] = {}
 
-        for channel in channels:
-            stream = self.datastream.get_waveform(channel.id, starttime, endtime)
+        for channel in Channel.objects.all():
+            st = self.datastream.get_waveform(channel.id, starttime, endtime)
 
             try:
-                stream = self.remove_response(inventory, stream)
+                st = self.remove_response(inventory, st)
             except Exception as e:
-                logger.error(f"Failed to remove response: {e}")
+                logger.error(
+                    f"Failed to remove response for channel {channel.stream_id}: {e}"
+                )
                 continue
 
-            if len(stream) == 0:
+            if len(st) == 0:
                 amax = 0
-                zeropk = 0
                 ml = 0
             else:
-                data = remove_outliers(stream[0].data)
+                data = remove_outliers(st[0].data)
                 amax = self.get_amax(data)
-                zeropk = self.get_zeropk(data)
-                ml = calc_bpptkg_ml(zeropk)
+                ml = calc_bpptkg_ml(amax)
 
-            magnitude_values.append(ml)
-            stations.add(channel.station.code)
+            if channel.contains_stream_id(stream_ids):
+                magnitude_values.append(ml)
+                stations.add(channel.station.code)
 
             amplitude, _ = Amplitude.objects.update_or_create(
                 event=event,
@@ -222,7 +209,7 @@ class MagnitudeEstimator:
                     "unit": AmplitudeUnit.UM.label,
                     "evaluation_mode": EvaluationMode.AUTOMATIC,
                     "author_id": author_id,
-                    "is_preferred": self.preferred_map.get(str(channel.id), False),
+                    "is_preferred": channel.matches_stream_id(preferred_stream_id),
                 },
             )
             amplitude_map[channel.id] = amplitude
@@ -245,117 +232,67 @@ class MagnitudeEstimator:
                 },
             )
 
-        if not magnitude_values:
-            logger.debug("No magnitude values found.")
-            return
-        avg = np.mean(magnitude_values)
-        if np.isnan(avg):
-            logger.debug("Average magnitude is NaN.")
-            return
-        magnitude.magnitude = avg
-        magnitude.station_count = len(stations)
-        magnitude.save()
+        if len(magnitude_values) > 0:
+            avg = np.mean(magnitude_values)
+            if np.isnan(avg):
+                logger.debug("Average magnitude is NaN.")
+                return
+            magnitude.magnitude = avg
+            magnitude.station_count = len(stations)
+            magnitude.save()
 
         for analog in analogs:
-            self.calc_analog_amplitude(
-                event, inventory, analog, starttime, endtime, author_id, buffer
+            network, station, channel = analog.stream_id.split(".")
+            try:
+                channel = Channel.objects.filter(
+                    code=channel, station__code=station, station__network__code=network
+                ).get()
+            except Channel.DoesNotExist:
+                logger.error(f"Channel {analog.stream_id} does not exist.")
+                continue
+
+            amplitude = amplitude_map.get(channel.id)
+            if amplitude is None:
+                logger.error(f"Amplitude for channel {channel.stream_id} is not found.")
+                continue
+
+            value = analog.slope * (amax * 1e6) + analog.offset
+            Amplitude.objects.update_or_create(
+                event=event,
+                waveform=channel,
+                method="analog",
+                defaults={
+                    "amplitude": value,
+                    "type": "Amax",
+                    "category": AmplitudeCategory.DURATION,
+                    "time": event.time,
+                    "begin": buffer,
+                    "end": event.duration + buffer,
+                    "snr": 0,
+                    "unit": AmplitudeUnit.MM.label,
+                    "evaluation_mode": EvaluationMode.AUTOMATIC,
+                    "author_id": author_id,
+                    "is_preferred": False,
+                    "label": analog.label,
+                },
             )
 
-    def calc_analog_amplitude(
-        self,
-        event: Event,
-        inventory: Inventory,
-        analog: AnalogChannel,
-        starttime: datetime,
-        endtime: datetime,
-        author_id: str,
-        buffer: int,
-    ) -> None:
-        network, station, channel = analog.channel_id.split(".")
-        try:
-            channel = Channel.objects.filter(
-                code=channel, station__code=station, station__network__code=network
-            ).get()
-        except Channel.DoesNotExist:
-            logger.error(f"Channel {analog.channel_id} does not exist.")
-            return
-
-        stream = self.datastream.get_waveform(channel.id, starttime, endtime)
-
-        try:
-            stream = self.remove_response(inventory, stream)
-        except Exception as e:
-            logger.error(f"Failed to remove response: {e}")
-            return
-
-        if len(stream) == 0:
-            amax = 0
-        else:
-            data = remove_outliers(stream[0].data)
-            amax = self.get_amax(data)
-
-        value = analog.slope * (amax * 1e6) + analog.offset
-        Amplitude.objects.update_or_create(
-            event=event,
-            waveform=channel,
-            method="analog",
-            defaults={
-                "amplitude": value,
-                "type": "Amax",
-                "category": AmplitudeCategory.DURATION,
-                "time": event.time,
-                "begin": buffer,
-                "end": event.duration + buffer,
-                "snr": 0,
-                "unit": AmplitudeUnit.MM.label,
-                "evaluation_mode": EvaluationMode.AUTOMATIC,
-                "author_id": author_id,
-                "is_preferred": False,
-                "label": analog.label,
-            },
-        )
+        logger.info(f"BPPTKG ML magnitude calculation for event {event.id} is done.")
 
 
 class MagnitudeObserver(EventObserver):
     """
-    This observer calculates BPPTKG local magnitude (ML) for an event. The
-    observer uses the following formula to compute Richter local magnitude scale
-    (ML) from amplitude:
-
-        ml = log10(amplitude) - log10(A0)
-
-    where log10(A0) equal to -1.4 and ml is Richter local magnitude scale.
-
-    The observer calculates ML magnitude for each channel and then computes the
-    average magnitude value.
+    This observer calculates BPPTKG local magnitude (ML) for an event.
     """
 
     name = "bpptkg.magnitude"
 
     def update(self, event_id: str, data: dict) -> None:
         event = Event.objects.get(id=event_id)
-        event_id = str(event.id)
-        volcano_id = str(event.catalog.volcano.id)
-        organization_id = str(event.catalog.volcano.organization.id)
-        author_id = str(event.author.id)
-        channels = data.get("channels", [])
-        is_preferred = data.get("is_preferred", False)
-        preferred_channel = data.get("preferred_channel", "")
-        analogs = [
-            AnalogChannel.from_dict(analog) for analog in data.get("analogs", [])
-        ]
-
         estimator = MagnitudeEstimator()
         estimator.calc_magnitude(
             MagnitudeEstimatorData(
-                organization_id=organization_id,
-                volcano_id=volcano_id,
-                event_id=event_id,
-                author_id=author_id,
-                channels=channels,
-                analogs=analogs,
-                is_preferred=is_preferred,
-                preferred_channel=preferred_channel,
+                event=event, data=MagnitudeObserverData.from_dict(data)
             )
         )
 

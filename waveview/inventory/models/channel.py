@@ -215,3 +215,28 @@ class Channel(models.Model):
     @property
     def sta_chan_code(self) -> str:
         return f"{self.station.code}.{self.code}"
+
+    def matches_stream_id(self, stream_id: str) -> bool:
+        parts = stream_id.split(".")
+        if len(parts) == 3:
+            network, station, channel = parts
+            return (
+                self.station.network.code == network
+                and self.station.code == station
+                and self.code == channel
+            )
+        elif len(parts) == 4:
+            network, station, location, channel = parts
+            return (
+                self.station.network.code == network
+                and self.station.code == station
+                and self.location_code == location
+                and self.code == channel
+            )
+        return False
+
+    def contains_stream_id(self, stream_ids: list[str]) -> bool:
+        for stream_id in stream_ids:
+            if self.matches_stream_id(stream_id):
+                return True
+        return False

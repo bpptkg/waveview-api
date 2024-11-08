@@ -1,7 +1,7 @@
 import io
 import logging
 import zlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 import numpy as np
@@ -108,8 +108,14 @@ class DataStream:
             raise ValueError(f"Channel {channel_id} does not exist")
 
         table = channel.get_datastream_id()
-        rows = self.db.query(table, start, end)
+        # Add buffer in seconds to start and end time to ensure we get all the
+        # chunks of data within the range.
+        buffer = 8
+        rows = self.db.query(
+            table, start - timedelta(seconds=buffer), end + timedelta(seconds=buffer)
+        )
         st = build_traces(rows, channel)
+        st.trim(starttime=UTCDateTime(start), endtime=(UTCDateTime(end)))
         return st
 
     def insert_stream(self, stream: Stream) -> None:

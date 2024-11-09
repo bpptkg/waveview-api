@@ -52,7 +52,7 @@ class SignalAmplitudeEndpoint(Endpoint):
             This endpoint allows users to calculate the signal amplitude of an event.
             """
         ),
-        tags=["Amplitude"],
+        tags=["Signal"],
         responses={
             status.HTTP_200_OK: openapi.Response(
                 "OK", SignalAmplitudeSerializer(many=True)

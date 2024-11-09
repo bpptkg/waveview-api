@@ -55,6 +55,7 @@ from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
 from .v1.volcano_index import VolcanoIndexEndpoint
+from .v1.plot_remove_response import PlotRemoveResponseEndpoint
 
 EVENT_ORIGIN_URLS = [
     path(
@@ -252,6 +253,11 @@ VOLCANO_URLS = [
         "<uuid:volcano_id>/signal-amplitude/",
         SignalAmplitudeEndpoint.as_view(),
         name="waveview-api-1-signal-amplitude",
+    ),
+    path(
+        "<uuid:volcano_id>/plot-remove-response/",
+        PlotRemoveResponseEndpoint.as_view(),
+        name="waveview-api-1-plot-remove-response",
     ),
 ]
 

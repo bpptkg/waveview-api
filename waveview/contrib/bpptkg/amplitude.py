@@ -39,7 +39,7 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
     ) -> SignalAmplitude:
         use_outlier_filter = options.get("use_outlier_filter", False)
         inventory = Inventory.objects.get(organization_id=organization_id)
-        buffer = 5  # Buffer in seconds.
+        buffer = 60  # Buffer in seconds.
         if use_outlier_filter:
             starttime = time - timedelta(seconds=buffer)
             endtime = time + timedelta(seconds=duration + buffer)

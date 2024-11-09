@@ -148,7 +148,7 @@ class MagnitudeEstimator:
 
         logger.info(f"Calculating BPPTKG ML magnitude for event {event.id}...")
 
-        buffer = 5  # Buffer in seconds.
+        buffer = 60  # Buffer in seconds.
         starttime = event.time - timedelta(seconds=buffer)
         endtime = event.time + timedelta(seconds=event.duration + buffer)
         magnitude_type = "ML"

@@ -21,6 +21,21 @@ class BandpassFilterParam:
     order: int
     zerophase: bool
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "BandpassFilterParam":
+        freqmin = data["freqmin"]
+        if freqmin <= 0:
+            freqmin = 0.01
+        freqmax = data["freqmax"]
+        order = data["order"]
+        zerophase = data["zerophase"]
+        return cls(
+            freqmin=freqmin,
+            freqmax=freqmax,
+            order=order,
+            zerophase=zerophase,
+        )
+
 
 @dataclass
 class LowpassFilterParam:
@@ -28,12 +43,38 @@ class LowpassFilterParam:
     order: int
     zerophase: bool
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "LowpassFilterParam":
+        freq = data["freq"]
+        if freq <= 0:
+            freq = 0.01
+        order = data["order"]
+        zerophase = data["zerophase"]
+        return cls(
+            freq=freq,
+            order=order,
+            zerophase=zerophase,
+        )
+
 
 @dataclass
 class HighpassFilterParam:
     freq: float
     order: int
     zerophase: bool
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "HighpassFilterParam":
+        freq = data["freq"]
+        if freq <= 0:
+            freq = 0.01
+        order = data["order"]
+        zerophase = data["zerophase"]
+        return cls(
+            freq=freq,
+            order=order,
+            zerophase=zerophase,
+        )
 
 
 class FilterType(enum.StrEnum):
@@ -118,7 +159,7 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
             st.taper(max_percentage=payload.taper_width, type=payload.taper_type)
 
         if payload.filter_type == FilterType.BANDPASS:
-            filter_param = BandpassFilterParam(**payload.filter_options)
+            filter_param = BandpassFilterParam.from_dict(payload.filter_options)
             st.filter(
                 "bandpass",
                 freqmin=filter_param.freqmin,
@@ -127,7 +168,7 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
                 zerophase=filter_param.zerophase,
             )
         elif payload.filter_type == FilterType.LOWPASS:
-            filter_param = LowpassFilterParam(**payload.filter_options)
+            filter_param = LowpassFilterParam.from_dict(payload.filter_options)
             st.filter(
                 "lowpass",
                 freq=filter_param.freq,
@@ -135,7 +176,7 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
                 zerophase=filter_param.zerophase,
             )
         elif payload.filter_type == FilterType.HIGHPASS:
-            filter_param = HighpassFilterParam(**payload.filter_options)
+            filter_param = HighpassFilterParam.from_dict(payload.filter_options)
             st.filter(
                 "highpass",
                 freq=filter_param.freq,

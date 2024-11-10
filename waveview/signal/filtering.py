@@ -158,32 +158,36 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
         if payload.taper_type != "none":
             st.taper(max_percentage=payload.taper_width, type=payload.taper_type)
 
-        if payload.filter_type == FilterType.BANDPASS:
-            filter_param = BandpassFilterParam.from_dict(payload.filter_options)
-            st.filter(
-                "bandpass",
-                freqmin=filter_param.freqmin,
-                freqmax=filter_param.freqmax,
-                corners=filter_param.order,
-                zerophase=filter_param.zerophase,
-            )
-        elif payload.filter_type == FilterType.LOWPASS:
-            filter_param = LowpassFilterParam.from_dict(payload.filter_options)
-            st.filter(
-                "lowpass",
-                freq=filter_param.freq,
-                corners=filter_param.order,
-                zerophase=filter_param.zerophase,
-            )
-        elif payload.filter_type == FilterType.HIGHPASS:
-            filter_param = HighpassFilterParam.from_dict(payload.filter_options)
-            st.filter(
-                "highpass",
-                freq=filter_param.freq,
-                corners=filter_param.order,
-                zerophase=filter_param.zerophase,
-            )
-        else:
+        try:
+            if payload.filter_type == FilterType.BANDPASS:
+                filter_param = BandpassFilterParam.from_dict(payload.filter_options)
+                st.filter(
+                    "bandpass",
+                    freqmin=filter_param.freqmin,
+                    freqmax=filter_param.freqmax,
+                    corners=filter_param.order,
+                    zerophase=filter_param.zerophase,
+                )
+            elif payload.filter_type == FilterType.LOWPASS:
+                filter_param = LowpassFilterParam.from_dict(payload.filter_options)
+                st.filter(
+                    "lowpass",
+                    freq=filter_param.freq,
+                    corners=filter_param.order,
+                    zerophase=filter_param.zerophase,
+                )
+            elif payload.filter_type == FilterType.HIGHPASS:
+                filter_param = HighpassFilterParam.from_dict(payload.filter_options)
+                st.filter(
+                    "highpass",
+                    freq=filter_param.freq,
+                    corners=filter_param.order,
+                    zerophase=filter_param.zerophase,
+                )
+            else:
+                return empty_packet.encode()
+        except Exception as e:
+            logger.error(f"Error filtering data: {e}")
             return empty_packet.encode()
 
         if resample:

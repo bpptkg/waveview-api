@@ -17,12 +17,15 @@ def remove_instrument_response(inventory: Inventory, st: Stream) -> Stream:
         try:
             st.merge(fill_value=0)
             st.detrend("demean")
-            if is_short_period(st):
-                pre_filt = [0.5, 1, 45, 50]
-            else:
-                pre_filt = [0.01, 0.03, 45, 50]
+            pre_filt = [0.5, 1, 45, 50]
             st.remove_response(
-                inventory=inv, pre_filt=pre_filt, output="DISP", water_level=60
+                inventory=inv,
+                pre_filt=pre_filt,
+                output="DISP",
+                water_level=60,
+                zero_mean=True,
+                taper=True,
+                taper_fraction=0.05,
             )
             return st
         except Exception:

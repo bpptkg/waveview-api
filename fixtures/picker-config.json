@@ -125,7 +125,7 @@
                 "label": "PUS Paper",
                 "channel_ref": "VG.MEPUS.EHZ",
                 "is_analog": true,
-                "slope": 30,
+                "slope": 26.3,
                 "offset": 0
             }
         ]

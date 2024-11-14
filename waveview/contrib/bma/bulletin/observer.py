@@ -27,7 +27,12 @@ class BulletinObserver(EventObserver):
     @delay(60)
     @retry(initial_delay=60)
     def create(self, event_id: str, data: dict) -> None:
-        event = Event.objects.get(id=event_id)
+        try:
+            event = Event.objects.get(id=event_id)
+        except Event.DoesNotExist:
+            logger.error(f"Event {event_id} not found")
+            return
+
         payload = BulletinPayloadBuilder(event).build()
         logger.debug(f"Creating bulletin for event {event_id} with payload: {payload}")
 
@@ -40,7 +45,12 @@ class BulletinObserver(EventObserver):
     @delay(60)
     @retry(initial_delay=60)
     def update(self, event_id: str, data: dict, **options) -> None:
-        event = Event.objects.get(id=event_id)
+        try:
+            event = Event.objects.get(id=event_id)
+        except Event.DoesNotExist:
+            logger.error(f"Event {event_id} not found")
+            return
+
         payload = BulletinPayloadBuilder(event).build()
         logger.debug(f"Updating bulletin for event {event_id} with payload: {payload}")
 

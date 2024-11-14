@@ -1,4 +1,3 @@
-import io
 from pathlib import Path
 from typing import Any
 
@@ -6,9 +5,9 @@ from django.core.management.base import BaseCommand, CommandParser
 from django.db import connection
 from obspy import Trace, read
 
+from waveview.inventory.datastream import prepare_buffer
 from waveview.inventory.db.schema import TimescaleSchemaEditor
 from waveview.inventory.models import Channel
-from waveview.inventory.datastream import prepare_buffer
 
 
 class Command(BaseCommand):
@@ -20,13 +19,10 @@ class Command(BaseCommand):
             "--stream_id", type=str, help="Stream ID, e.g. 'IU.ANMO.00.BHZ'."
         )
         parser.add_argument(
-            "--reclen", type=int, default=512, help="MiniSeed record length."
-        )
-        parser.add_argument(
             "--chunksize",
             type=int,
-            default=1,
-            help="Chunksize in multiples of the record length.",
+            default=4,
+            help="Chunksize of the window in seconds.",
         )
         parser.add_argument(
             "--print-info", action="store_true", help="Print trace information."
@@ -63,33 +59,34 @@ class Command(BaseCommand):
             self.stderr.write(self.style.ERROR("Stream ID or table name is missing."))
             return
 
-        reclen: int = options["reclen"]
-        chunksize: int = options["chunksize"]
-        size = reclen * chunksize
         schema = TimescaleSchemaEditor(connection)
+        chunksize = options["chunksize"]
+        nbytes: int = 0
+        compressed: int = 0
 
-        nbytes = 0
-        compressed = 0
-        with io.open(path, "rb") as f:
-            while True:
-                with io.BytesIO() as chunk:
-                    c = f.read(size)
-                    if not c:
-                        break
-                    chunk.write(c)
-                    chunk.seek(0, 0)
-                    stream = read(chunk)
+        st = read(path, format="mseed")
+        for trace in st:
+            trace: Trace
+            starttime = trace.stats.starttime
+            endtime = trace.stats.endtime
 
-                for trace in stream:
-                    trace: Trace
-                    st, et, sr, dtype, buf = prepare_buffer(trace)
-                    schema.insert(table, st, et, sr, dtype, buf)
+            while starttime < endtime:
+                chunk_start = starttime
+                chunk_end = starttime + chunksize
+                if chunk_end > endtime:
+                    chunk_end = endtime
 
-                    nbytes += trace.data.nbytes
-                    compressed += len(buf)
+                chunk = trace.slice(chunk_start, chunk_end)
+                st, et, sr, dtype, buf = prepare_buffer(chunk)
+                schema.insert(table, st, et, sr, dtype, buf)
 
-                    if print_info:
-                        self.stdout.write(trace)
+                nbytes += chunk.data.nbytes
+                compressed += len(buf)
+
+                if print_info:
+                    self.stdout.write(trace)
+
+                starttime = chunk_end
 
         self.stdout.write(
             "Data loaded: {:,} bytes, compressed: {:,} bytes.".format(

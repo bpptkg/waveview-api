@@ -25,7 +25,7 @@ class BulletinObserver(EventObserver):
     name = "bma.bulletin"
 
     @delay(60)
-    @retry(initial_delay=60)
+    @retry(initial_delay=10)
     def create(self, event_id: str, data: dict) -> None:
         try:
             event = Event.objects.get(id=event_id)
@@ -43,7 +43,7 @@ class BulletinObserver(EventObserver):
         logger.info(f"Bulletin created for event {event_id}")
 
     @delay(60)
-    @retry(initial_delay=60)
+    @retry(initial_delay=10)
     def update(self, event_id: str, data: dict, **options) -> None:
         try:
             event = Event.objects.get(id=event_id)
@@ -65,7 +65,7 @@ class BulletinObserver(EventObserver):
 
         logger.info(f"Bulletin updated for event {event_id}")
 
-    @retry(initial_delay=60)
+    @retry(initial_delay=10)
     def delete(self, event_id: str, data: dict, **options) -> None:
         conf = BulletinData.from_dict(data)
         client = BulletinClient(conf.server_url, conf.token)

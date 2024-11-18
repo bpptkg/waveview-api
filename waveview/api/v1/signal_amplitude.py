@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.appconfig.models import PickerConfig
-from waveview.appconfig.models.picker import PickerConfigData
+from waveview.appconfig.models.picker import ChannelConfigData, PickerConfigData
 from waveview.event.amplitude import SignalAmplitude, amplitude_registry
 from waveview.event.header import AmplitudeCategory, AmplitudeUnit
 
@@ -87,52 +87,41 @@ class SignalAmplitudeEndpoint(Endpoint):
 
         amplitudes: list[SignalAmplitude] = []
 
-        def calculate_amplitude(channel_id: str) -> SignalAmplitude:
-            return calculator.calc(
+        def calculate_amplitude(channel: ChannelConfigData) -> SignalAmplitude:
+            """
+            Calculate the amplitude of the event for a single channel.
+            """
+            ampl = calculator.calc(
                 time,
                 duration,
-                channel_id,
+                channel.channel_id,
                 organization_id,
                 use_outlier_filter=use_outlier_filter,
             )
+            if channel.is_analog:
+                slope = channel.slope or 1
+                offset = channel.offset or 0
+                return SignalAmplitude(
+                    time=time,
+                    duration=duration,
+                    amplitude=ampl.amplitude * slope + offset,
+                    method=method,
+                    category=AmplitudeCategory.DURATION,
+                    unit=AmplitudeUnit.MM,
+                    stream_id=channel.label,
+                    channel_id=channel.channel_id,
+                    label=channel.label,
+                )
+            return ampl
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(calculate_amplitude, channel.channel_id)
+                executor.submit(calculate_amplitude, channel)
                 for channel in data.amplitude_config.channels
-                if not channel.is_analog
             ]
             for future in concurrent.futures.as_completed(futures):
                 ampl = future.result()
                 amplitudes.append(ampl)
-
-        def calc_analog_amplitude(
-            channel_id: str, slope: float, offset: float
-        ) -> float:
-            filtered = list(filter(lambda x: x.channel_id == channel_id, amplitudes))
-            if not filtered:
-                return 0
-            ampl: SignalAmplitude = filtered[0]
-            return ampl.amplitude * slope + offset
-
-        for channel in data.amplitude_config.channels:
-            if not channel.is_analog:
-                continue
-            slope = channel.slope or 1
-            offset = channel.offset or 0
-            amplitude = calc_analog_amplitude(channel.channel_id, slope, offset)
-            ampl = SignalAmplitude(
-                time=time,
-                duration=duration,
-                amplitude=amplitude,
-                method=method,
-                category=AmplitudeCategory.DURATION,
-                unit=AmplitudeUnit.MM,
-                stream_id=channel.label,
-                channel_id=channel.channel_id,
-                label=channel.label,
-            )
-            amplitudes.append(ampl)
 
         return Response(
             SignalAmplitudeSerializer(

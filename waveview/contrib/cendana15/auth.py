@@ -42,9 +42,8 @@ class Cendana15Backend(BaseBackend):
         try:
             self.get_jwt_token(username, password)
         except requests.HTTPError as e:
-            if e.response.status_code == 401:
-                return None
-            raise
+            logger.error(f"Failed to authenticate user {username}: {e}")
+            return None
         cendana15_user = self.get_user_info(username)
 
         try:

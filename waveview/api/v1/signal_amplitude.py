@@ -53,6 +53,7 @@ class SignalAmplitudeEndpoint(Endpoint):
             """
         ),
         tags=["Signal"],
+        request_body=SignalAmplitudePayloadSerializer,
         responses={
             status.HTTP_200_OK: openapi.Response(
                 "OK", SignalAmplitudeSerializer(many=True)

@@ -34,7 +34,7 @@ class BulletinObserver(EventObserver):
             return
 
         payload = BulletinPayloadBuilder(event).build()
-        logger.debug(f"Creating bulletin for event {event_id} with payload: {payload}")
+        logger.info(f"Creating bulletin for event {event_id} with payload: {payload}")
 
         conf = BulletinData.from_dict(data)
         client = BulletinClient(conf.server_url, conf.token)
@@ -52,7 +52,7 @@ class BulletinObserver(EventObserver):
             return
 
         payload = BulletinPayloadBuilder(event).build()
-        logger.debug(f"Updating bulletin for event {event_id} with payload: {payload}")
+        logger.info(f"Updating bulletin for event {event_id} with payload: {payload}")
 
         conf = BulletinData.from_dict(data)
         client = BulletinClient(conf.server_url, conf.token)

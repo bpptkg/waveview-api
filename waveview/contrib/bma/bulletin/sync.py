@@ -28,14 +28,20 @@ class BulletinSynchronizer:
         payload = BulletinPayloadBuilder(event).build()
         event_id = event.id.hex
         logger.info(f"Uploading bulletin for event {event.id} with payload: {payload}")
-        self.client.update(event_id, payload)
-        logger.info(f"Bulletin uploaded for event {event.id}")
+        if not dry_run:
+            self.client.update(event_id, payload)
+            logger.info(f"Bulletin uploaded for event {event.id}")
+        else:
+            logger.info(f"Would upload bulletin for event {event.id}")
 
     def delete(self, event: Event, dry_run: bool = False) -> None:
         event_id = event.id.hex
         logger.info(f"Deleting bulletin for event {event.id}")
-        self.client.delete(event_id)
-        logger.info(f"Bulletin deleted for event {event.id}")
+        if not dry_run:
+            self.client.delete(event_id)
+            logger.info(f"Bulletin deleted for event {event.id}")
+        else:
+            logger.info(f"Would delete bulletin for event {event.id}")
 
     def sync_by_id(self, event_id: str, dry_run: bool = False) -> None:
         catalog = self.context.catalog

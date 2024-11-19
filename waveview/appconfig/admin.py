@@ -51,3 +51,4 @@ class EventObserverConfigAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    ordering = ("order",)

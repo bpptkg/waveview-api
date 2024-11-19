@@ -29,6 +29,14 @@ class EventObserverConfig(models.Model):
         help_text=_("Configuration data for the event observer."),
     )
     is_enabled = models.BooleanField(default=True)
+    order = models.IntegerField(
+        default=0,
+        help_text=_("Order of the event observer in the list of observers."),
+    )
+    run_async = models.BooleanField(
+        default=False,
+        help_text=_("Run the event observer asynchronously using Celery."),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(

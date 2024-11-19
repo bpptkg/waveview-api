@@ -28,13 +28,19 @@ def notify_event_observer(
             names = [names]
         else:
             names = list(names)
-        items = EventObserverConfig.objects.filter(
-            volcano_id=volcano_id, name__in=names, is_enabled=True
-        ).all()
+        items = (
+            EventObserverConfig.objects.filter(
+                volcano_id=volcano_id, name__in=names, is_enabled=True
+            )
+            .order_by("order")
+            .all()
+        )
     else:
-        items = EventObserverConfig.objects.filter(
-            volcano_id=volcano_id, is_enabled=True
-        ).all()
+        items = (
+            EventObserverConfig.objects.filter(volcano_id=volcano_id, is_enabled=True)
+            .order_by("order")
+            .all()
+        )
 
     for item in items:
         if not observer_registry.has(item.name):
@@ -43,21 +49,35 @@ def notify_event_observer(
             )
             continue
         adapter = observer_registry.get(item.name)()
-        if operation == OperationType.CREATE:
-            exec_async(
-                adapter.create,
-                args=(event_id, item.data),
-                kwargs=options,
-            )
-        elif operation == OperationType.UPDATE:
-            exec_async(
-                adapter.update,
-                args=(event_id, item.data),
-                kwargs=options,
-            )
-        elif operation == OperationType.DELETE:
-            exec_async(
-                adapter.delete,
-                args=(event_id, item.data),
-                kwargs=options,
+        try:
+            if operation == OperationType.CREATE:
+                if item.run_async:
+                    exec_async.delay(
+                        adapter.create,
+                        args=(event_id, item.data),
+                        kwargs=options,
+                    )
+                else:
+                    adapter.create(event_id, item.data, **options)
+            elif operation == OperationType.UPDATE:
+                if item.run_async:
+                    exec_async.delay(
+                        adapter.update,
+                        args=(event_id, item.data),
+                        kwargs=options,
+                    )
+                else:
+                    adapter.update(event_id, item.data, **options)
+            elif operation == OperationType.DELETE:
+                if item.run_async:
+                    exec_async.delay(
+                        adapter.delete,
+                        args=(event_id, item.data),
+                        kwargs=options,
+                    )
+                else:
+                    adapter.delete(event_id, item.data, **options)
+        except Exception as e:
+            logger.error(
+                f"Error notifying event observer {item.name} for event {event_id}: {e}"
             )

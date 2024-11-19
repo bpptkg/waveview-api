@@ -6,7 +6,6 @@ from waveview.contrib.bma.bulletin.payload import BulletinPayloadBuilder
 from waveview.contrib.bma.bulletin.types import BulletinData
 from waveview.event.models import Event
 from waveview.event.observers import EventObserver
-from waveview.utils.delay import delay
 from waveview.utils.retry import retry
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,6 @@ class BulletinObserver(EventObserver):
 
     name = "bma.bulletin"
 
-    @delay(60)
     @retry(initial_delay=5)
     def create(self, event_id: str, data: dict) -> None:
         try:
@@ -42,7 +40,6 @@ class BulletinObserver(EventObserver):
 
         logger.info(f"Bulletin created for event {event_id}")
 
-    @delay(60)
     @retry(initial_delay=5)
     def update(self, event_id: str, data: dict, **options) -> None:
         try:

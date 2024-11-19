@@ -12,6 +12,8 @@ class BulletinPayloadBuilder:
 
     def __init__(self, event: Event) -> None:
         self.event = event
+        self.analog_method = "analog"
+        self.digital_method = "bpptkg"
 
     def _get_amplitude(self) -> str | None:
         try:
@@ -19,7 +21,7 @@ class BulletinPayloadBuilder:
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(
-            event=self.event, waveform=channel, unit=AmplitudeUnit.MM.label
+            event=self.event, waveform=channel, method=self.analog_method
         ).first()
         if amplitude is None:
             return None
@@ -31,7 +33,7 @@ class BulletinPayloadBuilder:
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(
-            event=self.event, waveform=channel, unit=AmplitudeUnit.UM.label
+            event=self.event, waveform=channel, method=self.digital_method
         ).first()
         if amplitude is None:
             return None
@@ -46,7 +48,7 @@ class BulletinPayloadBuilder:
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(
-            event=self.event, waveform=channel, unit=AmplitudeUnit.UM.label
+            event=self.event, waveform=channel, method=self.digital_method
         ).first()
         if amplitude is None:
             return None
@@ -61,7 +63,7 @@ class BulletinPayloadBuilder:
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(
-            event=self.event, waveform=channel, unit=AmplitudeUnit.UM.label
+            event=self.event, waveform=channel, method=self.digital_method
         ).first()
         if amplitude is None:
             return None
@@ -76,7 +78,7 @@ class BulletinPayloadBuilder:
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(
-            event=self.event, waveform=channel, unit=AmplitudeUnit.UM.label
+            event=self.event, waveform=channel, method=self.digital_method
         ).first()
         if amplitude is None:
             return None

@@ -19,7 +19,7 @@ class BulletinPayloadBuilder:
             channel = Channel.objects.get_by_stream_id("VG.MEDEL.00.HHZ")
         except Channel.DoesNotExist:
             return None
-        amplitude = Amplitude.objects.filter(waveform=channel).first()
+        amplitude = Amplitude.objects.filter(event=self.event, waveform=channel).first()
         if amplitude is None:
             return None
         station_magnitude = StationMagnitude.objects.filter(amplitude=amplitude).first()
@@ -32,7 +32,7 @@ class BulletinPayloadBuilder:
             channel = Channel.objects.get_by_stream_id("VG.MELAB.00.HHZ")
         except Channel.DoesNotExist:
             return None
-        amplitude = Amplitude.objects.filter(waveform=channel).first()
+        amplitude = Amplitude.objects.filter(event=self.event, waveform=channel).first()
         if amplitude is None:
             return None
         station_magnitude = StationMagnitude.objects.filter(amplitude=amplitude).first()
@@ -45,7 +45,7 @@ class BulletinPayloadBuilder:
             channel = Channel.objects.get_by_stream_id("VG.MEPAS.00.HHZ")
         except Channel.DoesNotExist:
             return None
-        amplitude = Amplitude.objects.filter(waveform=channel).first()
+        amplitude = Amplitude.objects.filter(event=self.event, waveform=channel).first()
         if amplitude is None:
             return None
         station_magnitude = StationMagnitude.objects.filter(amplitude=amplitude).first()
@@ -58,7 +58,7 @@ class BulletinPayloadBuilder:
             channel = Channel.objects.get_by_stream_id("VG.MEPUS.00.EHZ")
         except Channel.DoesNotExist:
             return None
-        amplitude = Amplitude.objects.filter(waveform=channel).first()
+        amplitude = Amplitude.objects.filter(event=self.event, waveform=channel).first()
         if amplitude is None:
             return None
         station_magnitude = StationMagnitude.objects.filter(amplitude=amplitude).first()
@@ -126,11 +126,11 @@ class BulletinPayloadBuilder:
         latitude: float = self._get_latitude()
         depth: float = self._get_depth()
 
-        eventtype: str = event.type.code
+        eventtype: str = str(event.type.code)
         seiscompid: str | None = self._get_seiscompid()
         valid: int = 1
         projection: str = "WGS84"
-        operator: str = event.author.username
+        operator: str = str(event.author.username)
         timestamp: str = self._format_time(event.updated_at)
         timestamp_microsecond: int = self._get_microsecond(event.updated_at)
         count_deles: int = 0

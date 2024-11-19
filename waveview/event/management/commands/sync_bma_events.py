@@ -58,14 +58,16 @@ class Command(BaseCommand):
             end = timezone.now()
         else:
             end = parse(end)
-            end = timezone.make_aware(end)
+            if not timezone.is_aware(end):
+                end = timezone.make_aware(end)
 
         start = options["start"]
         if start is None:
             start = end - timezone.timedelta(days=3)
         else:
             start = parse(start)
-            start = timezone.make_aware(start)
+            if not timezone.is_aware(start):
+                start = timezone.make_aware(start)
 
         dry_run = options["dry_run"]
         event_id = options["event_id"]

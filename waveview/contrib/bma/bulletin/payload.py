@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from waveview.event.models import Amplitude, Event, StationMagnitude
+from waveview.event.header import AmplitudeUnit
 from waveview.inventory.models import Channel
 
 
@@ -19,7 +20,9 @@ class BulletinPayloadBuilder:
             channel = Channel.objects.get_by_stream_id("VG.MEDEL.00.HHZ")
         except Channel.DoesNotExist:
             return None
-        amplitude = Amplitude.objects.filter(event=self.event, waveform=channel).first()
+        amplitude = Amplitude.objects.filter(
+            event=self.event, waveform=channel, unit=AmplitudeUnit.UM.label
+        ).first()
         if amplitude is None:
             return None
         station_magnitude = StationMagnitude.objects.filter(amplitude=amplitude).first()
@@ -32,7 +35,9 @@ class BulletinPayloadBuilder:
             channel = Channel.objects.get_by_stream_id("VG.MELAB.00.HHZ")
         except Channel.DoesNotExist:
             return None
-        amplitude = Amplitude.objects.filter(event=self.event, waveform=channel).first()
+        amplitude = Amplitude.objects.filter(
+            event=self.event, waveform=channel, unit=AmplitudeUnit.UM.label
+        ).first()
         if amplitude is None:
             return None
         station_magnitude = StationMagnitude.objects.filter(amplitude=amplitude).first()
@@ -45,7 +50,9 @@ class BulletinPayloadBuilder:
             channel = Channel.objects.get_by_stream_id("VG.MEPAS.00.HHZ")
         except Channel.DoesNotExist:
             return None
-        amplitude = Amplitude.objects.filter(event=self.event, waveform=channel).first()
+        amplitude = Amplitude.objects.filter(
+            event=self.event, waveform=channel, unit=AmplitudeUnit.UM.label
+        ).first()
         if amplitude is None:
             return None
         station_magnitude = StationMagnitude.objects.filter(amplitude=amplitude).first()
@@ -58,7 +65,9 @@ class BulletinPayloadBuilder:
             channel = Channel.objects.get_by_stream_id("VG.MEPUS.00.EHZ")
         except Channel.DoesNotExist:
             return None
-        amplitude = Amplitude.objects.filter(event=self.event, waveform=channel).first()
+        amplitude = Amplitude.objects.filter(
+            event=self.event, waveform=channel, unit=AmplitudeUnit.UM.label
+        ).first()
         if amplitude is None:
             return None
         station_magnitude = StationMagnitude.objects.filter(amplitude=amplitude).first()

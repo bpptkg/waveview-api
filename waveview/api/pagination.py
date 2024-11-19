@@ -1,4 +1,4 @@
-import typing
+from typing import Optional
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework.pagination import PageNumberPagination
@@ -23,19 +23,19 @@ class FlexiblePageNumberPagination(PageNumberPagination):
     )
     max_page_size = 500
 
-    def get_page_size(self, request: Request) -> typing.Optional[int]:
+    def get_page_size(self, request: Request) -> Optional[int]:
         if request.query_params.get(self.page_query_param):
             return super().get_page_size(request)
         return None
 
-    def get_next_link(self):
+    def get_next_link(self) -> Optional[str]:
         if not self.page.has_next():
             return None
         url = self.request.get_full_path()
         page_number = self.page.next_page_number()
         return replace_query_param(url, self.page_query_param, page_number)
 
-    def get_previous_link(self):
+    def get_previous_link(self) -> Optional[str]:
         if not self.page.has_previous():
             return None
         url = self.request.get_full_path()
@@ -62,14 +62,14 @@ class StrictPageNumberPagination(PageNumberPagination):
     )
     max_page_size = 500
 
-    def get_next_link(self):
+    def get_next_link(self) -> Optional[str]:
         if not self.page.has_next():
             return None
         url = self.request.get_full_path()
         page_number = self.page.next_page_number()
         return replace_query_param(url, self.page_query_param, page_number)
 
-    def get_previous_link(self):
+    def get_previous_link(self) -> Optional[str]:
         if not self.page.has_previous():
             return None
         url = self.request.get_full_path()

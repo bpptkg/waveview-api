@@ -55,7 +55,7 @@ class BulletinPayloadBuilder:
 
     def _get_ml_pusunglondon(self) -> float | None:
         try:
-            channel = Channel.objects.get_by_stream_id("VG.MEPUS.HHZ")
+            channel = Channel.objects.get_by_stream_id("VG.MEPUS.EHZ")
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(waveform=channel).first()

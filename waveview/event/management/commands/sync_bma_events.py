@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from dateutil.parser import parse
@@ -14,6 +15,8 @@ from waveview.contrib.bma.bulletin.types import BulletinData
 from waveview.event.models import Catalog
 from waveview.organization.models import Organization
 from waveview.volcano.models import Volcano
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -42,8 +45,15 @@ class Command(BaseCommand):
             type=str,
             help="Run for certain Event ID only.",
         )
+        parser.add_argument(
+            "--hours",
+            type=int,
+            help="Number of hours since now to fetch events.",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
+        first = parse("2024-11-18T05:00:00Z")
+
         org_slug = options["org"]
         if not org_slug:
             self.stderr.write("Organization slug is required.")
@@ -63,7 +73,7 @@ class Command(BaseCommand):
 
         start = options["start"]
         if start is None:
-            start = end - timezone.timedelta(days=3)
+            start = end - timezone.timedelta(days=1)
         else:
             start = parse(start)
             if not timezone.is_aware(start):
@@ -71,6 +81,11 @@ class Command(BaseCommand):
 
         dry_run = options["dry_run"]
         event_id = options["event_id"]
+        hours = options["hours"]
+        if hours:
+            start = end - timezone.timedelta(hours=hours)
+        if start < first:
+            start = first
 
         try:
             organization = Organization.objects.get(slug=org_slug)
@@ -98,6 +113,10 @@ class Command(BaseCommand):
             self.stderr.write("Event observer config 'bma.bulletin' does not exist.")
             return
 
+        logger.info(
+            f"Syncing BMA bulletin events for {organization} ({volcano}) from {start} to {end}..."
+        )
+
         data = BulletinData.from_dict(config.data)
         client = BulletinClient(data.server_url, data.token)
         context = BulletinSynchronizerContext(
@@ -111,3 +130,5 @@ class Command(BaseCommand):
             synchronizer.sync_by_id(event_id, dry_run=dry_run)
         else:
             synchronizer.sync_in_range(start, end, dry_run=dry_run)
+
+        logger.info("Done.")

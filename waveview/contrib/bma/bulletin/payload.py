@@ -1,19 +1,29 @@
 from datetime import datetime
 
-from waveview.event.models import Amplitude, Event, StationMagnitude
 from waveview.event.header import AmplitudeUnit
+from waveview.event.models import Amplitude, Event, StationMagnitude
 from waveview.inventory.models import Channel
 
 
 class BulletinPayloadBuilder:
+    """
+    Build payload from WaveView event object to be sent to BMA bulletin system.
+    """
+
     def __init__(self, event: Event) -> None:
         self.event = event
 
     def _get_amplitude(self) -> str | None:
-        preferred_amplitude = self.event.preferred_amplitude()
-        if preferred_amplitude is not None:
-            return f"{preferred_amplitude.amplitude:.2f}{preferred_amplitude.unit}"
-        return None
+        try:
+            channel = Channel.objects.get_by_stream_id("VG.MEPUS.00.EHZ")
+        except Channel.DoesNotExist:
+            return None
+        amplitude = Amplitude.objects.filter(
+            event=self.event, waveform=channel, unit=AmplitudeUnit.MM.label
+        ).first()
+        if amplitude is None:
+            return None
+        return f"{amplitude.amplitude:.2f}"
 
     def _get_ml_deles(self) -> float | None:
         try:

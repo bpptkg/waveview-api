@@ -16,7 +16,7 @@ class BulletinPayloadBuilder:
 
     def _get_ml_deles(self) -> float | None:
         try:
-            channel = Channel.objects.get_by_stream_id("VG.MEDEL.HHZ")
+            channel = Channel.objects.get_by_stream_id("VG.MEDEL.00.HHZ")
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(waveform=channel).first()
@@ -29,7 +29,7 @@ class BulletinPayloadBuilder:
 
     def _get_ml_labuhan(self) -> float | None:
         try:
-            channel = Channel.objects.get_by_stream_id("VG.MELAB.HHZ")
+            channel = Channel.objects.get_by_stream_id("VG.MELAB.00.HHZ")
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(waveform=channel).first()
@@ -42,7 +42,7 @@ class BulletinPayloadBuilder:
 
     def _get_ml_pasarbubar(self) -> float | None:
         try:
-            channel = Channel.objects.get_by_stream_id("VG.MEPAS.HHZ")
+            channel = Channel.objects.get_by_stream_id("VG.MEPAS.00.HHZ")
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(waveform=channel).first()
@@ -55,7 +55,7 @@ class BulletinPayloadBuilder:
 
     def _get_ml_pusunglondon(self) -> float | None:
         try:
-            channel = Channel.objects.get_by_stream_id("VG.MEPUS.EHZ")
+            channel = Channel.objects.get_by_stream_id("VG.MEPUS.00.EHZ")
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(waveform=channel).first()

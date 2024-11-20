@@ -1,4 +1,3 @@
-import tempfile
 import unittest
 import uuid
 from datetime import timedelta
@@ -28,12 +27,10 @@ class TestStreamGap(unittest.TestCase):
         st.append(tr)
         self.assertEqual(len(st.get_gaps()), 1)
 
-        path = tempfile.gettempdir() + "/temp.mseed"
         st.merge(method=1, fill_value=0)
-        st.write(path, format="MSEED")
 
         datastream = DataStream(connection)
-        datastream.load_stream(table, path)
+        datastream.load_stream(st, table=table)
 
         start = st[0].stats.starttime.datetime - timedelta(hours=1)
         end = st[0].stats.endtime.datetime + timedelta(hours=1)

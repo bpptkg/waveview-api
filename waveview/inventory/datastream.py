@@ -1,6 +1,4 @@
-import io
 import logging
-import zlib
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -8,7 +6,7 @@ import numpy as np
 import psycopg2
 import zstandard as zstd
 from django.utils import timezone
-from obspy import Stream, Trace, UTCDateTime, read
+from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 
 from waveview.inventory.db.schema import TimescaleSchemaEditor
@@ -102,64 +100,95 @@ class DataStream:
     def get_waveform(
         self, channel_id: UUIDType, start: datetime, end: datetime
     ) -> Stream:
+        """
+        Get waveform data for a given channel and time range.
+
+        Parameters
+        ----------
+        channel_id : UUIDType
+            Channel ID.
+        start : datetime
+            Start time of the waveform data to retrieve in UTC.
+        end : datetime
+            End time of the waveform data to retrieve in UTC.
+
+        Returns
+        -------
+        Stream
+            ObsPy Stream object containing waveform data.
+        """
+
         try:
             channel = Channel.objects.get(id=channel_id)
         except Channel.DoesNotExist:
             raise ValueError(f"Channel {channel_id} does not exist")
 
-        table = channel.get_datastream_id()
         # Add buffer in seconds to start and end time to ensure we get all the
         # chunks of data within the range.
-        buffer = 8
-        rows = self.db.query(
-            table, start - timedelta(seconds=buffer), end + timedelta(seconds=buffer)
-        )
+        buffer = timedelta(seconds=8)
+        table = channel.get_datastream_id()
+        rows = self.db.query(table, start - buffer, end + buffer)
         st = build_traces(rows, channel)
-        st.trim(starttime=UTCDateTime(start), endtime=(UTCDateTime(end)))
+        st.trim(starttime=UTCDateTime(start), endtime=UTCDateTime(end))
         return st
 
-    def insert_stream(self, stream: Stream) -> None:
-        for trace in stream:
-            self.insert_trace(trace)
-
-    def insert_trace(self, trace: Trace) -> None:
-        network = trace.stats.network
-        station = trace.stats.station
-        channel = trace.stats.channel
-        sample_rate = trace.stats.sampling_rate
-        dtype = str(trace.data.dtype)
-        buf = zlib.compress(trace.data.tobytes())
-        obj = Channel.objects.filter(
-            code=channel, station__code=station, station__network__code=network
-        ).first()
-        if not obj:
-            logger.error(f"Channel {network}.{station}.{channel} not found.")
-            return
-        table = obj.get_datastream_id()
-        st, et, sample_rate, dtype, buf = prepare_buffer(trace)
-        self.db.insert(table, st, et, sample_rate, dtype, buf)
-
     def load_stream(
-        self, table: str, path: str, reclen: int = 512, chunksize: int = 1
+        self,
+        stream: Stream,
+        chunksize: float = 2,
+        table: str = None,
+        print_stats: bool = False,
     ) -> None:
-        size = reclen * chunksize
+        """
+        Load a stream of data into the database.
 
-        nbytes = 0
-        compressed = 0
-        with io.open(path, "rb") as f:
-            while True:
-                with io.BytesIO() as chunk:
-                    c = f.read(size)
-                    if not c:
-                        break
-                    chunk.write(c)
-                    chunk.seek(0, 0)
-                    stream = read(chunk)
+        Parameters
+        ----------
+        stream : Stream
+            ObsPy Stream object containing traces to be loaded.
+        chunksize : float, optional
+            Chunk size in seconds. Default is 2 seconds.
+        table : str, optional
+            Table name to insert data into. If not provided, the table name
+            will be fetched from the channel object. Default is None.
+        print_stats : bool, optional
+            Print data load statistics. Default is False.
+        """
+        nbytes: int = 0
+        compressed: int = 0
 
-                for trace in stream:
-                    trace: Trace
-                    st, et, sr, dtype, buf = prepare_buffer(trace)
-                    self.db.insert(table, st, et, sr, dtype, buf)
+        for trace in stream:
+            trace: Trace
+            stream_id = trace.id
+            if table is None:
+                try:
+                    channel = Channel.objects.get_by_stream_id(stream_id)
+                except Channel.DoesNotExist:
+                    logger.warning(f"Channel {stream_id} not found. Skipping.")
+                    continue
+                table = channel.get_datastream_id()
 
-                    nbytes += trace.data.nbytes
-                    compressed += len(buf)
+            starttime = trace.stats.starttime
+            endtime = trace.stats.endtime
+
+            while starttime < endtime:
+                chunk_start = starttime
+                chunk_end = starttime + chunksize
+                if chunk_end > endtime:
+                    chunk_end = endtime
+
+                chunk = trace.slice(chunk_start, chunk_end)
+                st, et, sr, dtype, buf = prepare_buffer(chunk)
+                self.db.insert(table, st, et, sr, dtype, buf)
+
+                nbytes += chunk.data.nbytes
+                compressed += len(buf)
+
+                starttime = chunk_end
+
+        if print_stats:
+            logger.info(
+                f"Data loaded: {nbytes:,} bytes, compressed: {compressed:,} bytes."
+            )
+            compression_ratio = (compressed / nbytes) * 100
+            logger.info(f"Compression ratio: {compression_ratio:.2f}%")

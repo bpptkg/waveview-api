@@ -26,6 +26,8 @@ class StreamConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, code: int) -> None:
         for channel_id in self.subscribed_channels:
             await self.channel_layer.group_discard(channel_id, self.channel_name)
+        self.subscribed_channels.clear()
+        await self.close()
 
     async def receive(self, text_data: str) -> None:
         request: WebSocketRequest = WebSocketRequest.parse_raw(text_data)

@@ -29,6 +29,7 @@ class WaveViewConsumer(AsyncJsonWebsocketConsumer):
             return
         if user.is_authenticated:
             self.channel_layer.group_discard(user_channel(user.pk), self.channel_name)
+        await self.close()
 
     async def notify(self, event: MessageEvent[dict]) -> None:
         response = WebSocketResponse(

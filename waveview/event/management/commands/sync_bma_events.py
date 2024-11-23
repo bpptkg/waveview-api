@@ -55,11 +55,6 @@ class Command(BaseCommand):
             action="store_true",
             help="Print information only.",
         )
-        parser.add_argument(
-            "--event-types",
-            nargs="+",
-            help="Event types to filter.",
-        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         first = parse("2024-11-18T05:00:00Z")
@@ -92,7 +87,6 @@ class Command(BaseCommand):
         dry_run = options["dry_run"]
         event_id = options["event_id"]
         info_only = options["info_only"]
-        event_types = options["event_types"]
         hours = options["hours"]
         if hours:
             start = end - timezone.timedelta(hours=hours)
@@ -146,7 +140,6 @@ class Command(BaseCommand):
                 end,
                 dry_run=dry_run,
                 info_only=info_only,
-                event_types=event_types,
             )
 
         logger.info("Done.")

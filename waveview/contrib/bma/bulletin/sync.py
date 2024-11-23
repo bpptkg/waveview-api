@@ -54,20 +54,11 @@ class BulletinSynchronizer:
         end: datetime,
         dry_run: bool = False,
         info_only: bool = False,
-        event_types: list[str] = None,
     ) -> None:
         catalog = self.context.catalog
-        if event_types:
-            events = Event.objects.filter(
-                catalog=catalog,
-                time__gte=start,
-                time__lt=end,
-                type__code__in=event_types,
-            ).all()
-        else:
-            events = Event.objects.filter(
-                catalog=catalog, time__gte=start, time__lt=end
-            ).all()
+        events = Event.objects.filter(
+            catalog=catalog, time__gte=start, time__lt=end
+        ).all()
 
         logger.info(f"Found {len(events)} events to sync")
         if not info_only:

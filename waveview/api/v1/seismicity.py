@@ -3,6 +3,7 @@ from typing import TypedDict
 from uuid import UUID
 
 import pandas as pd
+import pytz
 from django.db import models
 from django.db.models import Case, Count, When
 from django.db.models.functions import TruncDay, TruncHour
@@ -10,7 +11,6 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
-from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -57,6 +57,11 @@ class QueryParamsSerializer(serializers.Serializer):
     )
     fill_gaps = serializers.BooleanField(
         required=False, default=False, help_text="Whether to fill the gaps in the data."
+    )
+    timezone = serializers.CharField(
+        required=False,
+        default="UTC",
+        help_text="Timezone to use for the query. Default is UTC.",
     )
 
 
@@ -121,11 +126,13 @@ class SeismicityEndpoint(Endpoint):
 
         params = QueryParamsSerializer(data=request.query_params)
         params.is_valid(raise_exception=True)
-        start = params.validated_data.get("start")
-        end = params.validated_data.get("end")
-        group_by = params.validated_data.get("group_by")
-        event_types = params.validated_data.get("event_types")
-        fill_gaps = params.validated_data.get("fill_gaps")
+        start: datetime = params.validated_data.get("start")
+        end: datetime = params.validated_data.get("end")
+        group_by: str = params.validated_data.get("group_by")
+        event_types: list[str] | None = params.validated_data.get("event_types")
+        fill_gaps: bool = params.validated_data.get("fill_gaps")
+        timezone: str = params.validated_data.get("timezone")
+        tzinfo = pytz.timezone(timezone)
 
         if event_types:
             types = EventType.objects.filter(
@@ -158,13 +165,13 @@ class SeismicityEndpoint(Endpoint):
             )
             if group_by == GroupByType.HOUR:
                 seismicity = (
-                    queryset.annotate(timestamp=TruncHour("time"))
+                    queryset.annotate(timestamp=TruncHour("time", tzinfo=tzinfo))
                     .values("timestamp")
                     .annotate(count=Count("id"))
                 ).order_by("timestamp")
             elif group_by == GroupByType.DAY:
                 seismicity = (
-                    queryset.annotate(timestamp=TruncDay("time"))
+                    queryset.annotate(timestamp=TruncDay("time", tzinfo=tzinfo))
                     .values("timestamp")
                     .annotate(count=Count("id"))
                 ).order_by("timestamp")
@@ -175,8 +182,8 @@ class SeismicityEndpoint(Endpoint):
                         {"timestamp": item["timestamp"], "count": item["count"]}
                         for item in seismicity
                     ],
-                    start,
-                    end,
+                    start.astimezone(tzinfo),
+                    end.astimezone(tzinfo),
                     group_by,
                 )
             else:
@@ -185,13 +192,9 @@ class SeismicityEndpoint(Endpoint):
             result.append({"event_type": event_type, "data": data})
 
         if group_by == GroupByType.HOUR:
-            serializer = SeismicityGroupByHourSerializer(
-                result, many=True, context={"request": request}
-            )
+            serializer = SeismicityGroupByHourSerializer(result, many=True)
         elif group_by == GroupByType.DAY:
-            serializer = SeismicityGroupByDaySerializer(
-                result, many=True, context={"request": request}
-            )
+            serializer = SeismicityGroupByDaySerializer(result, many=True)
         else:
             raise ValueError("Invalid group by type.")
         return Response(serializer.data, status=status.HTTP_200_OK)

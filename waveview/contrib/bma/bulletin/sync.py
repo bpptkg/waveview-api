@@ -49,15 +49,30 @@ class BulletinSynchronizer:
         self.update(event, dry_run=dry_run)
 
     def sync_in_range(
-        self, start: datetime, end: datetime, dry_run: bool = False
+        self,
+        start: datetime,
+        end: datetime,
+        dry_run: bool = False,
+        info_only: bool = False,
+        event_types: list[str] = None,
     ) -> None:
         catalog = self.context.catalog
-        events = Event.objects.filter(
-            catalog=catalog, time__gte=start, time__lt=end
-        ).all()
+        if event_types:
+            events = Event.objects.filter(
+                catalog=catalog,
+                time__gte=start,
+                time__lt=end,
+                type__code__in=event_types,
+            ).all()
+        else:
+            events = Event.objects.filter(
+                catalog=catalog, time__gte=start, time__lt=end
+            ).all()
+
         logger.info(f"Found {len(events)} events to sync")
-        for event in events:
-            self.update(event, dry_run=dry_run)
+        if not info_only:
+            for event in events:
+                self.update(event, dry_run=dry_run)
 
         remotes = self.client.list(start, end)
         remote_ids = {remote["eventid"] for remote in remotes}
@@ -65,9 +80,10 @@ class BulletinSynchronizer:
         diff = remote_ids - local_ids
         logger.info(f"Found {len(diff)} remote events to delete")
 
-        for event_id in diff:
-            if not dry_run:
-                self.client.delete(event_id)
-                logger.info(f"Deleted remote event {event_id}")
-            else:
-                logger.info(f"Would delete remote event {event_id}")
+        if not info_only:
+            for event_id in diff:
+                if not dry_run:
+                    self.client.delete(event_id)
+                    logger.info(f"Deleted remote event {event_id}")
+                else:
+                    logger.info(f"Would delete remote event {event_id}")

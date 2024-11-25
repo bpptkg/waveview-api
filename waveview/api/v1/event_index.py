@@ -23,8 +23,8 @@ from waveview.event.serializers import (
 )
 from waveview.notifications.types import NotifyEventData
 from waveview.organization.permissions import PermissionType
-from waveview.tasks.notify_event_observer import notify_event_observer
 from waveview.tasks.notify_event import notify_event
+from waveview.tasks.notify_event_observer import notify_event_observer
 
 
 class OrderingType(models.TextChoices):
@@ -33,13 +33,22 @@ class OrderingType(models.TextChoices):
 
 
 class ParamSerializer(serializers.Serializer):
-    start = serializers.DateTimeField(required=False)
-    end = serializers.DateTimeField(required=False)
-    event_types = CommaSeparatedListField(required=False)
-    ordering = serializers.ChoiceField(
-        required=False, choices=OrderingType.choices, default=OrderingType.DESC
+    start = serializers.DateTimeField(
+        required=False, help_text="Start date of the event."
     )
-    is_bookmarked = serializers.BooleanField(required=False)
+    end = serializers.DateTimeField(required=False, help_text="End date of the event.")
+    event_types = CommaSeparatedListField(
+        required=False, help_text="Event type codes to filter in comma separated list."
+    )
+    ordering = serializers.ChoiceField(
+        required=False,
+        choices=OrderingType.choices,
+        default=OrderingType.DESC,
+        help_text="Ordering of the events.",
+    )
+    is_bookmarked = serializers.BooleanField(
+        required=False, help_text="Filter events that are bookmarked by the user."
+    )
 
 
 class EventIndexEndpoint(Endpoint):
@@ -57,39 +66,7 @@ class EventIndexEndpoint(Endpoint):
         responses={
             status.HTTP_200_OK: openapi.Response("OK", EventSerializer(many=True)),
         },
-        manual_parameters=[
-            openapi.Parameter(
-                "start",
-                openapi.IN_QUERY,
-                description="Start date of the origin time of the event.",
-                type=openapi.TYPE_STRING,
-            ),
-            openapi.Parameter(
-                "end",
-                openapi.IN_QUERY,
-                description="End date of the origin time of the event",
-                type=openapi.TYPE_STRING,
-            ),
-            openapi.Parameter(
-                "event_types",
-                openapi.IN_QUERY,
-                description="Filter event by its type code. Multiple values are separated by comma.",
-                type=openapi.TYPE_STRING,
-            ),
-            openapi.Parameter(
-                "ordering",
-                openapi.IN_QUERY,
-                description="Ordering of the events. Default is descending.",
-                type=openapi.TYPE_STRING,
-                enum=OrderingType.values,
-            ),
-            openapi.Parameter(
-                "is_bookmarked",
-                openapi.IN_QUERY,
-                description="Filter events that are bookmarked by the user.",
-                type=openapi.TYPE_BOOLEAN,
-            ),
-        ],
+        query_serializer=ParamSerializer,
     )
     def get(
         self,
@@ -133,13 +110,12 @@ class EventIndexEndpoint(Endpoint):
         elif ordering == OrderingType.DESC:
             events = events.order_by("-time")
 
-        queryset = events.distinct()
-        page = self.paginate_queryset(queryset)
+        page = self.paginate_queryset(events)
         if page is not None:
             serializer = EventSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = EventSerializer(queryset, many=True)
+        serializer = EventSerializer(events, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(

@@ -20,9 +20,13 @@ from waveview.organization.permissions import PermissionType
 
 
 class ParamSerializer(serializers.Serializer):
-    start = serializers.DateTimeField(required=True)
-    end = serializers.DateTimeField(required=True)
-    event_types = CommaSeparatedListField(required=False)
+    start = serializers.DateTimeField(
+        required=True, help_text="Start date of the query."
+    )
+    end = serializers.DateTimeField(required=True, help_text="End date of the query.")
+    event_types = CommaSeparatedListField(
+        required=False, help_text="Event type codes to filter in comma separated list."
+    )
 
 
 @dataclass
@@ -69,31 +73,7 @@ class DownloadEventsEndpoint(Endpoint):
         ),
         tags=["Catalog"],
         responses={status.HTTP_200_OK: openapi.Response("OK")},
-        manual_parameters=[
-            openapi.Parameter(
-                "start",
-                openapi.IN_QUERY,
-                description="Start date of the query.",
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_DATETIME,
-            ),
-            openapi.Parameter(
-                "end",
-                openapi.IN_QUERY,
-                description="End date of the query.",
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_DATETIME,
-            ),
-            openapi.Parameter(
-                "event_types",
-                openapi.IN_QUERY,
-                description=(
-                    "Event type codes to filter in comma separated list. "
-                    "If not provided, all event types will be included."
-                ),
-                type=openapi.TYPE_STRING,
-            ),
-        ],
+        query_serializer=ParamSerializer,
     )
     def get(
         self,

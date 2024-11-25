@@ -5,8 +5,8 @@ from uuid import UUID
 import pandas as pd
 import pytz
 from django.db import models
-from django.db.models import Case, Count, OuterRef, Subquery, When
-from django.db.models.functions import TruncDay, TruncHour, TruncSecond
+from django.db.models import Case, Count, When
+from django.db.models.functions import TruncDay, TruncHour
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -157,16 +157,12 @@ class SeismicityEndpoint(Endpoint):
         result: list[ResultItem] = []
 
         for event_type in types:
-            events = Event.objects.annotate(ts=TruncSecond("time", tzinfo=tzinfo))
-            subquery = events.filter(
+            queryset = Event.objects.filter(
                 catalog=catalog,
                 time__gte=start,
                 time__lt=end,
                 type=event_type,
-                ts=OuterRef("ts"),
-            ).values("pk")[:1]
-            queryset = events.filter(pk__in=Subquery(subquery))
-
+            )
             if group_by == GroupByType.HOUR:
                 seismicity = (
                     queryset.annotate(timestamp=TruncHour("time", tzinfo=tzinfo))

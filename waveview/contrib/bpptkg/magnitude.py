@@ -6,7 +6,6 @@ import numpy as np
 from django.db import connection, transaction
 from obspy import Stream
 
-from waveview.contrib.bpptkg.outliers import remove_outliers
 from waveview.contrib.bpptkg.response import remove_instrument_response
 from waveview.event.header import (
     AmplitudeCategory,
@@ -186,7 +185,7 @@ class MagnitudeEstimator:
                 amax = 0
                 ml = 0
             else:
-                data = remove_outliers(st[0].data)
+                data = st[0].data
                 amax = self.get_amax(data)
                 ml = calc_bpptkg_ml(amax)
 

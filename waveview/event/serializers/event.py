@@ -194,7 +194,8 @@ class EventPayloadSerializer(serializers.Serializer):
         attachment_ids = validated_data.pop("attachment_ids", [])
         observation = validated_data.pop("observation", None)
         for key, value in validated_data.items():
-            setattr(instance, key, value)
+            if hasattr(instance, key):
+                setattr(instance, key, value)
         if user not in instance.collaborators.all():
             instance.collaborators.add(user)
         instance.save()

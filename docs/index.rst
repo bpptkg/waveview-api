@@ -12,3 +12,6 @@ Volcano monitoring.
 
     guides/installation
     guides/configuration
+    guides/usage
+    guides/architecture
+    guides/troubleshooting

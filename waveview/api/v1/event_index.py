@@ -155,9 +155,13 @@ class EventIndexEndpoint(Endpoint):
         )
         serializer.is_valid(raise_exception=True)
         event = serializer.save()
+        use_outlier_filter = serializer.validated_data.get("use_outlier_filter", False)
 
         notify_event_observer.delay(
-            OperationType.CREATE, str(event.id), str(volcano.id)
+            OperationType.CREATE,
+            str(event.id),
+            str(volcano.id),
+            use_outlier_filter=use_outlier_filter,
         )
 
         payload = NotifyEventData.from_event(

@@ -117,6 +117,11 @@ class EventPayloadSerializer(serializers.Serializer):
         allow_null=True,
         default=None,
     )
+    use_outlier_filter = serializers.BooleanField(
+        help_text=_("Use outlier filter when calculating the amplitude."),
+        required=False,
+        default=False,
+    )
 
     def validate_type_id(self, value: str) -> str:
         if not EventType.objects.filter(id=value).exists():

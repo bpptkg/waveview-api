@@ -32,7 +32,7 @@ class WaveViewConsumer(AsyncJsonWebsocketConsumer):
 
     async def disconnect(self, code: int) -> None:
         user = self.scope.get("user")
-        if user:
+        if user and user.is_authenticated:
             await self.channel_layer.group_discard(
                 user_channel(user.pk), self.channel_name
             )

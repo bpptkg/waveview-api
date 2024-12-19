@@ -6,6 +6,7 @@ import numpy as np
 from django.db import connection, transaction
 from obspy import Stream
 
+from waveview.contrib.bpptkg.outliers import remove_outliers
 from waveview.contrib.bpptkg.response import remove_instrument_response
 from waveview.event.header import (
     AmplitudeCategory,
@@ -133,7 +134,9 @@ class MagnitudeEstimator:
         return remove_instrument_response(inventory, st)
 
     @transaction.atomic
-    def calc_magnitude(self, data: MagnitudeEstimatorData) -> None:
+    def calc_magnitude(
+        self, data: MagnitudeEstimatorData, use_outlier_filter: bool = False
+    ) -> None:
         event = data.event
         organization_id = event.catalog.volcano.organization.id
         inventory = self.get_inventory(organization_id)
@@ -147,9 +150,15 @@ class MagnitudeEstimator:
 
         logger.info(f"Calculating BPPTKG ML magnitude for event {event.id}...")
 
-        buffer = 5  # Buffer in seconds.
-        starttime = event.time - timedelta(seconds=buffer)
-        endtime = event.time + timedelta(seconds=event.duration + buffer)
+        if use_outlier_filter:
+            buffer = 5  # Buffer in seconds.
+            starttime = event.time - timedelta(seconds=buffer)
+            endtime = event.time + timedelta(seconds=event.duration + buffer)
+        else:
+            buffer = 0
+            starttime = event.time
+            endtime = event.time + timedelta(seconds=event.duration)
+
         magnitude_type = "ML"
 
         magnitude, _ = Magnitude.objects.get_or_create(
@@ -185,7 +194,10 @@ class MagnitudeEstimator:
                 amax = 0
                 ml = 0
             else:
-                data = st[0].data
+                if use_outlier_filter:
+                    data = remove_outliers(st[0].data)
+                else:
+                    data = st[0].data
                 amax = self.get_amax(data)
                 ml = calc_bpptkg_ml(amax)
 
@@ -285,14 +297,19 @@ class MagnitudeObserver(EventObserver):
 
     name = "bpptkg.magnitude"
 
-    def update(self, event_id: str, data: dict) -> None:
+    def update(
+        self, event_id: str, data: dict, use_outlier_filter: bool = False
+    ) -> None:
         event = Event.objects.get(id=event_id)
         estimator = MagnitudeEstimator()
         estimator.calc_magnitude(
             MagnitudeEstimatorData(
                 event=event, data=MagnitudeObserverData.from_dict(data)
-            )
+            ),
+            use_outlier_filter=use_outlier_filter,
         )
 
-    def create(self, event_id: str, data: dict) -> None:
-        self.update(event_id, data)
+    def create(
+        self, event_id: str, data: dict, use_outlier_filter: bool = False
+    ) -> None:
+        self.update(event_id, data, use_outlier_filter=use_outlier_filter)

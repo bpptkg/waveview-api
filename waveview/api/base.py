@@ -1,4 +1,4 @@
-import typing
+from typing import Any, List, Optional, Type
 
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
@@ -23,15 +23,12 @@ DEFAULT_AUTHENTICATION = [JWTAuthentication, SessionAuthentication]
 class Endpoint(APIView):
     """Base API endpoint."""
 
-    authentication_classes: typing.List[typing.Type[BaseAuthentication]] = (
-        DEFAULT_AUTHENTICATION
-    )
-    permission_classes: typing.List[typing.Type[BasePermission]] = [NoPermission]
-
-    pagination_class: typing.Optional[typing.Type[BasePagination]] = None
+    authentication_classes: List[Type[BaseAuthentication]] = DEFAULT_AUTHENTICATION
+    permission_classes: List[Type[BasePermission]] = [NoPermission]
+    pagination_class: Optional[Type[BasePagination]] = None
 
     @property
-    def paginator(self) -> typing.Optional[BasePagination]:
+    def paginator(self) -> Optional[BasePagination]:
         """
         The paginator instance associated with the view, or `None`.
         """
@@ -42,7 +39,7 @@ class Endpoint(APIView):
                 self._paginator = self.pagination_class()
         return self._paginator
 
-    def paginate_queryset(self, queryset: QuerySet) -> typing.Optional[QuerySet]:
+    def paginate_queryset(self, queryset: QuerySet) -> Optional[QuerySet]:
         """
         Return a single page of results, or `None` if pagination is disabled.
         """
@@ -50,7 +47,7 @@ class Endpoint(APIView):
             return None
         return self.paginator.paginate_queryset(queryset, self.request, view=self)
 
-    def get_paginated_response(self, data: typing.Any) -> Response:
+    def get_paginated_response(self, data: Any) -> Response:
         """
         Return a paginated style `Response` object for the given output data.
         """

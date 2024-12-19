@@ -24,7 +24,7 @@ class BulletinObserver(EventObserver):
     name = "bma.bulletin"
 
     @retry(initial_delay=5)
-    def create(self, event_id: str, data: dict) -> None:
+    def create(self, event_id: str, data: dict, **options) -> None:
         try:
             event = Event.objects.get(id=event_id)
         except Event.DoesNotExist:

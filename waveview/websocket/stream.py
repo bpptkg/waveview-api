@@ -18,7 +18,9 @@ class StreamConsumer(AsyncWebsocketConsumer):
         await self.accept()
         self.subscribed_channels = set()
         user = self.scope.get("user")
-        if not user or user.is_authenticated:
+        if user and user.is_authenticated:
+            pass
+        else:
             await self.close(code=4001)
 
     async def disconnect(self, code: int) -> None:

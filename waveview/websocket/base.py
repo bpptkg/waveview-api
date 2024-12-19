@@ -19,6 +19,7 @@ class CommandType(enum.StrEnum):
     STREAM_FILTER = "stream.filter"
     PING = "ping"
     NOTIFY = "notify"
+    JOIN = "join"
 
 
 class WebSocketMessageType(enum.StrEnum):

@@ -10,7 +10,6 @@ from waveview.users.models import User
 class UserManager(UserAdmin):
     form = UserChangeForm
     list_display = (
-        "id",
         "username",
         "email",
         "name",

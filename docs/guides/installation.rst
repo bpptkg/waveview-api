@@ -128,5 +128,5 @@ Run the Celery beat:
 
     celery -A waveview beat -l info
 
-Open your browser and go to `http://localhost:8000/admin/` to access the admin
+Open your browser and go to ``http://127.0.0.1:8000/admin/`` to access the admin
 panel.

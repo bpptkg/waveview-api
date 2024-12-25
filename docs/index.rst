@@ -15,3 +15,5 @@ Volcano monitoring.
     guides/usage
     guides/architecture
     guides/troubleshooting
+    guides/rest_api
+    guides/websocket

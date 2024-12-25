@@ -36,7 +36,8 @@ class WaveViewConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_discard(
                 user_channel(user.pk), self.channel_name
             )
-            self.joined_channels.remove(str(user.pk))
+            if str(user.pk) in self.joined_channels:
+                self.joined_channels.remove(str(user.pk))
             await self.broadcast()
         await self.close()
 

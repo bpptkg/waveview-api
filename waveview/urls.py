@@ -12,7 +12,7 @@ swagger_info = openapi.Info(
     title="WaveView API",
     default_version="v1",
     description="WaveView API endpoints",
-    terms_of_service="https://www.google.com/policies/terms/",
+    terms_of_service="https://github.com/bpptkg/waveview",
     contact=openapi.Contact(email="bpptkg@esdm.go.id"),
     license=openapi.License(name="(c) 2024 BPPTKG"),
 )

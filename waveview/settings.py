@@ -325,6 +325,7 @@ CHANNEL_LAYERS = {
             "hosts": [
                 (redis.hostname, redis.port),
             ],
+            "capacity": 2000,
         },
     },
 }

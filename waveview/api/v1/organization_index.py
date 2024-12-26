@@ -40,9 +40,13 @@ class OrganizationIndexEndpoint(Endpoint):
         },
     )
     def get(self, request: Request) -> Response:
-        organizations = Organization.objects.filter(
-            Q(members=request.user) | Q(author=request.user)
-        ).all()
+        organizations = (
+            Organization.objects.filter(
+                Q(members=request.user) | Q(author=request.user)
+            )
+            .distinct()
+            .all()
+        )
         serializer = OrganizationSerializer(organizations, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

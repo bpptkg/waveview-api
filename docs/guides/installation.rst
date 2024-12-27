@@ -3,6 +3,7 @@ Installation
 ============
 
 This guide will walk you through the installation of the `waveview-api` package.
+This guide covers both regular and Docker-based installation methods.
 
 Requirements
 
@@ -11,7 +12,9 @@ Requirements
 - Redis 6 or higher
 - RabbitMQ 3.8 or higher
 
-Installation
+
+Regular Installation
+--------------------
 
 Clone the repository:
 
@@ -130,3 +133,9 @@ Run the Celery beat:
 
 Open your browser and go to ``http://127.0.0.1:8000/admin/`` to access the admin
 panel.
+
+
+Docker Installation
+-------------------
+
+TODO

@@ -16,6 +16,7 @@ Volcano monitoring.
     guides/troubleshooting
     guides/rest_api
     guides/websocket
+    license
 
 .. toctree::
     :maxdepth: 1

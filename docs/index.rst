@@ -16,6 +16,7 @@ Volcano monitoring.
     guides/troubleshooting
     guides/rest_api
     guides/websocket
+    support
     license
 
 .. toctree::

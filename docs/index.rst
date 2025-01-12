@@ -16,3 +16,9 @@ Volcano monitoring.
     guides/troubleshooting
     guides/rest_api
     guides/websocket
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Developer
+
+    developer/index

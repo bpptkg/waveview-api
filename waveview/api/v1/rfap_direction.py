@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+from typing import TypedDict
 from uuid import UUID
 
 import pandas as pd
@@ -88,6 +90,34 @@ class RfApDirectionSerializer(serializers.Serializer):
     directional_results = DirectionSerializer(
         many=True, help_text="List of count and distance info grouped per direction."
     )
+
+
+class DirectionDataItem(TypedDict):
+    time: datetime
+    count: int
+    distance: float
+    rf_count: int
+    ap_count: int
+    rf_distance: float
+    ap_distance: float
+
+
+def fills_data_gaps(
+    data: list[DirectionDataItem], starttime: datetime, endtime: datetime
+) -> list[DirectionDataItem]:
+    if len(data) == 0:
+        return []
+    start = starttime.date()
+    end = endtime.date()
+    step = timedelta(days=1)
+
+    new_index = pd.date_range(start=start, end=end, freq=step).date
+    df = pd.DataFrame(data)
+    df.set_index("time", inplace=True)
+    df = df.reindex(new_index, fill_value=0)
+    df.reset_index(inplace=True)
+    df.rename(columns={"index": "time"}, inplace=True)
+    return df.to_dict(orient="records")
 
 
 class RfApDirectionEndpoint(Endpoint):
@@ -236,7 +266,7 @@ class RfApDirectionEndpoint(Endpoint):
                     "ap_count": group["ap_count"].sum(),
                     "rf_distance": group["rf_distance"].max(),
                     "ap_distance": group["ap_distance"].max(),
-                    "data": data,
+                    "data": fills_data_gaps(data, start, end),
                 }
             )
 

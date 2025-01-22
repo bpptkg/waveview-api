@@ -16,12 +16,8 @@ class BulletinPayloadBuilder:
         self.digital_method = "bpptkg"
 
     def _get_amplitude(self) -> str | None:
-        try:
-            channel = Channel.objects.get_by_stream_id("VG.MEPSL.00.HHZ")
-        except Channel.DoesNotExist:
-            return None
         amplitude = Amplitude.objects.filter(
-            event=self.event, waveform=channel, method=self.analog_method
+            event=self.event, method=self.analog_method
         ).first()
         if amplitude is None:
             return None

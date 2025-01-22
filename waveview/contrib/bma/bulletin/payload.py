@@ -17,7 +17,7 @@ class BulletinPayloadBuilder:
 
     def _get_amplitude(self) -> str | None:
         try:
-            channel = Channel.objects.get_by_stream_id("VG.MEPUS.00.EHZ")
+            channel = Channel.objects.get_by_stream_id("VG.MEPSL.00.HHZ")
         except Channel.DoesNotExist:
             return None
         amplitude = Amplitude.objects.filter(

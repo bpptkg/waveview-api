@@ -13,6 +13,7 @@ Volcano monitoring.
     guides/installation
     guides/configuration
     guides/architecture
+    guides/event_observer
     guides/troubleshooting
     guides/rest_api
     guides/websocket

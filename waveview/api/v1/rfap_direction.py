@@ -17,7 +17,7 @@ from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.event.header import ObservationType
 from waveview.event.models import Event, EventType
-from waveview.observation.models import PyroclasticFlow, Rockfall
+from waveview.observation.models import FallDirection, PyroclasticFlow, Rockfall
 
 
 class QueryParamsSerializer(serializers.Serializer):
@@ -102,6 +102,18 @@ class DirectionDataItem(TypedDict):
     ap_distance: float
 
 
+class DirectionalResultDataItem(TypedDict):
+    direction: str
+    azimuth: float
+    count: int
+    distance: float
+    rf_count: int
+    ap_count: int
+    rf_distance: float
+    ap_distance: float
+    data: list[DirectionDataItem]
+
+
 def fills_data_gaps(
     data: list[DirectionDataItem], starttime: datetime, endtime: datetime
 ) -> list[DirectionDataItem]:
@@ -171,13 +183,11 @@ class RfApDirectionEndpoint(Endpoint):
 
         rf_events = Rockfall.objects.filter(event__in=events).annotate(
             eventtime=F("event__time"),
-            falldirection=F("fall_direction__name"),
             rf=Value(1, models.IntegerField()),
             ap=Value(0, models.IntegerField()),
             rf_distance=F("runout_distance"),
             ap_distance=Value(0, models.FloatField()),
             distance=F("runout_distance"),
-            azimuth=F("fall_direction__azimuth"),
         )
         ap_events = PyroclasticFlow.objects.filter(event__in=events).annotate(
             eventtime=F("event__time"),
@@ -187,47 +197,22 @@ class RfApDirectionEndpoint(Endpoint):
             rf_distance=Value(0, models.FloatField()),
             ap_distance=F("runout_distance"),
             distance=F("runout_distance"),
-            azimuth=F("fall_direction__azimuth"),
         )
         columns = [
             "eventtime",
-            "falldirection",
             "rf",
             "ap",
             "rf_distance",
             "ap_distance",
             "distance",
-            "azimuth",
         ]
-        rf = rf_events.values(*columns)
-        ap = ap_events.values(*columns)
-        items = list(rf) + list(ap)
+        items = list(rf_events.values(*columns)) + list(ap_events.values(*columns))
 
-        df = pd.DataFrame(items)
-        if df.empty:
-            serializer = RfApDirectionSerializer(
-                {"daily_results": [], "directional_results": []}
-            )
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        df["eventtime"] = pd.to_datetime(df["eventtime"])
-
-        dft = df.groupby(pd.Grouper(key="eventtime", freq="D")).agg(
-            count=("eventtime", "count"),
-            distance=("distance", "max"),
-            rf_count=("rf", "sum"),
-            ap_count=("ap", "sum"),
-            rf_distance=("rf_distance", "max"),
-            ap_distance=("ap_distance", "max"),
-        )
-        dft["time"] = dft.index.date
-        dft.dropna(inplace=True, axis=0, how="any")
-        results = dft.to_dict(orient="records")
-
-        dfd = (
-            df.groupby(
-                [pd.Grouper(key="eventtime", freq="D"), "falldirection", "azimuth"]
-            )
-            .agg(
+        daily_results: list[DirectionDataItem] = []
+        dft = pd.DataFrame(items)
+        if not dft.empty:
+            dft["eventtime"] = pd.to_datetime(dft["eventtime"])
+            df_time = dft.groupby(pd.Grouper(key="eventtime", freq="D")).agg(
                 count=("eventtime", "count"),
                 distance=("distance", "max"),
                 rf_count=("rf", "sum"),
@@ -235,42 +220,45 @@ class RfApDirectionEndpoint(Endpoint):
                 rf_distance=("rf_distance", "max"),
                 ap_distance=("ap_distance", "max"),
             )
-            .reset_index()
-        )
-        dfd["time"] = dfd["eventtime"].dt.date
-        dfd.dropna(inplace=True, axis=0, how="any")
-        directions = []
-        for direction, group in dfd.groupby("falldirection"):
-            data = (
-                group[
-                    [
-                        "time",
-                        "count",
-                        "distance",
-                        "rf_count",
-                        "ap_count",
-                        "rf_distance",
-                        "ap_distance",
-                    ]
-                ]
-                .dropna(axis=0, how="any")
-                .to_dict(orient="records")
+            df_time["time"] = df_time.index.date
+            df_time.dropna(inplace=True, axis=0, how="any")
+            daily_results = df_time.to_dict(orient="records")
+
+        directional_results: list[DirectionalResultDataItem] = []
+        for direction in FallDirection.objects.all():
+            rf = rf_events.filter(fall_directions=direction)
+            ap = ap_events.filter(fall_directions=direction)
+            items = list(rf.values(*columns)) + list(ap.values(*columns))
+            dfd = pd.DataFrame(items)
+            if dfd.empty:
+                continue
+            dfd["eventtime"] = pd.to_datetime(dfd["eventtime"])
+            df_dir = dfd.groupby(pd.Grouper(key="eventtime", freq="D")).agg(
+                count=("eventtime", "count"),
+                distance=("distance", "max"),
+                rf_count=("rf", "sum"),
+                ap_count=("ap", "sum"),
+                rf_distance=("rf_distance", "max"),
+                ap_distance=("ap_distance", "max"),
             )
-            directions.append(
+            df_dir["time"] = df_dir.index.date
+            df_dir.dropna(inplace=True, axis=0, how="any")
+            data = df_dir.to_dict(orient="records")
+            directional_results.append(
                 {
-                    "direction": direction,
-                    "azimuth": group["azimuth"].iloc[0],
-                    "count": group["count"].sum(),
-                    "distance": group["distance"].max(),
-                    "rf_count": group["rf_count"].sum(),
-                    "ap_count": group["ap_count"].sum(),
-                    "rf_distance": group["rf_distance"].max(),
-                    "ap_distance": group["ap_distance"].max(),
+                    "direction": direction.name,
+                    "azimuth": direction.azimuth,
+                    "count": df_dir["count"].sum(),
+                    "distance": df_dir["distance"].max(),
+                    "rf_count": df_dir["rf_count"].sum(),
+                    "ap_count": df_dir["ap_count"].sum(),
+                    "rf_distance": df_dir["rf_distance"].max(),
+                    "ap_distance": df_dir["ap_distance"].max(),
                     "data": fills_data_gaps(data, start, end),
                 }
             )
 
         serializer = RfApDirectionSerializer(
-            {"daily_results": results, "directional_results": directions}
+            {"daily_results": daily_results, "directional_results": directional_results}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -22,8 +22,13 @@ class Rockfall(models.Model):
     )
     runout_distance = models.FloatField(null=True, blank=True)
     fall_direction = models.ForeignKey(
-        "FallDirection", on_delete=models.SET_NULL, null=True, blank=True
+        "FallDirection",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="rockfalls",
     )
+    fall_directions = models.ManyToManyField("FallDirection", blank=True)
     amplitude = models.FloatField(null=True, blank=True)
     duration = models.FloatField(null=True, blank=True)
     note = models.TextField(blank=True, null=True)

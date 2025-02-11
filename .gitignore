@@ -165,3 +165,4 @@ nocommit/
 testing.py
 backup.sh
 crontab/
+.aider*

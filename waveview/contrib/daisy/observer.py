@@ -4,7 +4,10 @@ from typing import Any
 import requests
 from django.conf import settings
 
+from waveview.event.models import Event
 from waveview.event.observers import EventObserver
+from waveview.event.serializers import EventDetailSerializer
+from waveview.utils.retry import retry
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +20,31 @@ class DaisyWebhookObserver(EventObserver):
     created, updated, or deleted.
     """
 
-    name = "webhook"
+    name = "daisy.webhook"
 
     def __init__(self):
-        self.webhook_url = getattr(settings, "DAISY_WEBHOOK_URL", "https://cendana15.com/data-entry/veps/webhook")
+        self.webhook_url = getattr(
+            settings,
+            "DAISY_WEBHOOK_URL",
+            "https://cendana15.com/data-entry/veps/webhook",
+        )
 
-    def _send_webhook(self, operation: str, event_id: str, data: dict[str, Any]) -> None:
+    @retry()
+    def _send_webhook(
+        self, operation: str, event_id: str, data: dict[str, Any]
+    ) -> None:
         """Send the webhook request with event data."""
+        try:
+            event = Event.objects.get(id=event_id)
+        except Event.DoesNotExist:
+            logger.error(
+                f"Webhook {operation} failed for event {event_id}: Event does not exist."
+            )
+            return
+
         payload = {
             "operation": operation,
-            "event_id": event_id,
+            "event": EventDetailSerializer(event).data,
             "data": data,
         }
         headers = {
@@ -34,14 +52,19 @@ class DaisyWebhookObserver(EventObserver):
             "Accept": "application/json",
         }
 
+        logger.info(f"Sending webhook {operation} for event {event_id}...")
+
         try:
-            response = requests.post(self.webhook_url, json=payload, headers=headers, timeout=5)
+            response = requests.post(
+                self.webhook_url, json=payload, headers=headers, timeout=5
+            )
             response.raise_for_status()
-            logger.info(f"Webhook {operation} successful for event {event_id}: {response.status_code}")
-        except requests.HTTPError:
-            logger.error(f"Webhook {operation} failed for event {event_id}: HTTP {response.status_code} - {response.text}")
+            logger.info(
+                f"Webhook {operation} successful for event {event_id}: {response.status_code}"
+            )
         except requests.RequestException as e:
             logger.error(f"Webhook {operation} failed for event {event_id}: {str(e)}")
+            raise e
 
     def create(self, event_id: str, data: dict[str, Any], **options: Any) -> None:
         """Send webhook when a new event is created."""

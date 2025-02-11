@@ -29,7 +29,7 @@ class DaisyWebhookObserver(EventObserver):
             "https://cendana15.com/data-entry/veps/webhook",
         )
 
-    @retry()
+    @retry(initial_delay=5)
     def _send_webhook(
         self, operation: str, event_id: str, data: dict[str, Any]
     ) -> None:

@@ -34,9 +34,11 @@ class OrderingType(models.TextChoices):
 
 class ParamSerializer(serializers.Serializer):
     start = serializers.DateTimeField(
-        required=False, help_text="Start date of the event."
+        required=False, help_text="Start date of the event in ISO 8601 format."
     )
-    end = serializers.DateTimeField(required=False, help_text="End date of the event.")
+    end = serializers.DateTimeField(
+        required=False, help_text="End date of the event in ISO 8601 format."
+    )
     event_types = CommaSeparatedListField(
         required=False, help_text="Event type codes to filter in comma separated list."
     )

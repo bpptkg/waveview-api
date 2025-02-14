@@ -19,8 +19,12 @@ from waveview.event.header import AmplitudeCategory, AmplitudeUnit
 
 
 class SignalAmplitudePayloadSerializer(serializers.Serializer):
-    time = serializers.DateTimeField(help_text=_("The time of the event."))
-    duration = serializers.FloatField(help_text=_("The duration of the event."))
+    time = serializers.DateTimeField(
+        help_text=_("The time of the event in ISO 8601 format.")
+    )
+    duration = serializers.FloatField(
+        help_text=_("The duration of the event in seconds.")
+    )
     use_outlier_filter = serializers.BooleanField(
         help_text=_("Whether to use a outlier filter to smooth the signal."),
         default=False,

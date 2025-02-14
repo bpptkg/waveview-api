@@ -21,8 +21,12 @@ from waveview.observation.models import FallDirection, PyroclasticFlow, Rockfall
 
 
 class QueryParamsSerializer(serializers.Serializer):
-    start = serializers.DateTimeField(help_text="Start date of the query.")
-    end = serializers.DateTimeField(help_text="End date of the query.")
+    start = serializers.DateTimeField(
+        help_text="Start date of the query in ISO 8601 format."
+    )
+    end = serializers.DateTimeField(
+        help_text="End date of the query in ISO 8601 format."
+    )
 
 
 class ResultSerializer(serializers.Serializer):

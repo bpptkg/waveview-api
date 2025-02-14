@@ -90,8 +90,12 @@ class RemoveResponsePlotter:
 
 class PlotRemoveResponsePayloadSerializer(serializers.Serializer):
     channel_id = serializers.UUIDField(help_text=_("The channel ID of the signal."))
-    time = serializers.DateTimeField(help_text=_("The time of the query."))
-    duration = serializers.FloatField(help_text=_("The duration of the query."))
+    time = serializers.DateTimeField(
+        help_text=_("The time of the query in ISO 8601 format.")
+    )
+    duration = serializers.FloatField(
+        help_text=_("The duration of the query in seconds.")
+    )
     output = serializers.ChoiceField(
         choices=FieldType.choices, help_text=_("The output type of the signal.")
     )

@@ -40,7 +40,8 @@ class ParamSerializer(serializers.Serializer):
         required=False, help_text="End date of the event in ISO 8601 format."
     )
     event_types = CommaSeparatedListField(
-        required=False, help_text="Event type codes to filter in comma separated list."
+        required=False,
+        help_text="Event type codes to filter in comma separated list, e.g ``ROCKFALL,AWANPANAS``",
     )
     ordering = serializers.ChoiceField(
         required=False,

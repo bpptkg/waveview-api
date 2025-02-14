@@ -43,9 +43,11 @@ class GroupByType(models.TextChoices):
 
 class QueryParamsSerializer(serializers.Serializer):
     start = serializers.DateTimeField(
-        required=True, help_text="Start date of the query."
+        required=True, help_text="Start date of the query in ISO 8601 format."
     )
-    end = serializers.DateTimeField(required=True, help_text="End date of the query.")
+    end = serializers.DateTimeField(
+        required=True, help_text="End date of the query in ISO 8601 format."
+    )
     group_by = serializers.ChoiceField(
         required=False,
         choices=GroupByType.choices,
@@ -53,7 +55,8 @@ class QueryParamsSerializer(serializers.Serializer):
         help_text="Group by type. Default is grouped per day.",
     )
     event_types = CommaSeparatedListField(
-        required=False, help_text="Event type codes to filter in comma separated list."
+        required=False,
+        help_text="Event type codes to filter in comma separated list, e.g ``ROCKFALL,AWANPANAS``.",
     )
     fill_gaps = serializers.BooleanField(
         required=False, default=False, help_text="Whether to fill the gaps in the data."
@@ -61,7 +64,7 @@ class QueryParamsSerializer(serializers.Serializer):
     timezone = serializers.CharField(
         required=False,
         default="UTC",
-        help_text="Timezone to use for the query. Default is UTC.",
+        help_text="Timezone name to use for the query. Default is UTC.",
     )
 
 

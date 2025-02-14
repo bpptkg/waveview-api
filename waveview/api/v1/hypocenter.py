@@ -19,14 +19,17 @@ from waveview.event.serializers import HypocenterSerializer
 
 class QueryParamsSerializer(serializers.Serializer):
     start = serializers.DateTimeField(
-        required=True, help_text="Start date of the query."
+        required=True, help_text="Start date of the query in ISO 8601 format."
     )
-    end = serializers.DateTimeField(required=True, help_text="End date of the query.")
+    end = serializers.DateTimeField(
+        required=True, help_text="End date of the query in ISO 8601 format."
+    )
     method = serializers.CharField(
         required=False, help_text="Filter origins by its method name."
     )
     event_types = CommaSeparatedListField(
-        required=False, help_text="Event type codes to filter."
+        required=False,
+        help_text="Event type codes to filter in comma separated list, e.g ``ROCKFALL,AWANPANAS``.",
     )
 
 

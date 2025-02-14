@@ -23,7 +23,7 @@ class UserSerializer(serializers.Serializer):
 def get_organization_membership_serializer():
     from waveview.organization.serializers import OrganizationMembershipSerializer
 
-    return OrganizationMembershipSerializer
+    return OrganizationMembershipSerializer(many=True)
 
 
 class UserDetailSerializer(UserSerializer):

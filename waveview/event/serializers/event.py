@@ -96,13 +96,23 @@ class EventPayloadSerializer(serializers.Serializer):
     station_of_first_arrival_id = serializers.UUIDField(
         help_text=_("Station of the first arrival ID.")
     )
-    time = serializers.DateTimeField(help_text=_("Time of the event."))
+    time = serializers.DateTimeField(
+        help_text=_("Time of the event in ISO 8601 format.")
+    )
     duration = serializers.FloatField(help_text=_("Duration of the event in seconds."))
     type_id = serializers.UUIDField(help_text=_("Event type ID."))
     note = serializers.CharField(
-        help_text=_("Event note."), allow_blank=True, default=""
+        help_text=_("Additional note describing the event."),
+        allow_blank=True,
+        default="",
     )
-    method = serializers.CharField(help_text=_("Event method."))
+    method = serializers.CharField(
+        help_text=_(
+            """
+        Method name used to identify the event, e.g veps, seiscomp, etc.
+        """
+        )
+    )
     evaluation_mode = serializers.ChoiceField(
         help_text=_("Event evaluation mode."), choices=EvaluationMode.choices
     )
@@ -113,7 +123,15 @@ class EventPayloadSerializer(serializers.Serializer):
         child=serializers.UUIDField(), help_text=_("Attachment IDs.")
     )
     observation = serializers.DictField(
-        help_text=_("Event observation."),
+        help_text=_(
+            """
+            Event observation data. The structure of the data depends on the
+            event type. For example, if the event type is explosion, the data
+            should be in the format of explosion observation. If the event type
+            is pyroclastic flow, the data should be in the format of pyroclastic
+            flow observation.
+            """
+        ),
         allow_null=True,
         default=None,
     )

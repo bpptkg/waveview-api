@@ -81,25 +81,25 @@ Install TimescaleDB using Docker:
 
 .. code-block:: bash
 
-    docker run --name timescaledb --restart unless-stopped -p 5432:5432 -v waveview-data:/home/postgres/pgdata/data -e POSTGRES_PASSWORD=test -d timescale/timescaledb-ha:pg16
+    docker run --name timescaledb --restart always -p 5432:5432 -v waveview-data:/home/postgres/pgdata/data -e POSTGRES_PASSWORD=test -d timescale/timescaledb-ha:pg16
 
 Install Memcached using Docker:
 
 .. code-block:: bash
 
-    docker run -d --restart unless-stopped --name memcached -p 11211:11211 memcached:1.6.32
+    docker run -d --restart always --name memcached -p 11211:11211 memcached:1.6.32
 
 Install Redis using Docker:
 
 .. code-block:: bash
 
-    docker run --name redis --restart unless-stopped -p 6379:6379 -d redis
+    docker run --name redis --restart always -p 6379:6379 -d redis
 
 Install RabbitMQ using Docker:
 
 .. code-block:: bash
 
-    docker run -d --restart unless-stopped --hostname rabbitmq --name rabbitmq -e RABBITMQ_DEFAULT_USER=user -e RABBITMQ_DEFAULT_PASS=password -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+    docker run -d --restart always --hostname rabbitmq --name rabbitmq -e RABBITMQ_DEFAULT_USER=rabbitmq -e RABBITMQ_DEFAULT_PASS=test -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 
 Run the migrations:
 

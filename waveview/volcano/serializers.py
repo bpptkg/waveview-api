@@ -15,13 +15,15 @@ class VolcanoSerializer(serializers.Serializer):
         help_text=_("Volcano description."), allow_blank=True
     )
     elevation = serializers.IntegerField(
-        help_text=_("Volcano elevation."), allow_null=True
+        help_text=_("Volcano elevation in meter."), allow_null=True
     )
     location = serializers.CharField(help_text=_("Volcano location."), allow_blank=True)
     country = serializers.CharField(help_text=_("Volcano country."), allow_blank=True)
-    latitude = serializers.FloatField(help_text=_("Volcano latitude."), allow_null=True)
+    latitude = serializers.FloatField(
+        help_text=_("Volcano latitude in degree."), allow_null=True
+    )
     longitude = serializers.FloatField(
-        help_text=_("Volcano longitude."), allow_null=True
+        help_text=_("Volcano longitude in degree."), allow_null=True
     )
     created_at = serializers.DateTimeField(
         help_text=_("Date when volcano was created.")
@@ -42,19 +44,19 @@ class VolcanoPayloadSerializer(serializers.Serializer):
         help_text=_("Volcano description."), allow_blank=True, required=False
     )
     elevation = serializers.IntegerField(
-        help_text=_("Volcano elevation."), allow_null=True, required=False
+        help_text=_("Volcano elevation in meter."), allow_null=True, required=False
     )
     location = serializers.CharField(
         help_text=_("Volcano location."), allow_blank=True, required=False
     )
     country = serializers.CharField(
-        help_text=_("Volcano country."), allow_blank=True, required=False
+        help_text=_("Volcano country name."), allow_blank=True, required=False
     )
     latitude = serializers.FloatField(
-        help_text=_("Volcano latitude."), allow_null=True, required=False
+        help_text=_("Volcano latitude in degree."), allow_null=True, required=False
     )
     longitude = serializers.FloatField(
-        help_text=_("Volcano longitude."), allow_null=True, required=False
+        help_text=_("Volcano longitude in degree."), allow_null=True, required=False
     )
 
     def validate_slug(self, value: str) -> str:

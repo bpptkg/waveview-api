@@ -4,6 +4,7 @@ from uuid import UUID
 
 from django.db import connection, models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
@@ -40,16 +41,22 @@ class Status:
 
 
 class ChannelInfoSerializer(serializers.Serializer):
-    stream_id = serializers.CharField()
-    last_packet = serializers.DateTimeField(allow_null=True)
+    stream_id = serializers.CharField(help_text=_("Stream ID."))
+    last_packet = serializers.DateTimeField(
+        allow_null=True, help_text=_("Last received packet timestamp.")
+    )
 
 
 class NetworkStatusSerializer(serializers.Serializer):
-    state_type = serializers.ChoiceField(choices=StateType.choices)
-    state_label = serializers.CharField()
-    state_description = serializers.CharField()
-    threshold = serializers.FloatField()
-    color = serializers.CharField()
+    state_type = serializers.ChoiceField(
+        choices=StateType.choices, help_text=_("Status state type.")
+    )
+    state_label = serializers.CharField(help_text=_("Status state label."))
+    state_description = serializers.CharField(help_text=_("State description."))
+    threshold = serializers.FloatField(
+        help_text=_("Threshold value used to calculate the status.")
+    )
+    color = serializers.CharField(help_text=_("Status color for this state."))
     channels = ChannelInfoSerializer(many=True)
 
 

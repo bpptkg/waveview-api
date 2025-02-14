@@ -88,7 +88,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./conf/nginx:/etc/nginx/conf.d
+      - ./conf/docker:/etc/nginx/conf.d
       - static:/app/storage/static
       - media:/app/storage/media
     depends_on:

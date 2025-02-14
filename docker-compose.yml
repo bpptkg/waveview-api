@@ -1,116 +1,100 @@
-version: "3"
-
 services:
-    postgres:
-        image: postgres:14-alpine
-        container_name: wv_postgres
-        restart: always
-        env_file:
-            - ./.env
-        volumes:
-            - ./storage/db:/var/lib/postgresql/data
-        ports:
-            - 5432:5432
-        networks:
-            - wv_network
+  web:
+    build: .
+    restart: always
+    container_name: waveview_web
+    command: daphne -b 0.0.0.0 -p 8000 waveview.asgi:application
+    env_file:
+      - ./.env
+    expose:
+      - "8000"
+    volumes:
+      - .:/app
+      - static:/app/storage/static
+      - media:/app/storage/media
+    depends_on:
+      - db
+      - redis
+      - memcached
 
-    memcached:
-        image: memcached:1.6-alpine
-        container_name: wv_memcached
-        restart: always
-        expose:
-            - "11211"
-        entrypoint:
-            - memcached
-            - -m 64
-        networks:
-            - wv_network
+  db:
+    image: timescale/timescaledb-ha:pg16
+    restart: always
+    container_name: waveview_db
+    expose:
+      - "5432"
+    volumes:
+      - waveview_data:/home/postgres/pgdata/data
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
 
-    redis:
-      image: redis:7.2-alpine
-      container_name: wv_redis
-      restart: always
-      networks:
-        - wv_network
+  redis:
+    image: redis:7
+    container_name: waveview_redis
+    restart: always
+    expose:
+      - "6379"
 
-    rabbitmq:
-        image: rabbitmq:3.12-alpine
-        container_name: wv_rabbitmq
-        restart: always
-        env_file:
-            - ./.env
-        ports:
-            - 5672:5672
-            - 15672:15672
-        volumes:
-            - ./storage/rabbitmq/data:/var/lib/rabbitmq/
-            - ./storage/rabbitmq/log:/var/log/rabbitmq/
-        networks:
-            - wv_network
+  memcached:
+    image: memcached:1.6
+    restart: always
+    container_name: waveview_memcached
+    expose:
+      - "11211"
 
-    app:
-        build: .
-        container_name: wv_app
-        restart: always
-        env_file:
-            - ./.env
-        ports:
-            - 8000:8000
-        volumes:
-            - ./storage/:/app/storage/
-        command: "gunicorn --workers 4 --bind 0.0.0.0:8000 waveview.wsgi:application"
-        depends_on:
-            - postgres
-            - redis
-            - rabbitmq
-            - memcached
-        networks:
-            - wv_network
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    container_name: waveview_rabbitmq
+    expose:
+      - "5672"
+      - "15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
 
-    nginx:
-        image: nginx:1.27-alpine
-        container_name: wv_nginx
-        restart: always
-        ports:
-            - 8080:80
-        volumes:
-            - ./conf/docker/waveview.conf:/etc/nginx/conf.d/waveview.conf
-            - ./storage/:/var/www/html/
-        depends_on:
-            - app
-        networks:
-            - wv_network
+  celery:
+    build: .
+    command: celery -A waveview worker -l info
+    container_name: waveview_celery
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+      - memcached
 
-    celery:
-        build: .
-        container_name: wv_celery
-        restart: always
-        env_file:
-            - ./.env
-        command: "celery -A waveview worker -l info"
-        depends_on:
-            - app
-            - redis
-            - rabbitmq
-            - memcached
-        networks:
-            - wv_network
+  celery-beat:
+    build: .
+    command: celery -A waveview beat -l info
+    container_name: waveview_celery_beat
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+      - memcached
 
-    celery-beat:
-        build: .
-        container_name: wv_celerybeat
-        restart: always
-        env_file:
-            - ./.env
-        command: "celery -A waveview beat -l info"
-        depends_on:
-            - app
-            - redis
-            - rabbitmq
-            - memcached
-        networks:
-            - wv_network
+  nginx:
+    image: nginx:1.21
+    restart: always
+    container_name: waveview_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./conf/nginx:/etc/nginx/conf.d
+      - static:/app/storage/static
+      - media:/app/storage/media
+    depends_on:
+      - web
 
-networks:
-  wv_network:
-    driver: bridge
+volumes:
+  waveview_data:
+  static:
+  media:

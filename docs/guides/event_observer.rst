@@ -47,6 +47,8 @@ Each function receives the following parameters:
             "server_url": "http://localhost:8000",
             "api_key": "123456"
         }
+
+    ``data`` will be a dictionary with the above value.
  
 - ``**options``: Additional options that can be passed to the observer. 
 
@@ -55,21 +57,24 @@ Event Observer section. Here is the step to register the observer:
 
 1. Select volcano name in which the observer will be registered.
 
-2. Fill the name with ``EventObserver.name`` value.
+2. Fill the name with observer name attribute. If ``EventObserver.name`` is
+   ``bma.sync``, the name should be ``bma.sync``.
 
 3. Fill the data with the data that will be passed to the observer.
 
-4. Make sure Is enabled is checked and uncheck Run async.
+4. Make sure ``Is enabled`` is checked and uncheck ``Run async``. Run async is
+   still in development.
 
 5. Set the order of the observer. The observer with the lowest order will be
    executed first. For example, if the event need magnitude data, it should be
-   ordeered after the magnitude observer.
+   ordered after the magnitude observer.
 
-7. Fill the description with the observer description (recommended).
+7. Fill the description with the text explaining what observer is doing
+   (recommended).
 
 8. Select the author of the observer (recommended).
 
 9. Click the save button.
 
-When the error raised in the observer while running, it will be logged in the
-Celery log file. The next observer will still be executed.
+When the error raised in the observer, it will be logged in the Celery log file
+from the storage directory. The next observer will still be executed.

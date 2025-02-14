@@ -14,7 +14,7 @@ swagger_info = openapi.Info(
     description="WaveView API endpoints",
     terms_of_service="https://github.com/bpptkg/waveview",
     contact=openapi.Contact(email="bpptkg@esdm.go.id"),
-    license=openapi.License(name="(c) 2024 BPPTKG"),
+    license=openapi.License(name="(c) 2024 WaveView Developers"),
 )
 
 schema_view = get_schema_view(

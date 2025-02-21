@@ -102,6 +102,9 @@ class RegisterUserSerializer(serializers.Serializer):
     username = serializers.CharField(help_text=_("Username."))
     email = serializers.EmailField(help_text=_("User email."))
     password = serializers.CharField(help_text=_("User password."), write_only=True)
+    password_verify = serializers.CharField(
+        help_text=_("Verify user password."), write_only=True
+    )
     name = serializers.CharField(
         help_text=_("User name."), allow_blank=True, required=False
     )
@@ -140,3 +143,8 @@ class RegisterUserSerializer(serializers.Serializer):
             )
 
         return value
+
+    def validate(self, data: dict) -> dict:
+        if data["password"] != data["password_verify"]:
+            raise serializers.ValidationError(_("Passwords do not match."))
+        return data

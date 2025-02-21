@@ -14,6 +14,7 @@ Volcano monitoring.
     guides/docker
     guides/configuration
     guides/architecture
+    guides/picker_configuration
     guides/event_observer
     guides/troubleshooting
     guides/rest_api

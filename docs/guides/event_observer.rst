@@ -78,3 +78,17 @@ Event Observer section. Here is the step to register the observer:
 
 When the error raised in the observer, it will be logged in the Celery log file
 from the storage directory. The next observer will still be executed.
+
+Below is several examples of built-in observer classes:
+
+- ``waveview.contrib.bpptkg.magnitude.MagnitudeObserver``
+
+    This observer is used to calculate the magnitude of the event using BPPTKG
+    method. You can see the input data configuration in the
+    ``fixtures/magnitude-config.json``. Its type is defined in
+    ``waveview.contrib.bpptkg.magnitude.MagnitudeObserverData``.
+
+- ``waveview.contrib.bma.bulletin.BulletinObserver``
+
+    This observer is used to send the event to the BMA system. It will send the
+    event data to the BMA system using the BMA API.

@@ -133,9 +133,3 @@ Run the Celery beat:
 
 Open your browser and go to ``http://127.0.0.1:8000/admin/`` to access the admin
 panel.
-
-
-Docker Installation
--------------------
-
-TODO

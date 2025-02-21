@@ -32,7 +32,7 @@ class OrderingType(models.TextChoices):
     DESC = "desc", _("Descending")
 
 
-class ParamSerializer(serializers.Serializer):
+class QueryParamsSerializer(serializers.Serializer):
     start = serializers.DateTimeField(
         required=False, help_text="Start date of the event in ISO 8601 format."
     )
@@ -69,7 +69,7 @@ class EventIndexEndpoint(Endpoint):
         responses={
             status.HTTP_200_OK: openapi.Response("OK", EventSerializer(many=True)),
         },
-        query_serializer=ParamSerializer,
+        query_serializer=QueryParamsSerializer,
     )
     def get(
         self,
@@ -83,7 +83,7 @@ class EventIndexEndpoint(Endpoint):
         volcano = self.get_volcano(organization, volcano_id)
         catalog = self.get_catalog(volcano, catalog_id)
 
-        param = ParamSerializer(data=request.query_params)
+        param = QueryParamsSerializer(data=request.query_params)
         param.is_valid(raise_exception=True)
         start = param.validated_data.get("start")
         end = param.validated_data.get("end")

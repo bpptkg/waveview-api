@@ -19,7 +19,7 @@ from waveview.event.models import Event, EventType
 from waveview.organization.permissions import PermissionType
 
 
-class ParamSerializer(serializers.Serializer):
+class QueryParamsSerializer(serializers.Serializer):
     start = serializers.DateTimeField(
         required=True, help_text="Start date of the query in ISO 8601 format."
     )
@@ -76,7 +76,7 @@ class DownloadEventsEndpoint(Endpoint):
         ),
         tags=["Catalog"],
         responses={status.HTTP_200_OK: openapi.Response("OK")},
-        query_serializer=ParamSerializer,
+        query_serializer=QueryParamsSerializer,
     )
     def get(
         self,
@@ -99,7 +99,7 @@ class DownloadEventsEndpoint(Endpoint):
                 _("You do not have permission to download event data.")
             )
 
-        serializer = ParamSerializer(data=request.query_params)
+        serializer = QueryParamsSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
 
         start = serializer.validated_data["start"]

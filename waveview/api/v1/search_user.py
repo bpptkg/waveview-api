@@ -12,7 +12,7 @@ from waveview.api.base import Endpoint
 from waveview.users.serializers import UserSerializer
 
 
-class ParamSerializer(serializers.Serializer):
+class QueryParamsSerializer(serializers.Serializer):
     query = serializers.CharField(help_text="The keyword to search.")
     limit = serializers.IntegerField(
         required=False, help_text="Limit the number of results."
@@ -33,10 +33,10 @@ class SearchUserEndpoint(Endpoint):
         responses={
             status.HTTP_200_OK: openapi.Response("OK", UserSerializer(many=True)),
         },
-        query_serializer=ParamSerializer,
+        query_serializer=QueryParamsSerializer,
     )
     def get(self, request: Request) -> Response:
-        serializer = ParamSerializer(data=request.query_params)
+        serializer = QueryParamsSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         query = serializer.validated_data["query"]
         limit = serializer.validated_data.get("limit", 15)

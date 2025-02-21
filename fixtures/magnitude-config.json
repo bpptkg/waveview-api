@@ -21,9 +21,9 @@
     ],
     "analogs": [
         {
-            "stream_id": "VG.MEPSL.00.HHZ",
+            "stream_id": "VG.MEPUS.00.EHZ",
             "label": "PUS Paper",
-            "slope": 16,
+            "slope": 26.3,
             "offset": 0
         }
     ],

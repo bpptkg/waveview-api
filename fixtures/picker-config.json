@@ -76,7 +76,8 @@
             "order": 4,
             "zerophase": false,
             "taper": "hann",
-            "width": 0.01
+            "width": 0.01,
+            "is_default": true
         },
         {
             "id": "lp,3",
@@ -127,11 +128,11 @@
                 "channel_id": "VG.MEGRA.HHZ"
             },
             {
-                "channel_id": "VG.MEPSL.HHZ",
+                "channel_id": "VG.MEPUS.EHZ",
                 "label": "PUS Paper",
-                "channel_ref": "VG.MEPSL.HHZ",
+                "channel_ref": "VG.MEPUS.EHZ",
                 "is_analog": true,
-                "slope": 16,
+                "slope": 26.3,
                 "offset": 0
             }
         ]

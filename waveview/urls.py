@@ -26,6 +26,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path("api/v1/", include("waveview.api.urls")),
     path("admin/", admin.site.urls),
     re_path(
         r"^waveview-api(?P<format>\.json|\.yaml)$",
@@ -42,7 +43,6 @@ urlpatterns = [
         schema_view.with_ui("redoc", cache_timeout=0),
         name="schema-redoc",
     ),
-    path("api/v1/", include("waveview.api.urls")),
     re_path(r"^$", lambda _: redirect("redoc/", permanent=False)),
 ]
 

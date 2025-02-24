@@ -128,11 +128,11 @@
                 "channel_id": "VG.MEGRA.HHZ"
             },
             {
-                "channel_id": "VG.MEPUS.EHZ",
+                "channel_id": "VG.MEPSL.HHZ",
                 "label": "PUS Paper",
-                "channel_ref": "VG.MEPUS.EHZ",
+                "channel_ref": "VG.MEPSL.HHZ",
                 "is_analog": true,
-                "slope": 26.3,
+                "slope": 16,
                 "offset": 0
             }
         ]

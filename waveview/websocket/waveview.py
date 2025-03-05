@@ -51,9 +51,10 @@ class WaveViewConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(response.to_dict())
 
     async def broadcast(self) -> None:
-        data = await database_sync_to_async(get_join_channel_data)(self.joined_channels)
+        joined_channels = self.joined_channels.copy()
+        data = await database_sync_to_async(get_join_channel_data)(joined_channels)
         channel_layer = get_channel_layer()
-        for user_id in self.joined_channels:
+        for user_id in joined_channels:
             await channel_layer.group_send(
                 user_channel(user_id),
                 {

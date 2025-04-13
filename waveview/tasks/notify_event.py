@@ -64,6 +64,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
     event_id = data.event_id
     event_time = data.event_time
     event_type_code = data.event_type_code
+    catalog_name = data.catalog_name
 
     if operation == OperationType.CREATE:
         event = get_event(event_id)
@@ -75,7 +76,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
         message = NotificationMessage(
             type=NotificationType.NEW_EVENT.value,
             title=f"New Event ({event_type_code})",
-            body=f"Time {event_time} UTC by {actor_name}",
+            body=f"Time {event_time} UTC by {actor_name} in {catalog_name}",
             data=payload,
         ).to_dict()
 
@@ -89,7 +90,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
         message = NotificationMessage(
             type=NotificationType.EVENT_UPDATE.value,
             title=f"Event Updated ({event_type_code})",
-            body=f"Time {event_time} UTC by {actor_name}",
+            body=f"Time {event_time} UTC by {actor_name} in {catalog_name}",
             data=payload,
         ).to_dict()
 
@@ -105,6 +106,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
                     "type": event_type,
                     "duration": data.event_duration,
                     "deleted_at": timezone.now(),
+                    "catalog_name": catalog_name,
                 },
                 "actor": actor,
             }
@@ -112,7 +114,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
         message = NotificationMessage(
             type=NotificationType.EVENT_DELETE.value,
             title=f"Event Deleted ({event_type_code})",
-            body=f"Time {event_time} UTC by {actor_name}",
+            body=f"Time {event_time} UTC by {actor_name} in {catalog_name}",
             data=payload,
         ).to_dict()
     else:

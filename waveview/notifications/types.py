@@ -35,6 +35,7 @@ class NotifyEventData:
     event_type_code: str
     event_duration: float
     actor_id: str
+    catalog_name: str
 
     @classmethod
     def from_dict(cls, data: dict) -> "NotifyEventData":
@@ -51,6 +52,7 @@ class NotifyEventData:
             event_type_code=event.type.code,
             event_duration=event.duration,
             actor_id=actor_id,
+            catalog_name=event.catalog.name,
         )
 
     def to_dict(self) -> dict:

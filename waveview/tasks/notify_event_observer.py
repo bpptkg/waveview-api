@@ -79,5 +79,6 @@ def notify_event_observer(
                     adapter.delete(event_id, item.data, **options)
         except Exception as e:
             logger.error(
-                f"Error notifying event observer {item.name} for event {event_id}: {e}"
+                f"Error notifying event observer {item.name} for event {event_id}: {e}",
+                exc_info=True,
             )

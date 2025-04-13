@@ -12,6 +12,7 @@ class NewEventNotificationDataSerializer(serializers.Serializer):
 class EventUpdateNotificationDataSerializer(serializers.Serializer):
     event = EventSerializer()
     actor = UserSerializer()
+    catalog_name = serializers.CharField()
 
 
 class DeletedEvent(serializers.Serializer):

@@ -71,7 +71,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
         actor = get_actor(actor_id)
         actor_name = get_actor_name(actor)
         payload = NewEventNotificationDataSerializer(
-            {"event": event, "actor": actor}
+            {"event": event, "actor": actor, "catalog_name": catalog_name}
         ).data
         message = NotificationMessage(
             type=NotificationType.NEW_EVENT.value,
@@ -85,7 +85,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
         actor = get_actor(actor_id)
         actor_name = get_actor_name(actor)
         payload = EventUpdateNotificationDataSerializer(
-            {"event": event, "actor": actor}
+            {"event": event, "actor": actor, "catalog_name": catalog_name}
         ).data
         message = NotificationMessage(
             type=NotificationType.EVENT_UPDATE.value,
@@ -106,9 +106,9 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
                     "type": event_type,
                     "duration": data.event_duration,
                     "deleted_at": timezone.now(),
-                    "catalog_name": catalog_name,
                 },
                 "actor": actor,
+                "catalog_name": catalog_name,
             }
         ).data
         message = NotificationMessage(

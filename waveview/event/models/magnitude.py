@@ -22,7 +22,11 @@ class Amplitude(models.Model):
         related_name="amplitudes",
         related_query_name="amplitude",
     )
-    amplitude = models.FloatField(help_text=_("Measured amplitude value."))
+    amplitude = models.FloatField(
+        null=True,
+        blank=True,
+        help_text=_("Measured amplitude value."),
+    )
     type = models.CharField(
         max_length=50,
         null=True,
@@ -121,7 +125,11 @@ class StationMagnitude(models.Model):
         related_query_name="station_magnitude",
         help_text=_("Reference to the amplitude object."),
     )
-    magnitude = models.FloatField(help_text=_("Estimated magnitude."))
+    magnitude = models.FloatField(
+        null=True,
+        blank=True,
+        help_text=_("Estimated magnitude."),
+    )
     type = models.CharField(
         max_length=255,
         null=True,
@@ -166,13 +174,15 @@ class Magnitude(models.Model):
         related_query_name="magnitude",
     )
     magnitude = models.FloatField(
+        null=True,
+        blank=True,
         help_text=_(
             """
             Resulting magnitude value from combining values of type
             StationMagnitude. If no estimations are available, this value can
             represent the reported magnitude.
             """
-        )
+        ),
     )
     type = models.CharField(
         max_length=50,

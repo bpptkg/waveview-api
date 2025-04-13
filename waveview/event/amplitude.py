@@ -12,7 +12,7 @@ from waveview.inventory.datastream import DataStream
 class SignalAmplitude:
     time: datetime
     duration: float
-    amplitude: float
+    amplitude: float | None
     method: str
     category: str
     unit: str

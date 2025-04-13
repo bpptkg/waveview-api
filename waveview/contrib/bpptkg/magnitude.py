@@ -81,8 +81,6 @@ def calc_bpptkg_ml(amplitude: float) -> float:
 
     where log10(A0) equal to -1.4 and ml is Richter local magnitude scale.
     """
-    if amplitude <= 0:
-        return 0
     ampl = amplitude * 1e6  # Convert to micro-meter.
     return np.log10(ampl) + 1.4
 
@@ -104,30 +102,30 @@ class MagnitudeEstimator:
         inventory = Inventory.objects.get(organization_id=organization_id)
         return inventory
 
-    def get_amax(self, data: np.ndarray) -> float:
+    def get_amax(self, data: np.ndarray) -> float | None:
         """
         Get Amax (peak-to-peak/2) value from stream in m.
         """
         if len(data) == 0:
-            return 0
+            return None
 
         minval = np.min(data)
         maxval = np.max(data)
         amplitude = (maxval - minval) / 2
         if np.isnan(amplitude):
-            return 0
+            return None
         return amplitude
 
-    def get_zeropk(self, data: np.ndarray) -> float:
+    def get_zeropk(self, data: np.ndarray) -> float | None:
         """
         Get zero-to-peak value from stream in m.
         """
         if len(data) == 0:
-            return 0
+            return None
 
         amplitude = np.max(np.abs(data))
         if np.isnan(amplitude):
-            return 0
+            return None
         return amplitude
 
     def remove_response(self, inventory: Inventory, st: Stream) -> Stream:
@@ -166,7 +164,7 @@ class MagnitudeEstimator:
             method=self.method,
             type=magnitude_type,
             defaults={
-                "magnitude": 0,
+                "magnitude": None,
                 "station_count": 0,
                 "azimuthal_gap": 0,
                 "evaluation_status": EvaluationStatus.PRELIMINARY,
@@ -191,26 +189,27 @@ class MagnitudeEstimator:
                 continue
 
             if len(st) == 0:
-                amax = 0
-                ml = 0
+                amax = None
+                ml = None
             else:
-                if use_outlier_filter:
-                    data = remove_outliers(st[0].data)
-                else:
-                    data = st[0].data
+                data = remove_outliers(st[0].data) if use_outlier_filter else st[0].data
                 amax = self.get_amax(data)
                 ml = calc_bpptkg_ml(amax)
 
-            if channel.contains_stream_id(stream_ids):
+            if channel.contains_stream_id(stream_ids) and ml is not None:
                 magnitude_values.append(ml)
                 stations.add(channel.station.code)
+
+            uamax = (
+                amax * 1e6 if amax is not None else None
+            )  # Convert to µm if amax exists
 
             amplitude, _ = Amplitude.objects.update_or_create(
                 event=event,
                 waveform=channel,
                 method=self.method,
                 defaults={
-                    "amplitude": amax * 1e6,  # Convert to micro-meter.
+                    "amplitude": uamax,
                     "type": "Amax",
                     "category": AmplitudeCategory.DURATION,
                     "time": event.time,
@@ -243,14 +242,12 @@ class MagnitudeEstimator:
                 },
             )
 
-        if len(magnitude_values) > 0:
+        if magnitude_values:
             avg = np.mean(magnitude_values)
-            if np.isnan(avg):
-                logger.debug("Average magnitude is NaN.")
-                return
-            magnitude.magnitude = avg
-            magnitude.station_count = len(stations)
-            magnitude.save()
+            if not np.isnan(avg):
+                magnitude.magnitude = avg
+                magnitude.station_count = len(stations)
+                magnitude.save()
 
         for analog in analogs:
             network, station, __, channel = analog.stream_id.split(".")
@@ -263,10 +260,11 @@ class MagnitudeEstimator:
                 continue
 
             ampl = amplitude_map.get(str(channel.id))
-            if ampl is None:
-                value = 0
-            else:
-                value = analog.slope * ampl.amplitude + analog.offset
+            value = (
+                analog.slope * ampl.amplitude + analog.offset
+                if ampl and ampl.amplitude is not None
+                else None
+            )
             Amplitude.objects.update_or_create(
                 event=event,
                 waveform=channel,

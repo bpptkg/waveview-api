@@ -16,17 +16,17 @@ logger = logging.getLogger(__name__)
 class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
     method = "bpptkg"
 
-    def get_amax(self, data: np.ndarray) -> float:
+    def get_amax(self, data: np.ndarray) -> float | None:
         """
         Get Amax (peak-to-peak/2) value from stream in m.
         """
         if len(data) == 0:
-            return 0
+            return None
         minval = np.min(data)
         maxval = np.max(data)
         amplitude = (maxval - minval) / 2
         if np.isnan(amplitude):
-            return 0
+            return None
         return amplitude
 
     def calc(
@@ -62,12 +62,17 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
             amax = self.get_amax(data)
         except Exception as e:
             logger.error(f"Failed to calculate amplitude: {e}")
-            amax = 0
+            amax = None
+
+        if amax is not None:
+            uamax = amax * 1e6  # Convert to µm.
+        else:
+            uamax = None
 
         return SignalAmplitude(
             time=time,
             duration=duration,
-            amplitude=amax * 1e6,  # Convert to µm.
+            amplitude=uamax,
             method=self.method,
             category=AmplitudeCategory.DURATION,
             unit=AmplitudeUnit.UM.label,

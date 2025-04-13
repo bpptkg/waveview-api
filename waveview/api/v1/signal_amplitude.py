@@ -106,10 +106,14 @@ class SignalAmplitudeEndpoint(Endpoint):
             if channel.is_analog:
                 slope = channel.slope or 1
                 offset = channel.offset or 0
+                if ampl.amplitude is not None:
+                    value = ampl.amplitude * slope + offset
+                else:
+                    value = None
                 return SignalAmplitude(
                     time=time,
                     duration=duration,
-                    amplitude=ampl.amplitude * slope + offset,
+                    amplitude=value,
                     method=method,
                     category=AmplitudeCategory.DURATION,
                     unit=AmplitudeUnit.MM,
@@ -130,7 +134,12 @@ class SignalAmplitudeEndpoint(Endpoint):
 
         return Response(
             SignalAmplitudeSerializer(
-                sorted(amplitudes, key=lambda x: x.amplitude, reverse=True), many=True
+                sorted(
+                    amplitudes,
+                    key=lambda x: (x.amplitude is None, x.amplitude),
+                    reverse=True,
+                ),
+                many=True,
             ).data,
             status=status.HTTP_200_OK,
         )

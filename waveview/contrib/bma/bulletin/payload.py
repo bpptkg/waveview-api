@@ -21,6 +21,8 @@ class BulletinPayloadBuilder:
         ).first()
         if amplitude is None:
             return None
+        if amplitude.amplitude is None:
+            return None
         return f"{amplitude.amplitude:.2f}{amplitude.unit}"
 
     def _get_ml_deles(self) -> float | None:

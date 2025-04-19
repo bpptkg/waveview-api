@@ -1,0 +1,140 @@
+{
+    "helicorder_channel": {
+        "channel_id": "VG.MEPAS.HHZ"
+    },
+    "helicorder_filter": {
+        "id": "bp,0.5,15",
+        "type": "bandpass",
+        "freqmin": 0.5,
+        "freqmax": 15,
+        "order": 4,
+        "zerophase": false,
+        "taper": "hann",
+        "width": 0.01
+    },
+    "helicorder_filters": [
+        {
+            "id": "bp,0.5,15",
+            "type": "bandpass",
+            "freqmin": 0.5,
+            "freqmax": 15,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "id": "lp,3",
+            "type": "lowpass",
+            "freq": 3,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "id": "lp,5",
+            "type": "lowpass",
+            "freq": 5,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "id": "hp,10",
+            "type": "highpass",
+            "freq": 10,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        }
+    ],
+    "helicorder_interval": 30,
+    "helicorder_duration": 12,
+    "seismogram_channels": [
+        {
+            "channel_id": "VG.MEPAS.HHZ"
+        },
+        {
+            "channel_id": "VG.MEKLA.HHZ"
+        },
+        {
+            "channel_id": "VG.MELAB.HHZ"
+        },
+        {
+            "channel_id": "VG.MEIJO.HHZ"
+        }
+    ],
+    "seismogram_filters": [
+        {
+            "id": "bp,0.5,15",
+            "type": "bandpass",
+            "freqmin": 0.5,
+            "freqmax": 15,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01,
+            "is_default": true
+        },
+        {
+            "id": "lp,3",
+            "type": "lowpass",
+            "freq": 3,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "id": "lp,5",
+            "type": "lowpass",
+            "freq": 5,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        },
+        {
+            "id": "hp,10",
+            "type": "highpass",
+            "freq": 10,
+            "order": 4,
+            "zerophase": false,
+            "taper": "hann",
+            "width": 0.01
+        }
+    ],
+    "window_size": 5,
+    "force_center": true,
+    "amplitude_config": {
+        "amplitude_calculator": "bpptkg",
+        "channels": [
+            {
+                "channel_id": "VG.MEPAS.HHZ"
+            },
+            {
+                "channel_id": "VG.MEPSL.HHZ"
+            },
+            {
+                "channel_id": "VG.MELAB.HHZ"
+            },
+            {
+                "channel_id": "VG.MEKLA.HHZ"
+            },
+            {
+                "channel_id": "VG.MEGRA.HHZ"
+            },
+            {
+                "channel_id": "VG.MEPUS.EHZ",
+                "label": "PUS Paper",
+                "channel_ref": "VG.MEPUS.EHZ",
+                "is_analog": true,
+                "slope": 26.3,
+                "offset": 0
+            }
+        ]
+    }
+}

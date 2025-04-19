@@ -1,0 +1,32 @@
+{
+    "stream_ids": [
+        "VG.MEGRA.00.HHE",
+        "VG.MEGRA.00.HHN",
+        "VG.MEGRA.00.HHZ",
+        "VG.MEKLA.00.HHE",
+        "VG.MEKLA.00.HHN",
+        "VG.MEKLA.00.HHZ",
+        "VG.MELAB.00.HHE",
+        "VG.MELAB.00.HHN",
+        "VG.MELAB.00.HHZ",
+        "VG.MEPAS.00.HHE",
+        "VG.MEPAS.00.HHN",
+        "VG.MEPAS.00.HHZ",
+        "VG.MEPSL.00.HHE",
+        "VG.MEPSL.00.HHN",
+        "VG.MEPSL.00.HHZ",
+        "VG.MEDEL.00.HHE",
+        "VG.MEDEL.00.HHN",
+        "VG.MEDEL.00.HHZ"
+    ],
+    "analogs": [
+        {
+            "stream_id": "VG.MEPUS.00.EHZ",
+            "label": "PUS Paper",
+            "slope": 26.3,
+            "offset": 0
+        }
+    ],
+    "is_preferred": true,
+    "preferred_stream_id": "VG.MEPAS.00.HHZ"
+}

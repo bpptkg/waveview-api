@@ -9,16 +9,14 @@ services:
     expose:
       - "8000"
     volumes:
-      - .:/app
-      - static:/app/storage/static
-      - media:/app/storage/media
+      - ./storage:/app/storage
     depends_on:
       - db
       - redis
       - memcached
 
   db:
-    image: timescale/timescaledb-ha:pg16
+    image: timescale/timescaledb-ha:pg17
     restart: always
     container_name: waveview_db
     expose:
@@ -31,7 +29,7 @@ services:
       - POSTGRES_DB=${DATABASE_NAME}
 
   redis:
-    image: redis:7
+    image: redis:7.4
     container_name: waveview_redis
     restart: always
     expose:
@@ -45,7 +43,7 @@ services:
       - "11211"
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3.13-management
     restart: always
     container_name: waveview_rabbitmq
     expose:
@@ -61,8 +59,6 @@ services:
     container_name: waveview_celery
     env_file:
       - ./.env
-    volumes:
-      - .:/app
     depends_on:
       - db
       - redis
@@ -74,27 +70,10 @@ services:
     container_name: waveview_celery_beat
     env_file:
       - ./.env
-    volumes:
-      - .:/app
     depends_on:
       - db
       - redis
       - memcached
 
-  nginx:
-    image: nginx:1.21
-    restart: always
-    container_name: waveview_nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./conf/docker:/etc/nginx/conf.d
-      - static:/app/storage/static
-      - media:/app/storage/media
-    depends_on:
-      - web
-
 volumes:
   waveview_data:
-  static:
-  media:

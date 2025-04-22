@@ -77,6 +77,7 @@ class BandpassFilterConfigData:
     taper: str
     taper_width: float
     id: str
+    is_default: bool
 
     @classmethod
     def from_dict(cls, data: dict) -> "BandpassFilterConfigData":
@@ -90,7 +91,7 @@ class BandpassFilterConfigData:
             raise ValueError("freqmin is required")
         if freqmax is None:
             raise ValueError("freqmax is required")
-
+        is_default = data.get("is_default", False)
         return cls(
             type="bandpass",
             freqmin=freqmin,
@@ -100,6 +101,7 @@ class BandpassFilterConfigData:
             taper=taper,
             taper_width=taper_width,
             id=data["id"],
+            is_default=is_default,
         )
 
     def to_dict(self) -> dict:
@@ -115,6 +117,7 @@ class LowpassFilterConfigData:
     taper: str
     taper_width: float
     id: str
+    is_default: bool
 
     @classmethod
     def from_dict(cls, data: dict) -> "LowpassFilterConfigData":
@@ -125,6 +128,7 @@ class LowpassFilterConfigData:
         zerophase = data.get("zerophase", False)
         taper = data.get("taper", "hann")
         taper_width = data.get("taper_width", 0.01)
+        is_default = data.get("is_default", False)
         return cls(
             type="lowpass",
             freq=freq,
@@ -133,6 +137,7 @@ class LowpassFilterConfigData:
             taper=taper,
             taper_width=taper_width,
             id=data["id"],
+            is_default=is_default,
         )
 
     def to_dict(self) -> dict:
@@ -148,6 +153,7 @@ class HighpassFilterConfigData:
     taper: str
     taper_width: float
     id: str
+    is_default: bool
 
     @classmethod
     def from_dict(cls, data: dict) -> "HighpassFilterConfigData":
@@ -158,6 +164,7 @@ class HighpassFilterConfigData:
         zerophase = data.get("zerophase", False)
         taper = data.get("taper", "hann")
         taper_width = data.get("taper_width", 0.01)
+        is_default = data.get("is_default", False)
         return cls(
             type="highpass",
             freq=freq,
@@ -166,6 +173,7 @@ class HighpassFilterConfigData:
             taper=taper,
             taper_width=taper_width,
             id=data["id"],
+            is_default=is_default,
         )
 
     def to_dict(self) -> dict:

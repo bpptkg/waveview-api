@@ -84,7 +84,7 @@ def build_traces(rows: BufferType, channel: Channel) -> Stream:
         for row in rows
     ]
     st = Stream(traces=traces)
-    st.merge(method=0, fill_value=0)
+    st.merge(method=1, fill_value=0)
     return st
 
 

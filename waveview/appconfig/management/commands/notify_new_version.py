@@ -28,7 +28,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--reload-timeout",
             type=int,
-            default=10,
+            default=30,
             help="Timeout for the reload.",
         )
 

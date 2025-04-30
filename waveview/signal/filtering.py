@@ -3,12 +3,11 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-import numpy as np
 from django.db import connection
 
 from waveview.inventory.datastream import DataStream
 from waveview.inventory.models import Channel
-from waveview.signal.packet import Packet
+from waveview.signal.encoder import StreamData, StreamEncoder
 from waveview.utils import timestamp
 
 logger = logging.getLogger(__name__)
@@ -131,27 +130,27 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
         resample = payload.resample
         sample_rate = payload.sample_rate
 
-        empty_packet = Packet(
-            request_id=request_id,
-            channel_id=channel_id,
-            command="stream.filter",
-            start=timestamp.to_milliseconds(start),
-            end=timestamp.to_milliseconds(end),
-            time=0,
-            sample_rate=1,
-            x=np.array([]),
-            y=np.array([]),
+        encoder = StreamEncoder()
+        empty = encoder.encode_stream(
+            StreamData(
+                request_id=request_id,
+                channel_id=channel_id,
+                command="stream.filter",
+                start=timestamp.to_milliseconds(start),
+                end=timestamp.to_milliseconds(end),
+                trace=None,
+            )
         )
 
         try:
             Channel.objects.get(id=channel_id)
         except Channel.DoesNotExist:
             logger.debug(f"Channel {channel_id} not found.")
-            return empty_packet.encode()
+            return empty
 
         st = self.datastream.get_waveform(channel_id, start, end)
-        if len(st) == 0 or st[0].stats.npts == 0:
-            return empty_packet.encode()
+        if len(st) == 0:
+            return empty
 
         st.detrend("demean")
 
@@ -185,40 +184,29 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
                     zerophase=filter_param.zerophase,
                 )
             else:
-                return empty_packet.encode()
+                return empty
         except Exception as e:
             logger.error(f"Error filtering data: {e}")
-            return empty_packet.encode()
+            return empty
 
         if resample:
             st.resample(sample_rate)
 
-        starttime = st[0].stats.starttime
-        npts = st[0].stats.npts
-        delta = st[0].stats.delta
-        a = np.array(
-            [starttime.timestamp * 1000 + i * delta * 1000 for i in range(npts)],
-            dtype=np.float64,
-        )
-        b = st[0].data.astype(np.float64)
+        st.merge(method=0, fill_value=None)
+        trace = st[0]
+        if len(trace.data) == 0:
+            return empty
 
-        # start and end time of the packet need to be the same as the original
-        # request as the client uses these values to cache the data. If the data
-        # is resampled, the start and end time of the packet will be different
-        # from the original request. But it should not affect the caching
-        # mechanism as the point will be plotted at the same time.
-        packet = Packet(
-            request_id=request_id,
-            channel_id=channel_id,
-            command="stream.filter",
-            start=start.timestamp() * 1000,
-            end=end.timestamp() * 1000,
-            time=starttime.timestamp * 1000,
-            sample_rate=1 / delta,
-            x=a,
-            y=b,
+        return encoder.encode_stream(
+            StreamData(
+                request_id=request_id,
+                channel_id=channel_id,
+                command="stream.fetch",
+                start=timestamp.to_milliseconds(start),
+                end=timestamp.to_milliseconds(end),
+                trace=trace,
+            )
         )
-        return packet.encode()
 
 
 def get_filter_adapter() -> BaseFilterAdapter:

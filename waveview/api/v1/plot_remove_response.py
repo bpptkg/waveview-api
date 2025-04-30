@@ -42,6 +42,7 @@ class RemoveResponsePlotter:
         self, channel: Channel, starttime: datetime, endtime: datetime, **options: dict
     ) -> ResultInfo:
         st = self.datastream.get_waveform(channel.id, starttime, endtime)
+        st.merge()
         buf = io.BytesIO()
         output = options.get("output", FieldType.DEF)
 

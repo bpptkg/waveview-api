@@ -184,8 +184,8 @@ class StreamEncoder:
             time_min = 0
             time_max = 0
         else:
-            time_min = data.start + (data.time.min() * 1000)
-            time_max = data.start + (data.time.max() * 1000)
+            time_min = data.start
+            time_max = data.end
 
         if len(data.data) == 0:
             min_val = 0

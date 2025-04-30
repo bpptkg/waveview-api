@@ -89,7 +89,7 @@ def generate_image(
     """
     cmap = get_cmap()
     pixels_per_bin = 1
-    dpi = plt.rcParams["figure.dpi"]
+    dpi = 100
 
     w = len(time) * pixels_per_bin / dpi
     h = len(freq) * pixels_per_bin / dpi

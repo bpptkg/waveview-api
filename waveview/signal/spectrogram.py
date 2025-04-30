@@ -46,7 +46,7 @@ def spectrogram(
     sample_rate: float,
     per_lap: float = 0.9,
     wlen: float | None = None,
-    mult: float | None = 8.0,
+    mult: float | None = 16.0,
     dbscale: bool = False,
     clip: list[float] = [0.0, 1.0],
     gap_threshold: float = 1e-12,
@@ -58,7 +58,7 @@ def spectrogram(
     data = data - np.mean(data)
 
     if wlen is None:
-        wlen = 128 / sample_rate
+        wlen = 256 / sample_rate
 
     nfft = int(_nearest_pow_2(wlen * sample_rate))
     if len(data) < nfft:

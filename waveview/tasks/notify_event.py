@@ -78,6 +78,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
             title=f"New Event ({event_type_code})",
             body=f"Time {event_time} UTC by {actor_name} in {catalog_name}",
             data=payload,
+            dirty=True,
         ).to_dict()
 
     elif operation == OperationType.UPDATE:
@@ -92,6 +93,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
             title=f"Event Updated ({event_type_code})",
             body=f"Time {event_time} UTC by {actor_name} in {catalog_name}",
             data=payload,
+            dirty=True,
         ).to_dict()
 
     elif operation == OperationType.DELETE:
@@ -116,6 +118,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
             title=f"Event Deleted ({event_type_code})",
             body=f"Time {event_time} UTC by {actor_name} in {catalog_name}",
             data=payload,
+            dirty=True,
         ).to_dict()
     else:
         raise ValueError(f"Invalid operation: {operation}")

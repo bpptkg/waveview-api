@@ -9,6 +9,7 @@ class NotificationType(models.TextChoices):
     NEW_EVENT = "new_event", "New Event"
     EVENT_UPDATE = "event_update", "Event Update"
     EVENT_DELETE = "event_delete", "Event Delete"
+    NEW_APP_VERSION = "new_app_version", "New App Version"
 
 
 @dataclass
@@ -17,6 +18,8 @@ class NotificationMessage:
     title: str
     body: str
     data: dict
+    dirty: bool = False
+    timeout: int = 5000
 
     def to_dict(self) -> dict:
         return {
@@ -24,6 +27,8 @@ class NotificationMessage:
             "title": self.title,
             "body": self.body,
             "data": dict(self.data),
+            "dirty": self.dirty,
+            "timeout": self.timeout,
         }
 
 

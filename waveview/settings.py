@@ -313,7 +313,15 @@ CELERY_DEFAULT_EXCHANGE_TYPE = "direct"
 CELERY_DEFAULT_ROUTING_KEY = "default"
 CELERY_CREATE_MISSING_QUEUES = True
 CELERYD_MAX_TASKS_PER_CHILD = 1
-CELERY_IMPORTS = ()
+CELERY_IMPORTS = (
+    "waveview.tasks.exec_async",
+    "waveview.tasks.notify_event_observer",
+    "waveview.tasks.notify_event",
+    "waveview.tasks.notify_new_version",
+    "waveview.tasks.send_email",
+    "waveview.tasks.send_trace_buffer",
+    "waveview.tasks.update_inventory",
+)
 CELERYBEAT_SCHEDULE_FILENAME = str(Path(tempfile.gettempdir()) / "waveview-celerybeat")
 CELERYBEAT_SCHEDULE = {}
 

@@ -123,7 +123,7 @@ def build_message(operation: OperationType, data: NotifyEventData) -> dict:
     return message
 
 
-def send_message(participants: list[User], message: NotificationMessage) -> None:
+def send_message(participants: list[User], message: dict) -> None:
     channel_layer = get_channel_layer()
     for participant in participants:
         channel = user_channel(participant.pk)

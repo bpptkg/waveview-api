@@ -201,7 +201,7 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
             StreamData(
                 request_id=request_id,
                 channel_id=channel_id,
-                command="stream.fetch",
+                command="stream.filter",
                 start=timestamp.to_milliseconds(start),
                 end=timestamp.to_milliseconds(end),
                 trace=trace,

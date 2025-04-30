@@ -176,7 +176,7 @@ class StreamEncoder:
             freq_min = 0
             freq_max = 0
         else:
-            freq_min = data.freq.min()
+            freq_min = 0
             freq_max = data.freq.max()
 
         time_length = len(data.time)

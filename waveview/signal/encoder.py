@@ -169,7 +169,6 @@ class StreamEncoder:
         command = pad(data.command.encode("utf-8"), 64)
         channel_id = pad(data.channel_id.encode("utf-8"), 64)
         time_signal = np.arange(data.npoints) / data.sample_rate
-        version: int = 0
 
         freq_length = len(data.freq)
         if len(data.freq) == 0:
@@ -204,7 +203,7 @@ class StreamEncoder:
             )
 
         binary = b""
-        binary += struct.pack("<i", version)
+        binary += struct.pack("<i", self.version)
         binary += request_id
         binary += command
         binary += channel_id

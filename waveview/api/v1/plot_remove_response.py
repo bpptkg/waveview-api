@@ -27,9 +27,9 @@ from waveview.inventory.models import Channel, Inventory
 class ResultInfo:
     image: str
     empty: bool
-    amplitude_max: float
-    amplitude_min: float
-    amplitude_peak: float
+    amplitude_max: float | None
+    amplitude_min: float | None
+    amplitude_peak: float | None
     amplitude_unit: str
 
 
@@ -42,7 +42,8 @@ class RemoveResponsePlotter:
         self, channel: Channel, starttime: datetime, endtime: datetime, **options: dict
     ) -> ResultInfo:
         st = self.datastream.get_waveform(channel.id, starttime, endtime)
-        st.merge()
+        st.detrend("demean")
+        st.merge(fill_value=0)
         buf = io.BytesIO()
         output = options.get("output", FieldType.DEF)
 
@@ -62,14 +63,17 @@ class RemoveResponsePlotter:
         buf.close()
 
         if len(st) == 0:
-            amplitude_max = 0
-            amplitude_min = 0
-            amplitude_peak = 0
+            amplitude_max = None
+            amplitude_min = None
+            amplitude_peak = None
         else:
             data = st[0].data
             amplitude_max = np.nanmax(data)
             amplitude_min = np.nanmin(data)
             amplitude_peak = (amplitude_max - amplitude_min) / 2
+            if np.isnan(amplitude_max):
+                amplitude_max = None
+
         if output == FieldType.DISP:
             amplitude_unit = "m"
         elif output == FieldType.VEL:
@@ -78,6 +82,7 @@ class RemoveResponsePlotter:
             amplitude_unit = "m/s^2"
         else:
             amplitude_unit = "units"
+
         response = ResultInfo(
             image=f"data:image/png;base64,{img_base64}",
             empty=img_base64 == "",

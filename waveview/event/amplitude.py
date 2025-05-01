@@ -20,6 +20,8 @@ class SignalAmplitude:
     channel_id: str
     preferred: bool = False
     label: str = ""
+    begin: int = 0
+    end: int = 0
 
 
 class AmplitudeCalculator:

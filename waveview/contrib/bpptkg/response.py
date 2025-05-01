@@ -15,8 +15,8 @@ def remove_instrument_response(inventory: Inventory, st: Stream) -> Stream:
     for inv_file in inventory.files.all():
         inv: ObspyInventory = read_inventory(inv_file.file)
         try:
-            st.merge(fill_value=0)
             st.detrend("demean")
+            st.merge(fill_value=0)
             pre_filt = [0.5, 1, 45, 50]
             st.remove_response(
                 inventory=inv,

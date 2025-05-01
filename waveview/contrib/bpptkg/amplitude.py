@@ -22,8 +22,8 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         """
         if len(data) == 0:
             return None
-        minval = np.min(data)
-        maxval = np.max(data)
+        minval = np.nanmin(data)
+        maxval = np.nanmax(data)
         amplitude = (maxval - minval) / 2
         if np.isnan(amplitude):
             return None

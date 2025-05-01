@@ -109,21 +109,9 @@ class MagnitudeEstimator:
         if len(data) == 0:
             return None
 
-        minval = np.min(data)
-        maxval = np.max(data)
+        minval = np.nanmin(data)
+        maxval = np.nanmax(data)
         amplitude = (maxval - minval) / 2
-        if np.isnan(amplitude):
-            return None
-        return amplitude
-
-    def get_zeropk(self, data: np.ndarray) -> float | None:
-        """
-        Get zero-to-peak value from stream in m.
-        """
-        if len(data) == 0:
-            return None
-
-        amplitude = np.max(np.abs(data))
         if np.isnan(amplitude):
             return None
         return amplitude

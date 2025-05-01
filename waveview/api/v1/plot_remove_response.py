@@ -67,8 +67,8 @@ class RemoveResponsePlotter:
             amplitude_peak = 0
         else:
             data = st[0].data
-            amplitude_max = np.max(data)
-            amplitude_min = np.min(data)
+            amplitude_max = np.nanmax(data)
+            amplitude_min = np.nanmin(data)
             amplitude_peak = (amplitude_max - amplitude_min) / 2
         if output == FieldType.DISP:
             amplitude_unit = "m"

@@ -35,15 +35,15 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         duration: float,
         channel_id: str,
         organization_id: str,
-        **options,
+        use_outlier_filter: bool = False,
     ) -> SignalAmplitude:
-        use_outlier_filter = options.get("use_outlier_filter", False)
         inventory = Inventory.objects.get(organization_id=organization_id)
-        buffer = 5  # Buffer in seconds.
         if use_outlier_filter:
+            buffer = 5  # Buffer in seconds.
             starttime = time - timedelta(seconds=buffer)
             endtime = time + timedelta(seconds=duration + buffer)
         else:
+            buffer = 0
             starttime = time
             endtime = time + timedelta(seconds=duration)
 
@@ -54,7 +54,9 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
             channel = Channel.objects.get(id=channel_id)
             stream = self.datastream.get_waveform(channel.id, starttime, endtime)
             if len(stream) == 0:
-                raise Exception("No matching data found.")
+                raise Exception(
+                    f"No matching data found for channel {channel.stream_id}."
+                )
             stream = remove_response(stream)
             data = stream[0].data
             if use_outlier_filter:
@@ -79,4 +81,6 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
             channel_id=channel_id,
             stream_id=channel.stream_id,
             label=channel.stream_id,
+            begin=buffer,
+            end=duration + buffer,
         )

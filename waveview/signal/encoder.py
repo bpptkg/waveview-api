@@ -88,13 +88,13 @@ def generate_image(
         the image only shows the desired time range.
     """
     cmap = get_cmap()
-    pixels_per_bin = 1
+    pixels_per_bin = 5
     dpi = 100
 
     w = len(time) * pixels_per_bin / dpi
     h = len(freq) * pixels_per_bin / dpi
 
-    fig, ax = plt.subplots(figsize=(w, h))
+    fig, ax = plt.subplots(figsize=(w, h), dpi=dpi)
     ax.imshow(
         specgram,
         aspect="auto",
@@ -102,6 +102,7 @@ def generate_image(
         origin="lower",
         extent=[time.min(), time.max(), freq.min(), freq.max()],
         cmap=cmap,
+        interpolation="bicubic",
     )
     ax.set_xlim(tmin, tmax)
     ax.set_ylim(0, freq.max())
@@ -220,4 +221,6 @@ class StreamEncoder:
 
         compressor = zstd.ZstdCompressor()
         compressed = compressor.compress(binary)
+        print(f"Compressed size: {len(compressed)}")
+        print(f"Uncompressed size: {len(binary)}")
         return compressed

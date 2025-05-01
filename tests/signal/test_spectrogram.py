@@ -6,6 +6,7 @@ import numpy as np
 from obspy import Stream, read
 
 from waveview.data.sample import get_sample_file_path
+from waveview.signal.encoder import StreamEncoder
 from waveview.signal.spectrogram import SpectrogramData, spectrogram
 
 
@@ -33,7 +34,8 @@ class SpectrogramTest(unittest.TestCase):
             width=800,
             height=600,
         )
-        data = packet.encode()
+        encoder = StreamEncoder()
+        data = encoder.encode_spectrogram(packet)
         self.assertTrue(isinstance(data, bytes))
 
 

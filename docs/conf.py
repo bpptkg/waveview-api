@@ -8,7 +8,7 @@ project = "WaveView"
 copyright = "(c) 2024, WaveView Developers"
 author = "WaveView Developers"
 
-release = "0.1.0"
+release = "0.2.0"
 
 extensions = [
     "sphinx.ext.todo",

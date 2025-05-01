@@ -221,6 +221,4 @@ class StreamEncoder:
 
         compressor = zstd.ZstdCompressor()
         compressed = compressor.compress(binary)
-        print(f"Compressed size: {len(compressed)}")
-        print(f"Uncompressed size: {len(binary)}")
         return compressed

@@ -153,6 +153,8 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
             return empty
 
         st.detrend("demean")
+        st.merge(method=0, fill_value=None)
+        st = st.split()
 
         if payload.taper_type != "none":
             st.taper(max_percentage=payload.taper_width, type=payload.taper_type)

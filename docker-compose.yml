@@ -6,8 +6,8 @@ services:
     command: daphne -b 0.0.0.0 -p 8000 waveview.asgi:application
     env_file:
       - ./.env
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     volumes:
       - ${STORAGE_DIR}:/app/storage
     depends_on:

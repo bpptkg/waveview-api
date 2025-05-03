@@ -1,9 +1,9 @@
-============
-Installation
-============
+====================
+Regular Installation
+====================
 
-This guide will walk you through the installation of the `waveview-api` package.
-This guide covers both regular and Docker-based installation methods.
+This guide will walk you through the regular installation of the `waveview-api`
+package.
 
 Requirements
 
@@ -11,10 +11,9 @@ Requirements
 - TimescaleDB 13 or higher
 - Redis 6 or higher
 - RabbitMQ 3.8 or higher
-
-
-Regular Installation
---------------------
+- Memcached 1.6 or higher
+- Docker 20.10 or higher
+- Docker Compose 1.29 or higher
 
 Clone the repository:
 

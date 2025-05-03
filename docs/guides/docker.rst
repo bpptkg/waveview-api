@@ -38,13 +38,24 @@ Edit the `.env` file and set the environment variables:
 
     vim .env
 
+If you are using custom storage directory, make sure to set the `STORAGE_DIR`
+variable to the correct path. The default value is `<PROJECT_ROOT>/storage`.
+
+Because docker containers are isolated from the host system, you need to create
+the storage directories in the host system. The following command will create
+the necessary directories:
+
+.. code-block:: bash
+
+    mkdir -p storage/{backup,db,logs,media,run,static}
+
 Build the Docker container:
 
 .. code-block:: bash
 
     docker-compose up --build
 
-The application will be available at http://localhost:80.
+The application will be available at http://127.0.0.1:8000.
 
 To create a superuser, run the following command:
 

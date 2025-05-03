@@ -347,6 +347,6 @@ BMA_URL = env("BMA_URL", default="https://bma.cendana15.com")
 BMA_API_KEY = env("BMA_API_KEY", default="")
 
 DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
-DBBACKUP_DIR = STORAGE_DIR / "dbbackup"
+DBBACKUP_DIR = STORAGE_DIR / "backup"
 DBBACKUP_DIR.mkdir(exist_ok=True, parents=True)
 DBBACKUP_STORAGE_OPTIONS = {"location": str(DBBACKUP_DIR)}

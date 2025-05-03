@@ -9,7 +9,7 @@ services:
     expose:
       - "8000"
     volumes:
-      - ./storage:/app/storage
+      - ${STORAGE_DIR}:/app/storage
     depends_on:
       - db
       - redis

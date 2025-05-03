@@ -15,6 +15,7 @@ __pycache__
 *.tar.gz
 *.zip
 *.tar
+*.swp
 TODO
 nocommit/
 crontab/

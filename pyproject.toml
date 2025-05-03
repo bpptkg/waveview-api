@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "waveview"
-version = "0.1.0"
+version = "0.2.0"
 description = "WaveView API endpoints"
 authors = ["Indra Rudianto <indrarudianto.official@gmail.com>"]
 license = "MIT"
@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-django = "^4.2.17"
+django = "^4.2.20"
 django-environ = "^0.11.2"
 djangorestframework = "^3.15.2"
 djangorestframework-simplejwt = "^5.3.1"

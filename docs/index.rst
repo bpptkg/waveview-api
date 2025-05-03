@@ -10,10 +10,10 @@ Volcano monitoring.
     :maxdepth: 1
     :caption: Guides
 
+    guides/architecture
     guides/installation
     guides/docker
     guides/configuration
-    guides/architecture
     guides/picker_configuration
     guides/event_observer
     guides/troubleshooting

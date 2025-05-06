@@ -79,11 +79,11 @@ class TimescaleStreamFetcher(BaseStreamFetcher):
         if len(st) == 0:
             return empty
 
-        if force_center:
-            st.detrend("demean")
-
         st.merge(method=0, fill_value=None)
         st = st.split()
+
+        if force_center:
+            st.detrend("demean")
 
         if resample:
             st.resample(sample_rate)

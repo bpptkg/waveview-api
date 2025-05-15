@@ -129,11 +129,21 @@
             },
             {
                 "channel_id": "VG.MEPUS.EHZ",
-                "label": "PUS Paper",
+                "label": "PUS Paper Auto",
                 "channel_ref": "VG.MEPUS.EHZ",
                 "is_analog": true,
                 "slope": 26.3,
                 "offset": 0
+            }
+        ],
+        "manual_inputs": [
+            {
+                "channel_id": "VG.MEPSL.HHZ",
+                "label": "PUS Paper Manual",
+                "method": "manual_analog",
+                "category": "duration",
+                "unit": "mm",
+                "type": "Amax"
             }
         ]
     }

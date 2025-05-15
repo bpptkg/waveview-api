@@ -22,7 +22,7 @@
     "analogs": [
         {
             "stream_id": "VG.MEPSL.00.HHZ",
-            "label": "PUS Paper",
+            "label": "PUS Paper Auto",
             "slope": 16,
             "offset": 0
         }

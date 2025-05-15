@@ -129,7 +129,7 @@
             },
             {
                 "channel_id": "VG.MEPSL.HHZ",
-                "label": "PUS Paper",
+                "label": "PUS Paper Auto",
                 "channel_ref": "VG.MEPSL.HHZ",
                 "is_analog": true,
                 "slope": 16,

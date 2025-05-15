@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from waveview.event.header import AmplitudeUnit
 from waveview.event.models import Amplitude, Event, StationMagnitude
 from waveview.inventory.models import Channel
 
@@ -13,9 +12,29 @@ class BulletinPayloadBuilder:
     def __init__(self, event: Event) -> None:
         self.event = event
         self.analog_method = "analog"
+        self.manual_analog_method = "manual_analog"
         self.digital_method = "bpptkg"
 
     def _get_amplitude(self) -> str | None:
+        """
+        Get manual analog amplitude if available. Otherwise, get the analog
+        amplitude. If both are not available, return None.
+
+        Manual analog amplitude is åamplitude that is manually entered by the
+        operator. Analog amplitude is the amplitude that is calculated by the
+        system. The amplitude is in the format of "value unit", e.g. "0.50m".
+        """
+        manual_analog_amplitude = Amplitude.objects.filter(
+            event=self.event, method=self.manual_analog_method
+        ).first()
+        if (
+            manual_analog_amplitude is not None
+            and manual_analog_amplitude.amplitude is not None
+        ):
+            return (
+                f"{manual_analog_amplitude.amplitude:.2f}{manual_analog_amplitude.unit}"
+            )
+
         amplitude = Amplitude.objects.filter(
             event=self.event, method=self.analog_method
         ).first()

@@ -135,6 +135,16 @@
                 "slope": 16,
                 "offset": 0
             }
+        ],
+        "manual_inputs": [
+            {
+                "channel_id": "VG.MEPSL.HHZ",
+                "label": "PUS Paper Manual",
+                "method": "manual_analog",
+                "category": "duration",
+                "unit": "mm",
+                "type": "Amax"
+            }
         ]
     }
 }

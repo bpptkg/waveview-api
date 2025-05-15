@@ -1,18 +1,25 @@
 from typing import Dict, Type
+from uuid import UUID
 
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
-from waveview.event.header import EvaluationMode, EvaluationStatus, ObservationType
-from waveview.event.models import Attachment, Event, EventType
+from waveview.event.header import (
+    AmplitudeCategory,
+    AmplitudeUnit,
+    EvaluationMode,
+    EvaluationStatus,
+    ObservationType,
+)
+from waveview.event.models import Amplitude, Attachment, Event, EventType
 from waveview.event.serializers.amplitude import AmplitudeSerializer
 from waveview.event.serializers.attachment import AttachmentSerializer
 from waveview.event.serializers.event_type import EventTypeSerializer
 from waveview.event.serializers.magnitude import MagnitudeSerializer
 from waveview.event.serializers.origin import OriginSerializer
-from waveview.inventory.models import Station
+from waveview.inventory.models import Channel, Station
 from waveview.observation.serializers import (
     ExplosionPayloadSerializer,
     ExplosionSerializer,
@@ -25,6 +32,7 @@ from waveview.observation.serializers import (
     VolcanicEmissionPayloadSerializer,
     VolcanicEmissionSerializer,
 )
+from waveview.users.models import User
 from waveview.users.serializers import UserSerializer
 
 
@@ -92,6 +100,51 @@ class EventDetailSerializer(EventSerializer):
         return None
 
 
+class AmplitudeManualInputPayloadSerializer(serializers.Serializer):
+    channel_id = serializers.UUIDField(help_text=_("Channel ID."))
+    amplitude = serializers.FloatField(help_text=_("Amplitude value."), allow_null=True)
+    type = serializers.CharField(
+        help_text=_("Type of the amplitude, e.g Amax, A10, etc.")
+    )
+    label = serializers.CharField(help_text=_("Label of the amplitude."))
+    method = serializers.CharField(
+        help_text=_(
+            """
+            Method name used to identify the amplitude, e.g veps, seiscomp, etc.
+            If channel ID with the same method will be overwrite the existing
+            amplitude.
+            """
+        )
+    )
+    category = serializers.ChoiceField(
+        choices=AmplitudeCategory.choices,
+        help_text=_("Category of the amplitude."),
+    )
+    unit = serializers.ChoiceField(
+        choices=AmplitudeUnit.choices, help_text=_("Unit of the amplitude.")
+    )
+    is_preferred = serializers.BooleanField(
+        help_text=_("True if this amplitude is preferred."),
+        default=False,
+    )
+    time = serializers.DateTimeField(
+        help_text=_("Reference point in time or central point.")
+    )
+    begin = serializers.FloatField(
+        help_text=_("Duration of time interval before reference point in time window.")
+    )
+    end = serializers.FloatField(
+        help_text=_("Duration of time interval after reference point in time window.")
+    )
+
+    def validate_channel_id(self, value: str) -> UUID:
+        try:
+            channel = Channel.objects.get(id=value)
+        except Channel.DoesNotExist:
+            raise serializers.ValidationError(_("Channel does not exist."))
+        return channel.id
+
+
 class EventPayloadSerializer(serializers.Serializer):
     station_of_first_arrival_id = serializers.UUIDField(
         help_text=_("Station of the first arrival ID.")
@@ -139,6 +192,11 @@ class EventPayloadSerializer(serializers.Serializer):
         help_text=_("Use outlier filter when calculating the amplitude."),
         required=False,
         default=False,
+    )
+    amplitude_manual_inputs = AmplitudeManualInputPayloadSerializer(
+        many=True,
+        help_text=_("Manual inputs for the amplitude."),
+        required=False,
     )
 
     def validate_type_id(self, value: str) -> str:
@@ -193,6 +251,7 @@ class EventPayloadSerializer(serializers.Serializer):
         evaluation_mode = validated_data["evaluation_mode"]
         evaluation_status = validated_data["evaluation_status"]
         observation = validated_data["observation"]
+        amplitude_manual_inputs = validated_data.pop("amplitude_manual_inputs", [])
 
         event = Event.objects.create(
             catalog_id=catalog_id,
@@ -209,6 +268,7 @@ class EventPayloadSerializer(serializers.Serializer):
         event.collaborators.add(user)
         Attachment.objects.filter(id__in=attachment_ids).update(event=event)
         self.update_observation(event, observation)
+        self.update_amplitude(event, amplitude_manual_inputs, user)
         return event
 
     @transaction.atomic
@@ -216,6 +276,7 @@ class EventPayloadSerializer(serializers.Serializer):
         user = self.context["request"].user
         attachment_ids = validated_data.pop("attachment_ids", [])
         observation = validated_data.pop("observation", None)
+        amplitude_manual_inputs = validated_data.pop("amplitude_manual_inputs", [])
         for key, value in validated_data.items():
             if hasattr(instance, key):
                 setattr(instance, key, value)
@@ -225,6 +286,7 @@ class EventPayloadSerializer(serializers.Serializer):
 
         Attachment.objects.filter(id__in=attachment_ids).update(event=instance)
         self.update_observation(instance, observation)
+        self.update_amplitude(instance, amplitude_manual_inputs, user)
         return instance
 
     def update_observation(self, instance: Event, observation: dict | None) -> Event:
@@ -252,4 +314,42 @@ class EventPayloadSerializer(serializers.Serializer):
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
+        return instance
+
+    def update_amplitude(
+        self, instance: Event, amplitude_manual_inputs: list[dict], author: User
+    ) -> Event:
+        for item in amplitude_manual_inputs:
+            amplitude = item["amplitude"]
+            channel_id = item["channel_id"]
+            label = item["label"]
+            method = item["method"]
+            category = item["category"]
+            unit = item["unit"]
+            type = item["type"]
+            time = item["time"]
+            begin = item["begin"]
+            end = item["end"]
+            is_preferred = item.get("is_preferred", False)
+
+            channel = Channel.objects.get(id=channel_id)
+
+            Amplitude.objects.update_or_create(
+                event=instance,
+                waveform=channel,
+                method=method,
+                defaults={
+                    "amplitude": amplitude,
+                    "type": type,
+                    "category": category,
+                    "unit": unit,
+                    "evaluation_mode": EvaluationMode.MANUAL,
+                    "author": author,
+                    "is_preferred": is_preferred,
+                    "label": label,
+                    "time": time,
+                    "begin": begin,
+                    "end": end,
+                },
+            )
         return instance

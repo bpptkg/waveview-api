@@ -28,11 +28,24 @@ class ChannelConfigSerializer(serializers.Serializer):
     offset = serializers.FloatField(allow_null=True, required=False)
 
 
+class AmplitudeConfigManualInputSerializer(serializers.Serializer):
+    channel_id = serializers.UUIDField(help_text=_("Channel ID."))
+    label = serializers.CharField(max_length=255, help_text=_("Label."))
+    method = serializers.CharField(max_length=255, help_text=_("Method."))
+    category = serializers.CharField(max_length=255, help_text=_("Category."))
+    unit = serializers.CharField(max_length=255, help_text=_("Unit."))
+    type = serializers.CharField(max_length=255, help_text=_("Type."))
+    is_preferred = serializers.BooleanField(default=False, help_text=_("Is preferred."))
+
+
 class AmplitudeConfigSerializer(serializers.Serializer):
     amplitude_calculator = serializers.CharField(
         max_length=255, help_text=_("Amplitude calculator.")
     )
     channels = ChannelConfigSerializer(help_text=_("Channels."), many=True)
+    manual_inputs = AmplitudeConfigManualInputSerializer(
+        help_text=_("Manual inputs."), many=True, required=False
+    )
 
 
 class PickerConfigDataSerializer(serializers.Serializer):

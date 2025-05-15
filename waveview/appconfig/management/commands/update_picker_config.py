@@ -35,9 +35,30 @@ class ChannelSerializer(serializers.Serializer):
         return value
 
 
+class AmplitudeManualInputSerializer(serializers.Serializer):
+    channel_id = serializers.CharField()
+    label = serializers.CharField()
+    method = serializers.CharField()
+    category = serializers.CharField()
+    unit = serializers.CharField()
+    type = serializers.CharField()
+    is_preferred = serializers.BooleanField(default=False)
+
+    def validate_channel_id(self, value: str) -> str:
+        network, station, channel = value.split(".")
+        try:
+            instance = Channel.objects.filter(
+                code=channel, station__code=station, station__network__code=network
+            ).get()
+        except Channel.DoesNotExist:
+            raise serializers.ValidationError(f"Channel does not exist: {value}")
+        return str(instance.id)
+
+
 class AmplitudeConfigSerializer(serializers.Serializer):
     amplitude_calculator = serializers.CharField()
     channels = ChannelSerializer(many=True)
+    manual_inputs = AmplitudeManualInputSerializer(many=True, required=False)
 
 
 class PickerConfigSerializer(serializers.Serializer):

@@ -350,6 +350,7 @@ class EventPayloadSerializer(serializers.Serializer):
                     "time": time,
                     "begin": begin,
                     "end": end,
+                    "snr": 0,
                 },
             )
         return instance

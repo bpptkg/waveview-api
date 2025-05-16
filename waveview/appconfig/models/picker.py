@@ -44,9 +44,36 @@ class ChannelConfigData:
 
 
 @dataclass
+class AmplitudeConfigManualInputData:
+    channel_id: str
+    label: str
+    method: str
+    category: str
+    unit: str
+    type: str
+    is_preferred: bool
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "AmplitudeConfigManualInputData":
+        return cls(
+            channel_id=data.get("channel_id", ""),
+            label=data.get("label", ""),
+            method=data.get("method", ""),
+            category=data.get("category", ""),
+            unit=data.get("unit", ""),
+            type=data.get("type", ""),
+            is_preferred=data.get("is_preferred", False),
+        )
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
 class AmplitudeConfigData:
     amplitude_calculator: str
     channels: list[ChannelConfigData]
+    manual_inputs: list[AmplitudeConfigManualInputData] | None
 
     @classmethod
     def from_dict(cls, data: dict | None) -> "AmplitudeConfigData":
@@ -58,12 +85,25 @@ class AmplitudeConfigData:
                 ChannelConfigData.from_dict(channel)
                 for channel in data.get("channels", [])
             ],
+            manual_inputs=(
+                [
+                    AmplitudeConfigManualInputData.from_dict(input)
+                    for input in data.get("manual_inputs", [])
+                ]
+                if data.get("manual_inputs")
+                else None
+            ),
         )
 
     def to_dict(self) -> dict:
         return {
             "amplitude_calculator": self.amplitude_calculator,
             "channels": [channel.to_dict() for channel in self.channels],
+            "manual_inputs": (
+                [input.to_dict() for input in self.manual_inputs]
+                if self.manual_inputs
+                else None
+            ),
         }
 
 

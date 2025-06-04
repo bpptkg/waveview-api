@@ -127,6 +127,10 @@ class BPPTKGMagnitudeEstimator:
         for channel in Channel.objects.filter(
             station__network__inventory__organization_id=organization_id
         ).all():
+            logger.info(
+                f"Processing channel {channel.stream_id} for event {event.id}..."
+            )
+
             channel_id = channel.id
             sa = amplitude_calculator.calc(
                 event.time,

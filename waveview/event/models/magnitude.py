@@ -83,7 +83,12 @@ class Amplitude(models.Model):
         blank=True,
         help_text=_("Label of the amplitude value."),
     )
-    method = models.CharField(max_length=255, null=True, blank=True)
+    method = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
     evaluation_mode = models.CharField(
         max_length=255, null=True, blank=True, choices=EvaluationMode.choices
     )

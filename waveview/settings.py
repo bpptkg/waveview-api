@@ -4,6 +4,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import environ
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -350,3 +352,12 @@ DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
 DBBACKUP_DIR = STORAGE_DIR / "backup"
 DBBACKUP_DIR.mkdir(exist_ok=True, parents=True)
 DBBACKUP_STORAGE_OPTIONS = {"location": str(DBBACKUP_DIR)}
+
+SENTRY_DSN = env("SENTRY_DSN", default="")
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=1.0,
+        send_default_pii=True,
+    )

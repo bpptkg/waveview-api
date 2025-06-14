@@ -53,15 +53,17 @@ class BPPTKGAmplitudeCalculator(AmplitudeCalculator):
         try:
             channel = Channel.objects.get(id=channel_id)
             stream = self.datastream.get_waveform(channel.id, starttime, endtime)
-            if len(stream) == 0:
-                raise Exception(
-                    f"No matching data found for channel {channel.stream_id}."
+            if len(stream) > 0:
+                stream = remove_response(stream)
+                data = stream[0].data
+                if use_outlier_filter:
+                    data = remove_outliers(data)
+                amax = self.get_amax(data)
+            else:
+                logger.warning(
+                    f"No data found for channel {channel_id} in the specified time range."
                 )
-            stream = remove_response(stream)
-            data = stream[0].data
-            if use_outlier_filter:
-                data = remove_outliers(data)
-            amax = self.get_amax(data)
+                amax = None
         except Exception as e:
             logger.error(f"Failed to calculate amplitude: {e}")
             amax = None

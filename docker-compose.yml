@@ -9,6 +9,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - .:/app
       - ${STORAGE_DIR}:/app/storage
     depends_on:
       - db
@@ -60,6 +61,7 @@ services:
     env_file:
       - ./.env
     volumes:
+      - .:/app
       - ${STORAGE_DIR}:/app/storage
     depends_on:
       - db
@@ -73,6 +75,7 @@ services:
     env_file:
       - ./.env
     volumes:
+      - .:/app
       - ${STORAGE_DIR}:/app/storage
     depends_on:
       - db

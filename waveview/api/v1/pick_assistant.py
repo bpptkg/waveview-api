@@ -35,7 +35,7 @@ class PickAssistantEndpoint(Endpoint):
             time.
             """
         ),
-        tags=["Analytics"],
+        tags=["Signal"],
         request_body=PickAssistantPayloadSerializer,
         responses={
             status.HTTP_200_OK: openapi.Response("OK", PickAssistantResponseSerializer),

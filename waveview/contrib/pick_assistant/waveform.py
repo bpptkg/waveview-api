@@ -31,8 +31,8 @@ class WaveformResolver:
 
         for stream_id in stream_ids:
             try:
-                channel = Channel.objects.get_by_stream_id(stream_id)
-                st = self.db.get_waveform(channel, start, end)
+                channel: Channel = Channel.objects.get_by_stream_id(stream_id)
+                st = self.db.get_waveform(channel.id, start, end)
                 st.merge(fill_value="interpolate")
                 if len(st) > 0:
                     return ResolvedWaveform(stream=st, channel=channel)

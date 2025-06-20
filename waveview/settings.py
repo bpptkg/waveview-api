@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 import environ
 import sentry_sdk
+from django.core.exceptions import DisallowedHost
 from sentry_sdk.integrations.django import DjangoIntegration
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -354,10 +355,21 @@ DBBACKUP_DIR.mkdir(exist_ok=True, parents=True)
 DBBACKUP_STORAGE_OPTIONS = {"location": str(DBBACKUP_DIR)}
 
 SENTRY_DSN = env("SENTRY_DSN", default="")
+
+
+def before_send(event, hint):
+    if "exc_info" in hint:
+        exc_type, exc_value, tb = hint["exc_info"]
+        if isinstance(exc_value, DisallowedHost):
+            return None  # Drop the event
+    return event
+
+
 if SENTRY_DSN:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=[DjangoIntegration()],
         traces_sample_rate=1.0,
         send_default_pii=True,
+        before_send=before_send,
     )

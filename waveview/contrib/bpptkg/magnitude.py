@@ -73,7 +73,7 @@ class BPPTKGMagnitudeEstimator:
         self.datastream = DataStream(connection)
         self.preferred_map: dict[str, bool] = {}
 
-    def calc_bpptkg_ml(self, amplitude: float) -> float:
+    def calc_bpptkg_ml(self, amplitude: float) -> float | None:
         """
         Compute BPPTKG Richter local magnitude scale (ML) from amplitude.
 
@@ -86,7 +86,13 @@ class BPPTKGMagnitudeEstimator:
 
         where log10(A0) equal to -1.4 and ml is Richter local magnitude scale.
         """
-        return np.log10(amplitude) + 1.4
+        try:
+            ml = np.log10(amplitude) + 1.4
+            if not np.isfinite(ml):  # Check for -inf, inf, or NaN
+                return None
+            return ml
+        except (ValueError, OverflowError):
+            return None
 
     @transaction.atomic
     def calc(
@@ -187,7 +193,7 @@ class BPPTKGMagnitudeEstimator:
 
         if magnitude_values:
             avg = np.mean(magnitude_values)
-            if not np.isnan(avg):
+            if not np.isnan(avg) or np.isfinite(avg):
                 magnitude.magnitude = avg
                 magnitude.station_count = len(stations)
                 magnitude.save()

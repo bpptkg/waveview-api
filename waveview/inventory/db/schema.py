@@ -24,7 +24,7 @@ class TimescaleSchemaEditor(DatabaseSchemaEditor):
     sql_is_table_exists = (
         "SELECT * FROM information_schema.tables WHERE table_name = '{table}'"
     )
-    sql_query_table = "SELECT st, et, sr, dtype, buf FROM {table} WHERE st >= '{start}' AND et < '{end}' ORDER BY st"
+    sql_query_table = "SELECT st, et, sr, dtype, buf FROM {table} WHERE st >= '{start}' AND st < '{end}' ORDER BY st"
     sql_hypertable_size = "SELECT hypertable_size('{table}')"
     sql_get_latest_data = (
         "SELECT st, et, sr, dtype, buf FROM {table} ORDER BY st DESC LIMIT 1"

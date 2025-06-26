@@ -196,6 +196,9 @@ class TimescaleFilterAdapter(BaseFilterAdapter):
             st.resample(sample_rate)
 
         st.merge(method=0, fill_value=None)
+        if len(st) == 0:
+            return empty
+
         trace = st[0]
         if len(trace.data) == 0:
             return empty

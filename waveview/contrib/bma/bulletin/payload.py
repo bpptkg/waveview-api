@@ -108,6 +108,21 @@ class BulletinPayloadBuilder:
             return None
         return station_magnitude.magnitude
 
+    def _get_ml_VG_MEPSL_00_HHZ(self) -> float | None:
+        try:
+            channel = Channel.objects.get_by_stream_id("VG.MEPSL.00.HHZ")
+        except Channel.DoesNotExist:
+            return None
+        amplitude = Amplitude.objects.filter(
+            event=self.event, waveform=channel, method=self.digital_method
+        ).first()
+        if amplitude is None:
+            return None
+        station_magnitude = StationMagnitude.objects.filter(amplitude=amplitude).first()
+        if station_magnitude is None:
+            return None
+        return station_magnitude.magnitude
+
     def _get_magnitude(self) -> float | None:
         preferred_magnitude = self.event.preferred_magnitude()
         if preferred_magnitude is not None:
@@ -183,6 +198,7 @@ class BulletinPayloadBuilder:
         ml_labuhan: float | None = self._get_ml_labuhan()
         ml_pasarbubar: float | None = self._get_ml_pasarbubar()
         ml_pusunglondon: float | None = self._get_ml_pusunglondon()
+        ml_VG_MEPSL_00_HHZ: float | None = self._get_ml_VG_MEPSL_00_HHZ()
         location_mode: str = "automatic"
         location_type: str = "earthquake"
 
@@ -212,6 +228,7 @@ class BulletinPayloadBuilder:
             "ml_labuhan": ml_labuhan,
             "ml_pasarbubar": ml_pasarbubar,
             "ml_pusunglondon": ml_pusunglondon,
+            "ml_VG_MEPSL_00_HHZ": ml_VG_MEPSL_00_HHZ,
             "location_mode": location_mode,
             "location_type": location_type,
         }

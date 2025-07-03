@@ -83,6 +83,7 @@ class ChannelAdmin(admin.ModelAdmin):
         "author",
     )
     ordering = ("station", "code")
+    list_filter = ("station__code", "code", "location_code")
 
     def network(self, obj: Channel) -> str:
         return obj.station.network.code

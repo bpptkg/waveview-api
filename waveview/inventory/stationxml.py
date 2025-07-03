@@ -152,9 +152,9 @@ class StationXMLAdapter:
         channel, __ = Channel.objects.update_or_create(
             station=station,
             code=code,
+            location_code=location_code,
             defaults=dict(
                 alternate_code=alternate_code,
-                location_code=location_code,
                 start_date=start_date,
                 end_date=end_date,
                 historical_code=historical_code,

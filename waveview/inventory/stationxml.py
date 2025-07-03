@@ -120,7 +120,7 @@ class StationXMLAdapter:
         return station
 
     def _update_channel(self, station: Station, cha: ObspyChannel) -> Channel:
-        logger.info(f"Updating channel {cha.code}")
+        logger.info(f"Updating channel {cha.code}.{cha.location_code}")
         code = cha.code
         alternate_code = cha.alternate_code
         start_date = dt(cha.start_date)

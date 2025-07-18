@@ -24,7 +24,7 @@ class WaveformResolver:
 
     def get_waveform(self, start: datetime, end: datetime) -> ResolvedWaveform:
         stream_ids = (
-            "VG.MEPAC.1J.HHZ",
+            "VG.MEPAC.00.HHZ",
             "VG.MEPSL.00.HHZ",
             "VG.MELAB.00.HHZ",
         )

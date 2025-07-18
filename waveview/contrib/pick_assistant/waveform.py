@@ -39,3 +39,11 @@ class WaveformResolver:
             except Exception as e:
                 logger.debug(f"Failed to get waveform for stream ID {stream_id}: {e}")
         return ResolvedWaveform(stream=Stream(), channel=None, resolved=False)
+
+
+class DummyWaveformResolver:
+    def __init__(self) -> None:
+        self.channel = Channel.objects.get_by_stream_id("VG.MELAB.00.HHZ")
+
+    def get_waveform(self, start: datetime, end: datetime) -> ResolvedWaveform:
+        return ResolvedWaveform(stream=Stream(), channel=self.channel, resolved=True)

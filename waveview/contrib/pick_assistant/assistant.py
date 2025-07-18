@@ -9,7 +9,10 @@ from waveview.contrib.pick_assistant.types import (
     PickAssistantInput,
     PickAssistantOutput,
 )
-from waveview.contrib.pick_assistant.waveform import WaveformResolver
+from waveview.contrib.pick_assistant.waveform import (
+    DummyWaveformResolver,
+    WaveformResolver,
+)
 from waveview.inventory.datastream import DataStream
 
 
@@ -85,10 +88,14 @@ class DefaultDurationEstimator(BaseDurationEstimator):
 
 
 class PickAssistant:
-    def __init__(self) -> None:
+    def __init__(self, simulate: bool = False) -> None:
         self.db = DataStream(connection)
-        self.waveform_resolver = WaveformResolver()
-        self.duration_resolver = DefaultDurationEstimator()
+        if simulate:
+            self.waveform_resolver = DummyWaveformResolver()
+            self.duration_resolver = RandomDurationEstimator()
+        else:
+            self.waveform_resolver = WaveformResolver()
+            self.duration_resolver = DefaultDurationEstimator()
 
     def process(self, input_data: PickAssistantInput) -> PickAssistantOutput:
         start = input_data.t_onset - timedelta(seconds=input_data.pre_noise)

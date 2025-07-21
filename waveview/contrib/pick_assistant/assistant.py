@@ -2,7 +2,6 @@ import random
 from datetime import timedelta
 
 import numpy as np
-from django.db import connection
 from obspy import Stream, UTCDateTime
 
 from waveview.contrib.pick_assistant.types import (
@@ -13,7 +12,6 @@ from waveview.contrib.pick_assistant.waveform import (
     DummyWaveformResolver,
     WaveformResolver,
 )
-from waveview.inventory.datastream import DataStream
 
 
 def random_duration() -> float:
@@ -22,7 +20,7 @@ def random_duration() -> float:
 
 class BaseDurationEstimator:
     def get_duration(self, start: UTCDateTime, st: Stream) -> float:
-        pass
+        raise NotImplementedError("Subclasses must implement get_duration method.")
 
 
 class RandomDurationEstimator(BaseDurationEstimator):
@@ -89,7 +87,6 @@ class DefaultDurationEstimator(BaseDurationEstimator):
 
 class PickAssistant:
     def __init__(self, simulate: bool = False) -> None:
-        self.db = DataStream(connection)
         if simulate:
             self.waveform_resolver = DummyWaveformResolver()
             self.duration_resolver = RandomDurationEstimator()

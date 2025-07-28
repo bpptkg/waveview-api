@@ -1,6 +1,6 @@
 {
     "helicorder_channel": {
-        "channel_id": "VG.MEPAS.HHZ"
+        "channel_id": "VG.MEPAC.HHZ"
     },
     "helicorder_filter": {
         "id": "bp,0.5,15",
@@ -55,7 +55,7 @@
     "helicorder_duration": 12,
     "seismogram_channels": [
         {
-            "channel_id": "VG.MEPAS.HHZ"
+            "channel_id": "VG.MEPAC.HHZ"
         },
         {
             "channel_id": "VG.MEKLA.HHZ"
@@ -113,7 +113,7 @@
         "amplitude_calculator": "bpptkg",
         "channels": [
             {
-                "channel_id": "VG.MEPAS.HHZ"
+                "channel_id": "VG.MEPAC.HHZ"
             },
             {
                 "channel_id": "VG.MEPSL.HHZ"

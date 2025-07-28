@@ -9,9 +9,9 @@
         "VG.MELAB.00.HHE",
         "VG.MELAB.00.HHN",
         "VG.MELAB.00.HHZ",
-        "VG.MEPAS.00.HHE",
-        "VG.MEPAS.00.HHN",
-        "VG.MEPAS.00.HHZ",
+        "VG.MEPAC.00.HHE",
+        "VG.MEPAC.00.HHN",
+        "VG.MEPAC.00.HHZ",
         "VG.MEPSL.00.HHE",
         "VG.MEPSL.00.HHN",
         "VG.MEPSL.00.HHZ",
@@ -28,5 +28,5 @@
         }
     ],
     "is_preferred": true,
-    "preferred_stream_id": "VG.MEPAC.1J.HHZ"
+    "preferred_stream_id": "VG.MEPAC.00.HHZ"
 }

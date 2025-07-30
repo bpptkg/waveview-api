@@ -1,8 +1,6 @@
-from dataclasses import dataclass
-from io import StringIO
+from datetime import timedelta
 from uuid import UUID
 
-import pandas as pd
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -14,71 +12,39 @@ from rest_framework.response import Response
 
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
-from waveview.api.serializers import CommaSeparatedListField
 from waveview.event.models import Event, EventType
+from waveview.event.serializers import EventDetailSerializer
 from waveview.organization.permissions import PermissionType
 
 
-class QueryParamsSerializer(serializers.Serializer):
-    start = serializers.DateTimeField(
-        required=True, help_text="Start date of the query in ISO 8601 format."
+class DownloadEventsPayloadSerializer(serializers.Serializer):
+    date = serializers.DateTimeField(
+        required=True, help_text="Date of the query in ISO 8601 format."
     )
-    end = serializers.DateTimeField(
-        required=True, help_text="End date of the query in ISO 8601 format."
-    )
-    event_types = CommaSeparatedListField(
+    event_types = serializers.ListField(
+        child=serializers.CharField(),
         required=False,
-        help_text="Event type codes to filter in comma separated list, e.g ``ROCKFALL,AWANPANAS``.",
+        help_text="Event type codes to filter.",
     )
-
-
-@dataclass
-class EventItem:
-    id: UUID
-    time: str
-    duration: float
-    type: str
-    magnitude: float | None
-    latitude: float | None
-    longitude: float | None
-    depth: float | None
-    evaluation_mode: str | None
-    evaluation_status: str | None
-    author: str
-
-
-COLUMNS = [
-    "ID",
-    "Time (UTC)",
-    "Duration (s)",
-    "Type",
-    "Magnitude",
-    "Latitude (°)",
-    "Longitude (°)",
-    "Depth (km)",
-    "Evaluation Mode",
-    "Evaluation Status",
-    "Author",
-]
 
 
 class DownloadEventsEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOrganizationMember]
 
     @swagger_auto_schema(
-        operation_id="Download Event",
+        operation_id="Download Events",
         operation_description=(
             """
-            Download event data for a given catalog and return CSV file. Only
+            Download event data for a given catalog and return JSON file. Only
             organization members with the given permission can access this
             endpoint.
             """
         ),
         tags=["Catalog"],
+        request_body=DownloadEventsPayloadSerializer,
         responses={status.HTTP_200_OK: openapi.Response("OK")},
-        query_serializer=QueryParamsSerializer,
     )
-    def get(
+    def post(
         self,
         request: Request,
         organization_id: UUID,
@@ -99,17 +65,17 @@ class DownloadEventsEndpoint(Endpoint):
                 _("You do not have permission to download event data.")
             )
 
-        serializer = QueryParamsSerializer(data=request.query_params)
+        serializer = DownloadEventsPayloadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        start = serializer.validated_data["start"]
-        end = serializer.validated_data["end"]
+        start = serializer.validated_data["date"]
         event_types = serializer.validated_data.get("event_types")
+        end = start + timedelta(days=1)
 
         queryset = (
             Event.objects.select_related("type", "catalog")
             .prefetch_related("origins", "magnitudes", "amplitudes")
-            .filter(catalog=catalog, time__gte=start, time__lte=end)
+            .filter(catalog=catalog, time__gte=start, time__lt=end)
         )
 
         if event_types:
@@ -118,57 +84,13 @@ class DownloadEventsEndpoint(Endpoint):
             )
             queryset = queryset.filter(type__in=types)
 
-        events: list[EventItem] = []
-        for event in queryset.all():
-            preferred_origin = event.preferred_origin()
-            preferred_magnitude = event.preferred_magnitude()
-            magnitude = preferred_magnitude.magnitude if preferred_magnitude else None
-            latitude = preferred_origin.latitude if preferred_origin else None
-            longitude = preferred_origin.longitude if preferred_origin else None
-            depth = preferred_origin.depth if preferred_origin else None
-            if event.author:
-                author = event.author.name or event.author.username
-            else:
-                author = None
-            item = EventItem(
-                id=event.id,
-                time=event.time.isoformat(),
-                duration=event.duration,
-                type=event.type.code,
-                magnitude=magnitude,
-                latitude=latitude,
-                longitude=longitude,
-                depth=depth,
-                evaluation_mode=event.evaluation_mode,
-                evaluation_status=event.evaluation_status,
-                author=author,
-            )
-            events.append(item)
-
-        df = pd.DataFrame(
-            [
-                [
-                    item.id,
-                    item.time,
-                    item.duration,
-                    item.type,
-                    item.magnitude,
-                    item.latitude,
-                    item.longitude,
-                    item.depth,
-                    item.evaluation_mode,
-                    item.evaluation_status,
-                    item.author,
-                ]
-                for item in events
-            ],
-            columns=COLUMNS,
+        serializer = EventDetailSerializer(
+            queryset, many=True, context={"request": request}
         )
-        output = StringIO()
-        df.to_csv(output, index=False)
-        csv = output.getvalue()
-
-        response = Response(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="events.csv"'
-        response.write(csv)
+        data = serializer.data
+        response = Response(data, content_type="application/json")
+        response["Content-Disposition"] = f'attachment; filename="events.json"'
+        response["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response["Pragma"] = "no-cache"
+        response["Expires"] = "0"
         return response

@@ -38,8 +38,10 @@ from .v1.organization_member_index import OrganizationMemberIndexEndpoint
 from .v1.organization_permissions import OrganizationPermissionsEndpoint
 from .v1.organization_role_detail import OrganizationRoleDetailEndpoint
 from .v1.organization_role_index import OrganizationRoleIndexEndpoint
+from .v1.pick_assistant import PickAssistantEndpoint
 from .v1.picker_config_index import PickerConfigIndexEndpoint
 from .v1.picker_config_reset import PickerConfigResetEndpoint
+from .v1.plot_remove_response import PlotRemoveResponseEndpoint
 from .v1.registration import AccountRegistrationEndpoint
 from .v1.rfap_direction import RfApDirectionEndpoint
 from .v1.search_user import SearchUserEndpoint
@@ -55,7 +57,6 @@ from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
 from .v1.volcano_detail import VolcanoDetailEndpoint
 from .v1.volcano_index import VolcanoIndexEndpoint
-from .v1.plot_remove_response import PlotRemoveResponseEndpoint
 
 EVENT_ORIGIN_URLS = [
     path(
@@ -317,6 +318,11 @@ ORGANIZATION_URLS = [
         "<uuid:organization_id>/seismic-network-status/",
         SeismicNetworkStatusEndpoint.as_view(),
         name="waveview-api-1-seismic-network-status",
+    ),
+    path(
+        "<uuid:organization_id>/pick-assistant/",
+        PickAssistantEndpoint.as_view(),
+        name="waveview-api-1-pick-assistant",
     ),
 ]
 

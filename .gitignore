@@ -162,7 +162,7 @@ cython_debug/
 TODO
 .DS_Store
 nocommit/
-testing.py
 backup.sh
 crontab/
 .aider*
+storage/

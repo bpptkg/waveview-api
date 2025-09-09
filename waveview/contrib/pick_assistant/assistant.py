@@ -35,7 +35,7 @@ class DefaultDurationEstimator(BaseDurationEstimator):
         SDV_WINDOW = 3.0
         PRE_NOISE = SDV_WINDOW
         POST_NOISE = 240.0 - PRE_NOISE
-        THRESHOLD = 1.3
+        THRESHOLD = 2.0
 
         st.trim((T_ONSET - PRE_NOISE), (T_ONSET + POST_NOISE))
         st.detrend(type="demean")

@@ -86,19 +86,19 @@ Install Memcached using Docker:
 
 .. code-block:: bash
 
-    docker run -d --restart always --name memcached -p 11211:11211 memcached:1.6.32
+    docker run -d --restart always --name memcached -p 11211:11211 memcached:1.6-alpine
 
 Install Redis using Docker:
 
 .. code-block:: bash
 
-    docker run --name redis --restart always -p 6379:6379 -d redis
+    docker run --name redis --restart always -p 6379:6379 -d redis:8-alpine
 
 Install RabbitMQ using Docker:
 
 .. code-block:: bash
 
-    docker run -d --restart always --hostname rabbitmq --name rabbitmq -e RABBITMQ_DEFAULT_USER=rabbitmq -e RABBITMQ_DEFAULT_PASS=test -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+    docker run -d --restart always --hostname rabbitmq --name rabbitmq -e RABBITMQ_DEFAULT_USER=rabbitmq -e RABBITMQ_DEFAULT_PASS=test -p 5672:5672 -p 15672:15672 rabbitmq:3-management-alpine
 
 Run the migrations:
 

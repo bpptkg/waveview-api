@@ -1,5 +1,6 @@
 import unittest
 
+import pytest
 from django.utils import timezone
 
 from waveview.contrib.sinoas.context import SinoasContext
@@ -10,6 +11,7 @@ from waveview.users.models import User
 from waveview.volcano.models import Volcano
 
 
+@pytest.mark.django_db
 class CreateEventTest(unittest.TestCase):
     def test_create_event(self) -> None:
         user, __ = User.objects.get_or_create(username="test")

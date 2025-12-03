@@ -4,6 +4,7 @@ import uuid
 from datetime import timedelta
 
 import numpy as np
+import pytest
 from django.db import connection
 from obspy import Stream, Trace, read
 
@@ -12,6 +13,7 @@ from waveview.inventory.datastream import merge_buffer, prepare_buffer
 from waveview.inventory.db.schema import TimescaleSchemaEditor
 
 
+@pytest.mark.django_db
 class DataStreamIOTest(unittest.TestCase):
     def setUp(self) -> None:
         self.schema = TimescaleSchemaEditor(connection=connection)

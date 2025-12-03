@@ -1,11 +1,13 @@
 import unittest
 import uuid
 
+import pytest
 from django.db import connection
 
 from waveview.inventory.db.schema import TimescaleSchemaEditor
 
 
+@pytest.mark.django_db
 class TestTimescaleSchemaEditor(unittest.TestCase):
     def setUp(self):
         self.schema_editor = TimescaleSchemaEditor(connection=connection)

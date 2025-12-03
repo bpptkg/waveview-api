@@ -2,6 +2,7 @@ import unittest
 import uuid
 from datetime import timedelta
 
+import pytest
 from django.db import connection
 from obspy import Stream, UTCDateTime
 
@@ -10,6 +11,7 @@ from waveview.inventory.datastream import DataStream, build_trace
 from waveview.inventory.db.schema import TimescaleSchemaEditor
 
 
+@pytest.mark.django_db
 class TestStreamGap(unittest.TestCase):
     def test_stream_gap(self) -> None:
         schema = TimescaleSchemaEditor(connection=connection)

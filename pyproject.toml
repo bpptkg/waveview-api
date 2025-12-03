@@ -5,6 +5,7 @@ description = "WaveView API endpoints"
 authors = ["Indra Rudianto <indrarudianto.official@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -36,6 +37,13 @@ sphinx-rtd-theme = "^2.0.0"
 gunicorn = "^23.0.0"
 django-dbbackup = "^4.2.1"
 sentry-sdk = {extras = ["django"], version = "^2.30.0"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0.1"
+pytest-django = "^4.11.1"
+pytest-cov = "^7.0.0"
+factory-boy = "^3.3.3"
+faker = "^38.2.0"
 
 
 [build-system]

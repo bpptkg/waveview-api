@@ -4,12 +4,14 @@ import zlib
 from datetime import timedelta
 
 import numpy as np
+import pytest
 from django.db import connection
 from django.utils import timezone
 
 from waveview.inventory.db.schema import TimescaleSchemaEditor
 
 
+@pytest.mark.django_db
 class TimescaleQueryTest(unittest.TestCase):
     def setUp(self) -> None:
         self.schema = TimescaleSchemaEditor(connection=connection)

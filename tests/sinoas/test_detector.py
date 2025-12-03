@@ -1,6 +1,8 @@
 import unittest
 from datetime import datetime, timedelta
+
 import pandas as pd
+
 from waveview.contrib.sinoas.detector import Detector
 
 

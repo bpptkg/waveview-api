@@ -101,7 +101,7 @@ class Detector:
             sof = Station.objects.get(code="MEPAS")
         except Station.DoesNotExist:
             logger.error(f"Station MEPAS does not exist.")
-            return
+            sof = None
         event_type, __ = EventType.objects.get_or_create(
             organization=organization, code="AUTO"
         )

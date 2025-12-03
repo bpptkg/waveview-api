@@ -1,23 +1,58 @@
-.env
-.venv
-venv
-.git
-__pycache__
+# Python cache
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.db
-*.sqlite3
-*.log
-*.egg-info
-*.egg
-*.whl
-*.tar.gz
-*.zip
-*.tar
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# Environment files
+.env
+*.env
+
+# IDE/editor files
+.vscode/
+.idea/
 *.swp
-TODO
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test and coverage files
+.coverage
+htmlcov/
+*.log
+.tox/
+.pytest_cache/
+
+# Docker files
+Dockerfile*
+docker-compose*
+
+# Git files
+.git/
+.gitignore
+
+# Node modules (if present)
+node_modules/
+
+# Misc
 nocommit/
-crontab/
-*.DS_Store
-.env*
+*.bak
+*.tmp
+*.orig
+*.rej
+*.sublime-workspace
+*.sublime-project
+storage/
+logs/
+*.log
+*.sqlite3
+*.db
+*.sqlite

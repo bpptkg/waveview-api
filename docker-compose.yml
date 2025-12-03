@@ -1,86 +1,67 @@
 services:
-  web:
-    build: .
-    restart: always
-    container_name: waveview_web
-    command: daphne -b 0.0.0.0 -p 8000 waveview.asgi:application
-    env_file:
-      - ./.env
-    ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
-      - ${STORAGE_DIR}:/app/storage
-    depends_on:
-      - db
-      - redis
-      - memcached
-
   db:
     image: timescale/timescaledb-ha:pg17
     restart: always
-    container_name: waveview_db
-    expose:
-      - "5432"
     volumes:
       - waveview_data:/home/postgres/pgdata/data
     environment:
       - POSTGRES_USER=${DATABASE_USER}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_DB=${DATABASE_NAME}
-
+  
   redis:
-    image: redis:7.4
-    container_name: waveview_redis
+    image: redis:8.4-alpine
     restart: always
-    expose:
-      - "6379"
 
   memcached:
-    image: memcached:1.6
+    image: memcached:1.6-alpine
     restart: always
-    container_name: waveview_memcached
-    expose:
-      - "11211"
 
   rabbitmq:
-    image: rabbitmq:3.13-management
+    image: rabbitmq:4.2-management-alpine
     restart: always
-    container_name: waveview_rabbitmq
-    expose:
-      - "5672"
-      - "15672"
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
 
-  celery:
+  web:
     build: .
-    command: celery -A waveview worker -l info
-    container_name: waveview_celery
+    restart: always
+    entrypoint: ["/code/entrypoint.sh"]
+    command: daphne -b 0.0.0.0 -p 8000 waveview.asgi:application
     env_file:
       - ./.env
+    ports:
+      - "8000:8000"
     volumes:
-      - .:/app
       - ${STORAGE_DIR}:/app/storage
     depends_on:
       - db
       - redis
       - memcached
+      - rabbitmq
+
+  celery:
+    build: .
+    command: celery -A waveview worker -l info
+    entrypoint: ["/code/entrypoint_celery.sh"]
+    env_file:
+      - ./.env
+    volumes:
+      - ${STORAGE_DIR}:/app/storage
+    depends_on:
+      - web
 
   celery-beat:
     build: .
     command: celery -A waveview beat -l info
-    container_name: waveview_celery_beat
+    entrypoint: ["/code/entrypoint_celery.sh"]
     env_file:
       - ./.env
     volumes:
-      - .:/app
       - ${STORAGE_DIR}:/app/storage
     depends_on:
-      - db
-      - redis
-      - memcached
+      - web
 
 volumes:
   waveview_data:

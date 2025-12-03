@@ -1,24 +1,50 @@
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm AS builder
 
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     netcat-openbsd \
-    curl \
     build-essential \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    ln -s /root/.local/bin/poetry /usr/local/bin/poetry
+WORKDIR /code
 
-WORKDIR /app
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir poetry
 
-COPY pyproject.toml poetry.lock /app/
+COPY pyproject.toml poetry.lock ./
 
-RUN poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi --no-root
+RUN poetry install --no-root --only main
 
-COPY . /app/
+FROM python:3.12-slim-bookworm AS image
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    netcat-openbsd \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get purge -y --auto-remove
+
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+WORKDIR /code
+
+RUN addgroup --system app && adduser --system --ingroup app app
+
+COPY ./entrypoint.sh ./entrypoint_celery.sh ./
+RUN chmod +x /code/entrypoint.sh /code/entrypoint_celery.sh
+
+COPY . .
+
+RUN chown -R app:app /code
+
+USER app

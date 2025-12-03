@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('event', '0003_nullable_amplitude'),
+        ("event", "0003_nullable_amplitude"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='amplitude',
-            name='method',
-            field=models.CharField(blank=True, db_index=True, max_length=255, null=True),
+            model_name="amplitude",
+            name="method",
+            field=models.CharField(
+                blank=True, db_index=True, max_length=255, null=True
+            ),
         ),
     ]

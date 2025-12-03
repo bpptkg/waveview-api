@@ -1,8 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from waveview.observation.models import VolcanicEmission
 from waveview.observation.choices import ObservationForm
+from waveview.observation.models import VolcanicEmission
 
 
 class VolcanicEmissionSerializer(serializers.Serializer):

@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('event', '0001_initial'),
+        ("event", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='amplitude',
-            name='label',
-            field=models.CharField(blank=True, help_text='Label of the amplitude value.', max_length=255, null=True),
+            model_name="amplitude",
+            name="label",
+            field=models.CharField(
+                blank=True,
+                help_text="Label of the amplitude value.",
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

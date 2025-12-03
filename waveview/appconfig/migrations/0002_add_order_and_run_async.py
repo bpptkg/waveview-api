@@ -6,18 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('appconfig', '0001_initial'),
+        ("appconfig", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='eventobserverconfig',
-            name='order',
-            field=models.IntegerField(default=0, help_text='Order of the event observer in the list of observers.'),
+            model_name="eventobserverconfig",
+            name="order",
+            field=models.IntegerField(
+                default=0,
+                help_text="Order of the event observer in the list of observers.",
+            ),
         ),
         migrations.AddField(
-            model_name='eventobserverconfig',
-            name='run_async',
-            field=models.BooleanField(default=False, help_text='Run the event observer asynchronously using Celery.'),
+            model_name="eventobserverconfig",
+            name="run_async",
+            field=models.BooleanField(
+                default=False,
+                help_text="Run the event observer asynchronously using Celery.",
+            ),
         ),
     ]

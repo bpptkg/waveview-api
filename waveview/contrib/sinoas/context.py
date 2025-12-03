@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
 from waveview.organization.models import Organization
-from waveview.volcano.models import Volcano
 from waveview.users.models import User
+from waveview.volcano.models import Volcano
 
 
 @dataclass

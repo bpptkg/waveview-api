@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 @app.task(
     name="waveview.tasks.exec_async",
-    default_retry_delay=60 * 5,
-    max_retries=None,
+    default_retry_delay=5,
+    max_retries=3,
 )
 def exec_async(
     function: Callable[..., Any],

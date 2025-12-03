@@ -141,8 +141,8 @@ def send_message(participants: list[User], message: dict) -> None:
 
 @app.task(
     name="waveview.tasks.notify_event_update",
-    default_retry_delay=60 * 5,
-    max_retries=None,
+    default_retry_delay=5,
+    max_retries=3,
 )
 def notify_event(operation: OperationType, payload: dict) -> None:
     data = NotifyEventData.from_dict(payload)

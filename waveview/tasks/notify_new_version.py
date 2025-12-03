@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 @app.task(
     name="waveview.tasks.notify_new_version",
-    default_retry_delay=60 * 5,
-    max_retries=None,
+    default_retry_delay=5,
+    max_retries=3,
 )
 def notify_new_version(
     version: str, reload: bool = True, timeout: int = -1, reload_timeout: int = 10

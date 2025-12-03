@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 @app.task(
     name="waveview.tasks.send_trace_buffer",
-    default_retry_delay=60 * 5,
-    max_retries=None,
+    autoretry_for=(),
+    max_retries=0,
 )
 def send_trace_buffer(channel_id: str, buffer: str) -> None:
     channel_layer = get_channel_layer()

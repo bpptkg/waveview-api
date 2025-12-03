@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 @app.task(
     name="waveview.tasks.notify_event_observer",
-    default_retry_delay=60 * 5,
-    max_retries=None,
+    default_retry_delay=5,
+    max_retries=3,
 )
 def notify_event_observer(
     operation: OperationType,

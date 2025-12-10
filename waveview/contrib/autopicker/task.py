@@ -73,6 +73,7 @@ def create_event(detection_result: dict) -> None:
         evaluation_status=EvaluationStatus.PRELIMINARY,
         author=user,
     )
+    event.collaborators.add(user)
 
     payload = NotifyEventData.from_event(
         str(user.id), str(volcano.organization.id), event

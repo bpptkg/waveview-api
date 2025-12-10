@@ -42,7 +42,7 @@ class DetectionResult:
             min([pick.offset for pick in self.picks])
         )
         try:
-            return self.picks[index].stream_id
+            return self.picks[index].stream_id.split(".")[1]
         except IndexError:
             return ""
 

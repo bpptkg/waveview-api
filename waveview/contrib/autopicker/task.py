@@ -67,7 +67,7 @@ def create_event(detection_result: dict) -> None:
         time=time,
         duration=duration,
         type=event_type,
-        note="Event created by autopicker.",
+        note="",
         method="autopicker/bpptkg",
         evaluation_mode=EvaluationMode.AUTOMATIC,
         evaluation_status=EvaluationStatus.PRELIMINARY,

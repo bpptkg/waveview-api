@@ -1,6 +1,7 @@
 import os
 import tempfile
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 import numpy as np
 from obspy.clients.seedlink.easyseedlink import EasySeedLinkClient
@@ -101,7 +102,7 @@ class LteSteDetector:
     def _log(self, message: str) -> None:
         """Helper method for logging messages."""
         if self.debug:
-            print(message)
+            print(f"{datetime.now(UTC)} {message}")
 
     def _initialize_stream(self):
         """Memuat data hari ini jika ada, atau membuat Stream baru."""
@@ -275,7 +276,7 @@ class LteSteDetector:
                     if duration > 10:
                         # Event Terkonfirmasi > 10 detik. Lakukan picking pada SEMUA stasiun.
                         self._log(
-                            f"\n--- EVENT CONFIRMED (Duration: {duration:.2f}s) ---"
+                            f"--- EVENT CONFIRMED (Duration: {duration:.2f}s) ---"
                         )
 
                         picks: list[PickResult] = []
@@ -316,7 +317,7 @@ class LteSteDetector:
                         )
                         self.on_event_confirmed(event_result)
 
-                        self._log("--- END EVENT PROCESSING ---\n")
+                        self._log("--- END EVENT PROCESSING ---")
 
                     # Reset status event, terlepas dari durasi
                     self.onset = 0

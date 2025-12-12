@@ -178,7 +178,6 @@ class LteSteDetector:
 
         # Hitung Characteristic Function (LTE/STE Ratio)
         # Tambahkan epsilon untuk menghindari pembagian dengan nol
-        eps = 1e-6
         chrFunc = np.divide(
             lteList,
             steList,
@@ -215,7 +214,13 @@ class LteSteDetector:
         if self.day != current_day:
             self._log(f"New day detected: {current_day}. Resetting client state.")
             self.day = current_day
-            self.fn = f"D.{self.day}"
+            temp_dir = tempfile.gettempdir()
+            if self.instance_id:
+                self.fn = os.path.join(
+                    temp_dir, f"D.{self.day}_{self.instance_id}.mseed"
+                )
+            else:
+                self.fn = os.path.join(temp_dir, f"D.{self.day}.mseed")
             self.i = 1
             self.traces = Stream()  # Memulai Stream baru untuk hari baru
             self.onset = 0
@@ -309,7 +314,7 @@ class LteSteDetector:
                                 )
                             else:
                                 self._log(
-                                    f"PICK for {sta3}: Uncomplete trace ({trimmed_trace.stats.npts} points)"
+                                    f"PICK for {sta3}: Incomplete trace ({trimmed_trace.stats.npts} points)"
                                 )
 
                         event_result = DetectionResult(

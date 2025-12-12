@@ -319,6 +319,7 @@ CELERY_IMPORTS = (
     "waveview.tasks.send_email",
     "waveview.tasks.send_trace_buffer",
     "waveview.tasks.update_inventory",
+    "waveview.contrib.autopicker.task",
 )
 CELERYBEAT_SCHEDULE_FILENAME = str(Path(tempfile.gettempdir()) / "waveview-celerybeat")
 CELERYBEAT_SCHEDULE = {}

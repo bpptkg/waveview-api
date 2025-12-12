@@ -68,7 +68,7 @@ def create_event(detection_result: dict) -> None:
         duration=duration,
         type=event_type,
         note="",
-        method="autopicker/bpptkg",
+        method="stelte",
         evaluation_mode=EvaluationMode.AUTOMATIC,
         evaluation_status=EvaluationStatus.PRELIMINARY,
         author=user,

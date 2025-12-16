@@ -60,6 +60,7 @@ def run_autopicker(debug: bool = False) -> None:
             break
         except Exception as e:
             logger.error(
-                f"Error running AutoPickerSeedLink client: {e} - retrying in 5 seconds"
+                f"Error running AutoPickerSeedLink client: {e} - retrying in 5 seconds",
+                exc_info=True,
             )
             time.sleep(5)

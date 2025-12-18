@@ -46,6 +46,15 @@ class DetectionResult:
         except IndexError:
             return ""
 
+    def get_sof_pick(self) -> PickResult | None:
+        index = [pick.offset for pick in self.picks].index(
+            min([pick.offset for pick in self.picks])
+        )
+        try:
+            return self.picks[index]
+        except IndexError:
+            return None
+
     def get_duration(self) -> float:
         return self.t_off - self.t_on
 

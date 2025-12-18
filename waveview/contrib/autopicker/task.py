@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 def create_event(detection_result: dict) -> None:
     result = DetectionResult.from_dict(detection_result)
 
+    pick = result.get_sof_pick()
+    if pick is None:
+        logger.error("No SOF pick found in the detection result.")
+        return
+
     user = User.objects.get_or_create(
         email="autopicker@cendana15.com",
         defaults={
@@ -58,7 +63,7 @@ def create_event(detection_result: dict) -> None:
         logger.warning(f"Station with code '{sof}' does not exist.")
         station_of_first_arrival = None
 
-    time = timezone.make_aware(result.t_on.datetime, timezone=timezone.utc)
+    time = timezone.make_aware(pick.t_pick.datetime, timezone=timezone.utc)
     duration = result.get_duration()
 
     event = Event.objects.create(

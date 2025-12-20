@@ -1,11 +1,69 @@
 import os
 import tempfile
+from dataclasses import dataclass
+from datetime import UTC, datetime
 
 import numpy as np
 from obspy.clients.seedlink.easyseedlink import EasySeedLinkClient
 from obspy.core import UTCDateTime
 from obspy.core.stream import Stream, read
 from obspy.core.trace import Trace
+
+
+@dataclass
+class PickResult:
+    stream_id: str
+    t_pick: UTCDateTime
+    offset: float
+
+
+@dataclass
+class DetectionResult:
+    t_on: UTCDateTime
+    t_off: UTCDateTime
+    picks: list[PickResult]
+
+    def to_dict(self) -> dict:
+        return {
+            "t_on": self.t_on.isoformat(),
+            "t_off": self.t_off.isoformat(),
+            "picks": [
+                {
+                    "stream_id": pick.stream_id,
+                    "t_pick": pick.t_pick.isoformat(),
+                    "offset": pick.offset,
+                }
+                for pick in self.picks
+            ],
+        }
+
+    def get_sof(self) -> str:
+        index = [pick.offset for pick in self.picks].index(
+            min([pick.offset for pick in self.picks])
+        )
+        try:
+            return self.picks[index].stream_id.split(".")[1]
+        except IndexError:
+            return ""
+
+    def get_duration(self) -> float:
+        return self.t_off - self.t_on
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "DetectionResult":
+        picks = [
+            PickResult(
+                stream_id=pick_data["stream_id"],
+                t_pick=UTCDateTime(pick_data["t_pick"]),
+                offset=pick_data["offset"],
+            )
+            for pick_data in data.get("picks", [])
+        ]
+        return cls(
+            t_on=UTCDateTime(data["t_on"]),
+            t_off=UTCDateTime(data["t_off"]),
+            picks=picks,
+        )
 
 
 class LteSteDetector:
@@ -44,7 +102,7 @@ class LteSteDetector:
     def _log(self, message: str) -> None:
         """Helper method for logging messages."""
         if self.debug:
-            print(message)
+            print(f"{datetime.now(UTC)} {message}")
 
     def _initialize_stream(self):
         """Memuat data hari ini jika ada, atau membuat Stream baru."""
@@ -80,7 +138,6 @@ class LteSteDetector:
         std1 = np.std(trace1.data)
         std2 = np.std(trace2.data)
         rstd = std2 / std1
-        print("std2, rstd", std2, rstd)
 
         # Kriteria Offset
         if std2 < 400 and rstd > 1:
@@ -121,7 +178,6 @@ class LteSteDetector:
 
         # Hitung Characteristic Function (LTE/STE Ratio)
         # Tambahkan epsilon untuk menghindari pembagian dengan nol
-        eps = 1e-6
         chrFunc = np.divide(
             lteList,
             steList,
@@ -147,6 +203,9 @@ class LteSteDetector:
     # --- Metode Utama: Dipanggil saat data baru diterima ---
     # ----------------------------------------------------------------------
 
+    def on_event_confirmed(self, result: DetectionResult) -> None:
+        pass
+
     def on_data(self, trace: Trace) -> None:
         """Metode yang dipanggil oleh EasySeedLinkClient saat data baru tiba."""
 
@@ -155,7 +214,13 @@ class LteSteDetector:
         if self.day != current_day:
             self._log(f"New day detected: {current_day}. Resetting client state.")
             self.day = current_day
-            self.fn = f"D.{self.day}"
+            temp_dir = tempfile.gettempdir()
+            if self.instance_id:
+                self.fn = os.path.join(
+                    temp_dir, f"D.{self.day}_{self.instance_id}.mseed"
+                )
+            else:
+                self.fn = os.path.join(temp_dir, f"D.{self.day}.mseed")
             self.i = 1
             self.traces = Stream()  # Memulai Stream baru untuk hari baru
             self.onset = 0
@@ -216,8 +281,10 @@ class LteSteDetector:
                     if duration > 10:
                         # Event Terkonfirmasi > 10 detik. Lakukan picking pada SEMUA stasiun.
                         self._log(
-                            f"\n--- EVENT CONFIRMED (Duration: {duration:.2f}s) ---"
+                            f"--- EVENT CONFIRMED (Duration: {duration:.2f}s) ---"
                         )
+
+                        picks: list[PickResult] = []
 
                         # Loop melalui SEMUA trace di Stream yang terakumulasi
                         for trace3 in self.traces.copy():
@@ -238,12 +305,24 @@ class LteSteDetector:
                                 self._log(
                                     f"PICK for {sta3}: {t_pick} ({t_pick - self.t_on:.2f}s after onset)"
                                 )
+                                picks.append(
+                                    PickResult(
+                                        stream_id=f"{self.net}.{sta3}.{self.loc}.{self.cha}",
+                                        t_pick=t_pick,
+                                        offset=t_pick - self.t_on,
+                                    )
+                                )
                             else:
                                 self._log(
-                                    f"PICK for {sta3}: Uncomplete trace ({trimmed_trace.stats.npts} points)"
+                                    f"PICK for {sta3}: Incomplete trace ({trimmed_trace.stats.npts} points)"
                                 )
 
-                        self._log("--- END EVENT PROCESSING ---\n")
+                        event_result = DetectionResult(
+                            t_on=self.t_on, t_off=self.t_off, picks=picks
+                        )
+                        self.on_event_confirmed(event_result)
+
+                        self._log("--- END EVENT PROCESSING ---")
 
                     # Reset status event, terlepas dari durasi
                     self.onset = 0
@@ -252,10 +331,12 @@ class LteSteDetector:
 
         self.i += 1
 
+
 class DetectionCallback:
     """
     Subclass untuk menerima callback dari metode on_data dan menyimpan hasil deteksi.
     """
+
     def __init__(self):
         self.t_on = None
         self.t_off = None
@@ -275,6 +356,7 @@ class DetectionCallback:
     def __str__(self):
         return f"DetectionCallback(t_on={self.t_on}, t_off={self.t_off}, t_pick={self.t_pick})"
 
+
 class MySeedLinkClient(EasySeedLinkClient):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -289,7 +371,7 @@ class MySeedLinkClient(EasySeedLinkClient):
 
     def on_data(self, trace: Trace) -> None:
         self.detector.on_data(trace)
-    
+
         if self.detector.t_on is not None:
             self.callback.update(t_on=self.detector.t_on)
         if self.detector.t_off is not None:
@@ -301,6 +383,8 @@ class MySeedLinkClient(EasySeedLinkClient):
 
 
 if __name__ == "__main__":
+    """Use this script to test the SeedLink client and detection logic."""
+
     # Konfigurasi
     client_addr = "192.168.0.25:18000"
 
@@ -308,14 +392,14 @@ if __name__ == "__main__":
     client = MySeedLinkClient(client_addr)
 
     # Dapatkan informasi Stream
-    streams_xml = client.get_info('STREAMS')
+    streams_xml = client.get_info("STREAMS")
     print(streams_xml)
 
     # Pilih Stream yang ingin dimonitor
     print("Selecting streams...")
     try:
         # Panggil select_stream pada instance client
-        
+
         client.select_stream("VG", "MELAB", "HHZ")
         client.select_stream("VG", "MEPET", "HHZ")
         client.select_stream("VG", "MEDEL", "HHZ")

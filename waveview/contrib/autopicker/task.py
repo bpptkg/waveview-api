@@ -54,7 +54,7 @@ def create_event(detection_result: dict) -> None:
         return
 
     try:
-        sof = result.get_sof()
+        sof = pick.stream_id.split(".")[1]
         if sof:
             station_of_first_arrival = Station.objects.get(code=sof)
         else:

@@ -224,10 +224,12 @@ class LteSteDetector:
                     t_off_new = self._detect_offset(tr1, tr2)
                     if t_off_new:
                         duration = t_off_new - self.t_on
+                        self.t_off = t_off_new
                         if duration > 10:
                             self._process_event(duration)
 
                         self.onset, self.t_on = 0, None
+                        self.t_off = None
 
     def _process_event(self, duration: float):
         """Metode picking saat event terkonfirmasi."""

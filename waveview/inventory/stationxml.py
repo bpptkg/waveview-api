@@ -38,6 +38,19 @@ def f(value: float | None, default: float = 0) -> float:
     return val
 
 
+def print_info(file: str) -> None:
+    inv: ObspyInventory = read_inventory(file)
+    for net in inv:
+        net: ObspyNetwork
+        print(f"Network {net.code}")
+        for sta in net:
+            sta: ObspyStation
+            print(f"  Station {sta.code}")
+            for cha in sta:
+                cha: ObspyChannel
+                print(f"    Channel {cha.location_code}.{cha.code}")
+
+
 class StationXMLAdapter:
     def __init__(self, inventory_file: InventoryFile) -> None:
         self.inventory_file = inventory_file

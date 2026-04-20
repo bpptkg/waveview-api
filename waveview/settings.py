@@ -54,6 +54,7 @@ PROJECT_APPS = [
     "waveview.event",
     "waveview.appconfig",
     "waveview.observation",
+    "waveview.whatsapp",
 ]
 
 INSTALLED_APPS = PREREQUISITE_APPS + PROJECT_APPS
@@ -375,3 +376,6 @@ if SENTRY_DSN:
         send_default_pii=True,
         before_send=before_send,
     )
+
+BROADCAST_TOKEN = env("BROADCAST_TOKEN", default="")
+BROADCAST_TESTING = env.bool("BROADCAST_TESTING", default=False)

@@ -80,7 +80,7 @@ class SendToWAEndpoint(Endpoint):
         if settings.BROADCAST_TESTING:
             final_message = "[TESTING]\n" + final_message
         body = {
-            "type": "Group",
+            "type": "WA Group",
             "is_wa": 1,
             "is_sms": 0,
             "message": final_message,

@@ -52,6 +52,7 @@ from .v1.seedlink import (
 )
 from .v1.seismic_network_status import SeismicNetworkStatusEndpoint
 from .v1.seismicity import SeismicityEndpoint
+from .v1.send_to_wa import SendToWAEndpoint
 from .v1.signal_amplitude import SignalAmplitudeEndpoint
 from .v1.station_detail import StationDetailEndpoint
 from .v1.station_index import StationIndexEndpoint
@@ -392,6 +393,7 @@ urlpatterns = [
     path("event-attachments/", include(EVENT_ATTACHMENT_URLS)),
     path("account/", include(ACCOUNT_URLS)),
     path("auth/", include(AUTH_URLS)),
+    path("send-to-wa/", SendToWAEndpoint.as_view(), name="waveview-api-1-send-to-wa"),
     re_path(r"^$", IndexEndpoint.as_view(), name="waveview-api-1-index"),
     re_path(r"^", CatchallEndpoint.as_view(), name="waveview-api-1-catchall"),
 ]

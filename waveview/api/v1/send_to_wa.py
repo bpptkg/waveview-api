@@ -31,12 +31,10 @@ class SendToWAEndpoint(Endpoint):
 
     @swagger_auto_schema(
         operation_id="Send Event to WA",
-        operation_description=(
-            """
+        operation_description=("""
             This endpoint allows users to send a Pyroclastic Flow event to
             WhatsApp for notification purposes.
-            """
-        ),
+            """),
         tags=["Event"],
         request_body=SendToWAPayloadSerializer,
         responses={
@@ -78,7 +76,9 @@ class SendToWAEndpoint(Endpoint):
             f"Arah: {', '.join([fd.name for fd in pf.fall_directions.all()])}"
         )
         if settings.BROADCAST_TESTING:
-            final_message = "[TESTING]\n" + final_message
+            final_message = (
+                "[TESTING. PESAN INI HANYA UNTUK UJI COBA.]\n" + final_message
+            )
         body = {
             "type": "WA Group",
             "is_wa": 1,

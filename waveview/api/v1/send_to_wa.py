@@ -1,7 +1,3 @@
-from zoneinfo import ZoneInfo
-
-import requests
-from django.conf import settings
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
@@ -13,7 +9,7 @@ from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.event.models import Event
 from waveview.observation.models import PyroclasticFlow
-from waveview.whatsapp.models import Group
+from waveview.tasks.send_wa_notification import send_wa_notification
 
 
 class SendToWAPayloadSerializer(serializers.Serializer):
@@ -53,48 +49,14 @@ class SendToWAEndpoint(Endpoint):
                 f"Event with ID {event_id} does not exist."
             )
         try:
-            pf = PyroclasticFlow.objects.get(event=event)
+            PyroclasticFlow.objects.get(event=event)
         except PyroclasticFlow.DoesNotExist:
             raise serializers.ValidationError(
                 f"No Pyroclastic Flow observation found for event ID {event_id}."
             )
 
-        groups = Group.objects.filter(excluded=False)
-        url = "https://broadcast-api.cendana15.com/messages"
-        headers = {
-            "Authorization": f"Bearer {settings.BROADCAST_TOKEN}",
-            "Content-Type": "application/json",
-        }
-        event_time_wib = event.time.astimezone(ZoneInfo("Asia/Jakarta"))
-        final_message = (
-            f"*Info APG:*\n"
-            f"Tanggal: {event_time_wib.strftime('%d %B %Y')}\n"
-            f"Jam: {event_time_wib.strftime('%H.%M.%S')} WIB\n"
-            f"Durasi: {(event.duration)} detik\n"
-            f"Amplitudo maks: {(pf.amplitude)} mm\n"
-            f"Estimasi jarak luncur: {(pf.runout_distance)} m\n"
-            f"Arah: {', '.join([fd.name for fd in pf.fall_directions.all()])}"
-        )
-        if settings.BROADCAST_TESTING:
-            final_message = (
-                "[TESTING. PESAN INI HANYA UNTUK UJI COBA.]\n" + final_message
-            )
-        body = {
-            "type": "WA Group",
-            "is_wa": 1,
-            "is_sms": 0,
-            "message": final_message,
-            "receiver": [
-                {"id": group.group_id, "name": group.name} for group in groups
-            ],
-        }
-
-        response = requests.post(url, json=body, headers=headers)
-        if response.status_code != 200:
-            raise serializers.ValidationError(
-                f"Failed to send message to WA. Status code: {response.status_code}, Response: {response.text}"
-            )
+        send_wa_notification.delay(str(event_id))
 
         return Response(
-            {"message": f"Event {event_id} has been sent to WA successfully."}
+            {"message": f"Event {event_id} has been queued to be sent to WA."}
         )

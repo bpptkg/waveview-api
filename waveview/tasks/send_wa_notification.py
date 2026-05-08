@@ -52,7 +52,7 @@ def format_decimal(value: float) -> str:
     return formatted
 
 
-def get_amplitude(event: Event) -> str | None:
+def get_amplitude(event: Event) -> str:
     manual_analog_method = "manual_analog"
     manual_analog_amplitude = (
         Amplitude.objects.filter(event=event, method=manual_analog_method)
@@ -71,10 +71,8 @@ def get_amplitude(event: Event) -> str | None:
         .order_by("-updated_at")
         .first()
     )
-    if amplitude is None:
-        return None
-    if amplitude.amplitude is None:
-        return None
+    if amplitude is None or amplitude.amplitude is None:
+        return "tidak dapat ditentukan"
     return f"{format_decimal(amplitude.amplitude)} {amplitude.unit}"
 
 

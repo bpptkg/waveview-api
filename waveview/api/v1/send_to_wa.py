@@ -55,8 +55,8 @@ class SendToWAEndpoint(Endpoint):
                 f"No Pyroclastic Flow observation found for event ID {event_id}."
             )
 
-        send_wa_notification.delay(str(event_id))
+        send_wa_notification(str(event_id))
 
         return Response(
-            {"message": f"Event {event_id} has been queued to be sent to WA."}
+            {"message": f"Event {event_id} has been sent to WA."}
         )

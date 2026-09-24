@@ -92,3 +92,9 @@ Below is several examples of built-in observer classes:
 
     This observer is used to send the event to the BMA system. It will send the
     event data to the BMA system using the BMA API.
+
+- ``waveview.contrib.bma.thermal_direction.ThermalDirectionObserver``
+
+    This observer classifies thermal river-axis direction for RF and APG
+    events. Its name in Event Observer Config is ``bma.thermal_direction``.
+    See :doc:`thermal_direction`.

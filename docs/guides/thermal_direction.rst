@@ -49,13 +49,18 @@ rest of the note alone::
     classified_at: 2026-09-23T10:02:00+00:00
     [/thermal-direction]
 
-The same ``hasil_akhir``, ``arah``, and ``arah_sumber`` values are sent to the
-BMA bulletin. ``refid`` is the bulletin id. When ``refid`` is empty, the task
-looks up ``/api/v1/bulletin/`` around the event time. The update is a PATCH of
-those fields on ``/api/v1/crud/bulletin/<id>/``, using the same API key. If the
-fetched bulletin already has ``attributes`` or ``remark`` / ``note`` /
-``catatan``, those are updated as well. A failed bulletin call does not roll
-back the local note.
+BMA stores the winning river name on the bulletin field ``arah_kubah``.
+``refid`` is the bulletin id. When ``refid`` is empty, the task looks up
+``/api/v1/bulletin/`` around the event time. The update is:
+
+``PATCH {BMA_URL}/api/v1/crud/bulletin/<id>/arah_kubah/``
+
+with body ``{"arah_kubah": "<hasil_akhir>"}``. ``hasil_akhir`` is the river
+name, such as ``Krasak``, ``Boyong``, ``Bebeng``, or ``Tidak terdeteksi``.
+The request uses the same ``Authorization: Api-Key <BMA_API_KEY>`` header.
+``Event.note`` still keeps both the river name and ``arah`` (``Kiri`` or
+``Kanan``) for debugging. A failed bulletin call does not roll back the local
+note. This write requires the BMA ``arah_kubah`` column from bpptkg/bma#10.
 
 The thermal query is ``GET {BMA_URL}/api/v1/thermal-axis-jrg/`` with
 ``eventdate``, ``datetime_before`` (10 minutes before), ``datetime_after``

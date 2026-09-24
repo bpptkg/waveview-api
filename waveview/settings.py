@@ -321,6 +321,7 @@ CELERY_IMPORTS = (
     "waveview.tasks.send_trace_buffer",
     "waveview.tasks.update_inventory",
     "waveview.contrib.autopicker.task",
+    "waveview.contrib.bma.thermal_direction.task",
 )
 CELERYBEAT_SCHEDULE_FILENAME = str(Path(tempfile.gettempdir()) / "waveview-celerybeat")
 CELERYBEAT_SCHEDULE = {}
@@ -342,6 +343,7 @@ EVENT_OBSERVER_REGISTRY = [
     "waveview.contrib.bpptkg.magnitude.MagnitudeObserver",
     "waveview.contrib.bma.bulletin.BulletinObserver",
     "waveview.contrib.daisy.observer.DaisyWebhookObserver",
+    "waveview.contrib.bma.thermal_direction.ThermalDirectionObserver",
 ]
 
 AMPLITUDE_CALCULATOR_REGISTRY = [
@@ -351,6 +353,7 @@ AMPLITUDE_CALCULATOR_REGISTRY = [
 SINOAS_WINSTON_URL = env("SINOAS_WINSTON_URL", default="http://127.0.0.1:16030")
 BMA_URL = env("BMA_URL", default="https://bma.cendana15.com")
 BMA_API_KEY = env("BMA_API_KEY", default="")
+THERMAL_DIRECTION_DELAY = env.int("THERMAL_DIRECTION_DELAY", default=120)
 
 DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
 DBBACKUP_DIR = STORAGE_DIR / "backup"

@@ -203,7 +203,7 @@ class ThermalAxisClientTest(unittest.TestCase):
         self.assertNotIn("secret-key", str(raised.exception))
 
 
-class PushArahKubahTest(unittest.TestCase):
+class PushArahKubahTermalTest(unittest.TestCase):
     def test_patch_sends_hasil_akhir_not_kiri_kanan(self) -> None:
         session = MagicMock()
         response = MagicMock()
@@ -230,9 +230,9 @@ class PushArahKubahTest(unittest.TestCase):
         kwargs = session.patch.call_args.kwargs
         self.assertEqual(
             url,
-            "https://bma.example/base/api/v1/crud/bulletin/evt-1/arah_kubah/",
+            "https://bma.example/base/api/v1/crud/bulletin/evt-1/arah_kubah_termal/",
         )
-        self.assertEqual(kwargs["json"], {"arah_kubah": "Krasak"})
+        self.assertEqual(kwargs["json"], {"arah_kubah_termal": "Krasak"})
         self.assertEqual(kwargs["headers"]["Authorization"], "Api-Key test-key")
         self.assertNotIn("Kiri", str(kwargs["json"]))
 
@@ -254,7 +254,7 @@ class PushArahKubahTest(unittest.TestCase):
 
         self.assertEqual(
             session.patch.call_args.kwargs["json"],
-            {"arah_kubah": "Tidak terdeteksi"},
+            {"arah_kubah_termal": "Tidak terdeteksi"},
         )
 
     def test_missing_refid_looks_up_bulletin_then_patches_winner(self) -> None:
@@ -296,11 +296,11 @@ class PushArahKubahTest(unittest.TestCase):
         )
         self.assertEqual(
             session.patch.call_args.args[0],
-            "https://bma.example/api/v1/crud/bulletin/bma-9/arah_kubah/",
+            "https://bma.example/api/v1/crud/bulletin/bma-9/arah_kubah_termal/",
         )
         self.assertEqual(
             session.patch.call_args.kwargs["json"],
-            {"arah_kubah": "Bebeng"},
+            {"arah_kubah_termal": "Bebeng"},
         )
         session.put.assert_not_called()
 
@@ -326,7 +326,7 @@ class PushArahKubahTest(unittest.TestCase):
 
         self.assertEqual(
             session.patch.call_args.args[0],
-            "https://bma.example/api/v1/crud/bulletin/evt-3/arah_kubah/",
+            "https://bma.example/api/v1/crud/bulletin/evt-3/arah_kubah_termal/",
         )
         session.put.assert_not_called()
 

@@ -28,8 +28,8 @@ def push_bulletin_direction(
     Best-effort write of the winning river name onto one BMA bulletin.
 
     Uses ``Authorization: Api-Key``. Looks the bulletin up by ``refid`` or, when
-    that is empty, by event time on ``/api/v1/bulletin/``. ``arah_kubah`` is
-    ``result.hasil_akhir`` (the river name).
+    that is empty, by event time on ``/api/v1/bulletin/``. ``arah_kubah_termal``
+    is ``result.hasil_akhir`` (the river name).
     """
     api = session or requests.Session()
     headers = {
@@ -43,8 +43,8 @@ def push_bulletin_direction(
 
     try:
         response = api.patch(
-            _arah_kubah_url(base_url, resolved_id),
-            json={"arah_kubah": result.hasil_akhir},
+            _arah_kubah_termal_url(base_url, resolved_id),
+            json={"arah_kubah_termal": result.hasil_akhir},
             headers=headers,
             timeout=30,
         )
@@ -56,9 +56,9 @@ def push_bulletin_direction(
         )
 
 
-def _arah_kubah_url(base_url: str, bulletin_id: str) -> str:
+def _arah_kubah_termal_url(base_url: str, bulletin_id: str) -> str:
     quoted = quote(str(bulletin_id), safe="")
-    return f"{base_url.rstrip('/')}/api/v1/crud/bulletin/{quoted}/arah_kubah/"
+    return f"{base_url.rstrip('/')}/api/v1/crud/bulletin/{quoted}/arah_kubah_termal/"
 
 
 def _find_bulletin_id(

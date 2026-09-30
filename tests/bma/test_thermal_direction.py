@@ -2,7 +2,10 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
-from waveview.contrib.bma.thermal_direction.bulletin import merge_bulletin_payload
+from waveview.contrib.bma.thermal_direction.bulletin import (
+    ThermalBulletinError,
+    push_bulletin_direction,
+)
 from waveview.contrib.bma.thermal_direction.classifier import (
     ThermalSample,
     classify,
@@ -200,29 +203,132 @@ class ThermalAxisClientTest(unittest.TestCase):
         self.assertNotIn("secret-key", str(raised.exception))
 
 
-class BulletinPayloadMergeTest(unittest.TestCase):
-    def test_merge_sets_direction_fields_and_replaces_remark_line(self) -> None:
-        payload = {
-            "eventid": "abc",
-            "eventtype": "RF",
-            "remark": "awal\nthermal-direction: hasil_akhir=Putih; arah=Kanan\n",
-            "attributes": {"source": "bma"},
-        }
+class PushArahKubahTest(unittest.TestCase):
+    def test_patch_sends_hasil_akhir_not_kiri_kanan(self) -> None:
+        session = MagicMock()
+        response = MagicMock()
+        response.ok = True
+        session.patch.return_value = response
         result = classify(
             EVENT,
-            [sample("Sat", -1, 10), sample("Sat", 1, 20)],
+            [sample("Krasak", -1, 10), sample("Krasak", 1, 20)],
         )
-        merged = merge_bulletin_payload(payload, result)
-        self.assertEqual(merged["hasil_akhir"], "Sat")
-        self.assertEqual(merged["arah"], "Kiri")
-        self.assertEqual(merged["arah_sumber"], "Sat")
-        self.assertEqual(merged["attributes"]["hasil_akhir"], "Sat")
-        self.assertEqual(merged["attributes"]["arah"], "Kiri")
-        self.assertEqual(merged["attributes"]["source"], "bma")
-        self.assertIn("hasil_akhir=Sat", merged["remark"])
-        self.assertNotIn("Putih", merged["remark"])
-        self.assertIn("awal", merged["remark"])
-        self.assertEqual(payload["remark"].count("Putih"), 1)
+        self.assertEqual(result.arah, "Kiri")
+
+        push_bulletin_direction(
+            base_url="https://bma.example/base/",
+            api_key="test-key",
+            bulletin_id="evt-1",
+            result=result,
+            session=session,
+        )
+
+        session.get.assert_not_called()
+        session.put.assert_not_called()
+        session.patch.assert_called_once()
+        url = session.patch.call_args.args[0]
+        kwargs = session.patch.call_args.kwargs
+        self.assertEqual(
+            url,
+            "https://bma.example/base/api/v1/crud/bulletin/evt-1/arah_kubah/",
+        )
+        self.assertEqual(kwargs["json"], {"arah_kubah": "Krasak"})
+        self.assertEqual(kwargs["headers"]["Authorization"], "Api-Key test-key")
+        self.assertNotIn("Kiri", str(kwargs["json"]))
+
+    def test_patch_sends_tidak_terdeteksi_river_name(self) -> None:
+        session = MagicMock()
+        response = MagicMock()
+        response.ok = True
+        session.patch.return_value = response
+        result = classify(EVENT, [])
+        self.assertEqual(result.hasil_akhir, "Tidak terdeteksi")
+
+        push_bulletin_direction(
+            base_url="https://bma.example",
+            api_key="test-key",
+            bulletin_id="evt-2",
+            result=result,
+            session=session,
+        )
+
+        self.assertEqual(
+            session.patch.call_args.kwargs["json"],
+            {"arah_kubah": "Tidak terdeteksi"},
+        )
+
+    def test_missing_refid_looks_up_bulletin_then_patches_winner(self) -> None:
+        session = MagicMock()
+        listed = MagicMock()
+        listed.ok = True
+        listed.status_code = 200
+        listed.json.return_value = {
+            "results": [
+                {"eventid": "bma-9", "eventdate": "2026-09-23 17:00:00"},
+            ]
+        }
+        patched = MagicMock()
+        patched.ok = True
+        session.get.return_value = listed
+        session.patch.return_value = patched
+        result = classify(
+            EVENT,
+            [sample("Bebeng", -2, 10), sample("Bebeng", 1, 20)],
+        )
+        self.assertEqual(result.arah, "Kanan")
+
+        push_bulletin_direction(
+            base_url="https://bma.example",
+            api_key="test-key",
+            bulletin_id=None,
+            result=result,
+            event_time=EVENT,
+            session=session,
+        )
+
+        self.assertEqual(
+            session.get.call_args.args[0],
+            "https://bma.example/api/v1/bulletin/",
+        )
+        self.assertEqual(
+            session.get.call_args.kwargs["headers"]["Authorization"],
+            "Api-Key test-key",
+        )
+        self.assertEqual(
+            session.patch.call_args.args[0],
+            "https://bma.example/api/v1/crud/bulletin/bma-9/arah_kubah/",
+        )
+        self.assertEqual(
+            session.patch.call_args.kwargs["json"],
+            {"arah_kubah": "Bebeng"},
+        )
+        session.put.assert_not_called()
+
+    def test_patch_failure_raises_without_detail_put(self) -> None:
+        session = MagicMock()
+        response = MagicMock()
+        response.ok = False
+        response.status_code = 404
+        session.patch.return_value = response
+        result = classify(
+            EVENT,
+            [sample("Boyong", -1, 10), sample("Boyong", 1, 20)],
+        )
+
+        with self.assertRaises(ThermalBulletinError):
+            push_bulletin_direction(
+                base_url="https://bma.example",
+                api_key="test-key",
+                bulletin_id="evt-3",
+                result=result,
+                session=session,
+            )
+
+        self.assertEqual(
+            session.patch.call_args.args[0],
+            "https://bma.example/api/v1/crud/bulletin/evt-3/arah_kubah/",
+        )
+        session.put.assert_not_called()
 
 
 class ThermalDirectionObserverTest(unittest.TestCase):

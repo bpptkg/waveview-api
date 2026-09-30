@@ -4,7 +4,6 @@ from django.conf import settings
 from django.utils import timezone
 
 from waveview.celery import app
-from waveview.contrib.bma.bulletin.payload import BulletinPayloadBuilder
 from waveview.contrib.bma.thermal_direction.bulletin import push_bulletin_direction
 from waveview.contrib.bma.thermal_direction.classifier import (
     classify,
@@ -71,17 +70,11 @@ def classify_thermal_direction(event_id: str) -> None:
     )
 
     try:
-        fallback = BulletinPayloadBuilder(event).build()
-    except Exception:
-        logger.exception("Could not build BMA bulletin payload for event %s", event_id)
-        fallback = None
-    try:
         push_bulletin_direction(
             base_url=base_url,
             api_key=api_key,
             bulletin_id=str(event.refid) if event.refid else None,
             result=result,
-            fallback_payload=fallback,
             event_time=event.time,
         )
     except Exception:

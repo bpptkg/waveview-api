@@ -44,7 +44,9 @@ class BulletinClient:
     def create(self, payload: dict) -> None:
         url = urljoin(self.base_url, "api/v1/crud/bulletin/")
         try:
-            response = self.api.post(url, json=payload, timeout=(10, 30), allow_redirects=False)
+            response = self.api.post(
+                url, json=payload, timeout=(10, 30), allow_redirects=False
+            )
         except requests.exceptions.RequestException as e:
             raise Exception("Failed to create event") from e
         if not 200 <= response.status_code < 300:

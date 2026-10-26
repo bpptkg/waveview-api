@@ -202,7 +202,10 @@ class BulletinPayloadBuilder:
         seiscompid: str | None = self._get_seiscompid()
         valid: int = 1
         if event.autoclass:
-            valid = int(event.evaluation_mode == 'manual' and event.evaluation_status in ('confirmed','reviewed','final'))
+            valid = int(
+                event.evaluation_mode == "manual"
+                and event.evaluation_status in ("confirmed", "reviewed", "final")
+            )
         projection: str = "WGS84"
         operator: str = str(event.author.username)
         timestamp: str = self._format_time(event.updated_at)

@@ -213,6 +213,8 @@ class EventPayloadSerializer(serializers.Serializer):
         return value
 
     def validate_observation(self, value: dict | None) -> dict | None:
+        if value is None and self.instance is not None and self.instance.autoclass:
+            return None
         type_id = self.initial_data.get("type_id")
         if not type_id:
             return None
@@ -274,6 +276,7 @@ class EventPayloadSerializer(serializers.Serializer):
 
     @transaction.atomic
     def update(self, instance: Event, validated_data: dict) -> Event:
+        instance = Event.objects.select_for_update().get(pk=instance.pk)
         user = self.context["request"].user
         attachment_ids = validated_data.pop("attachment_ids", [])
         observation = validated_data.pop("observation", None)
@@ -288,12 +291,17 @@ class EventPayloadSerializer(serializers.Serializer):
         Attachment.objects.filter(id__in=attachment_ids).update(event=instance)
         self.update_observation(instance, observation)
         self.update_amplitude(instance, amplitude_manual_inputs, user)
+        if instance.autoclass:
+            from waveview.contrib.autoclass.task import schedule_sync
+            schedule_sync(instance)
         return instance
 
     def update_observation(self, instance: Event, observation: dict | None) -> Event:
         observation_type = instance.type.observation_type
         if observation_type in ObservationType.values:
             if observation is None:
+                if instance.autoclass:
+                    return instance
                 raise serializers.ValidationError(
                     _("Observation data could not be empty.")
                 )

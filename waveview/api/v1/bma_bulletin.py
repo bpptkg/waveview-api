@@ -74,9 +74,10 @@ class BMABulletinEndpoint(Endpoint):
         bulletin.is_valid(raise_exception=True)
         event: Event = bulletin.save()
 
-        notify_event_observer.delay(
-            OperationType.UPDATE, str(event.id), str(volcano.id)
-        )
+        if not event.autoclass:
+            notify_event_observer.delay(
+                OperationType.UPDATE, str(event.id), str(volcano.id)
+            )
 
         return Response({"message": "Event updated."}, status=status.HTTP_200_OK)
 

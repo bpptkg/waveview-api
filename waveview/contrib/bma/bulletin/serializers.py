@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from uuid import UUID
 
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
@@ -186,6 +187,12 @@ class BulletinPayloadSerializer(serializers.Serializer):
         user = self.context["user"]
 
         eventid = validated_data["eventid"]
+        try:
+            native = Event.objects.filter(pk=UUID(eventid), catalog_id=catalog_id, autoclass__isnull=False).first()
+        except ValueError:
+            native = None
+        if native is not None:
+            return native
         eventdate = validated_data["eventdate"]
         duration = validated_data.get("duration", 0)
         amplitude = validated_data.get("amplitude", "0mm")

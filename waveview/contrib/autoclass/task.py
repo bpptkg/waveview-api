@@ -6,13 +6,14 @@ from datetime import timedelta
 from functools import partial
 
 from django.conf import settings
-from django.db import transaction
+from django.db import connection, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from waveview.celery import app
 from waveview.contrib.autoclass.client import TYPES, PredictionError, predict
+from waveview.contrib.autoclass.bma import push_bulletin
 from waveview.event.models import Event, EventType
 from waveview.event.observers import OperationType
 from waveview.notifications.types import NotifyEventData
@@ -144,6 +145,8 @@ def classify_event(event_id):
                     Event.objects.filter(pk=event.pk).update(type=event_type)
                     data['applied'] = True
         _save(event, data)
+        if event.evaluation_mode == 'manual':
+            schedule_sync(event)
         transaction.on_commit(partial(_notify, event))
 
 
@@ -155,3 +158,67 @@ def recover_events():
     ids = Event.objects.filter(due | expired, catalog_id__in=settings.AUTOCLASS_CATALOG_IDS).values_list('id', flat=True)[:200]
     for event_id in ids:
         _dispatch(classify_event, str(event_id))
+    sync_ids = Event.objects.filter(catalog_id__in=settings.AUTOCLASS_CATALOG_IDS,
+        autoclass__sync__state__in=['pending', 'retrying'], autoclass__sync__due_at__lte=now.isoformat()
+    ).values_list('id', flat=True)[:200]
+    for event_id in sync_ids:
+        _dispatch(sync_event, str(event_id))
+
+
+@transaction.atomic
+def schedule_sync(event):
+    current = Event.objects.select_for_update().filter(pk=event.pk).first()
+    if current is None or not current.autoclass or not enabled(current):
+        return
+    ready = current.evaluation_mode == 'manual' and current.evaluation_status in ('confirmed', 'reviewed', 'final', 'rejected')
+    data = current.autoclass
+    data['sync'] = {'state': 'pending' if ready else 'waiting_validation', 'attempts': 0,
+                    'revision': uuid.uuid4().hex, 'due_at': timezone.now().isoformat()}
+    _save(current, data)
+    event.autoclass = data
+    if ready:
+        transaction.on_commit(partial(_dispatch, sync_event, str(event.pk)))
+
+
+@app.task(name='waveview.contrib.autoclass.sync_event')
+def sync_event(event_id):
+    # Serialize outbound writes without blocking the operator's row during HTTP.
+    key = uuid.UUID(event_id).int % (2 ** 63)
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT pg_try_advisory_lock(%s)', [key])
+        if not cursor.fetchone()[0]:
+            return
+    try:
+        for _ in range(2):
+            event = Event.objects.select_related('type', 'author', 'catalog__volcano').filter(pk=event_id).first()
+            if event is None or not event.autoclass or not enabled(event):
+                return
+            data, sync = event.autoclass, event.autoclass.get('sync', {})
+            if event.evaluation_mode != 'manual' or event.evaluation_status not in ('confirmed','reviewed','final','rejected'):
+                return
+            if sync.get('state') not in ('pending', 'retrying') or parse_datetime(sync['due_at']) > timezone.now():
+                return
+            revision = sync['revision']
+            try:
+                push_bulletin(event)
+                error = False
+            except Exception:
+                logger.exception('BMA autoclass sync failed for event %s', event_id)
+                error = True
+            with transaction.atomic():
+                current = Event.objects.select_for_update().filter(pk=event_id).first()
+                if current is None:
+                    return
+                if current.autoclass['sync']['revision'] != revision:
+                    continue
+                sync['attempts'] += 1
+                sync.update(state='synced' if not error else 'failed', error='bma_unavailable' if error else None)
+                if error and sync['attempts'] <= len(RETRIES):
+                    delay = RETRIES[sync['attempts'] - 1]
+                    sync.update(state='retrying', due_at=(timezone.now()+timedelta(seconds=delay)).isoformat())
+                    transaction.on_commit(partial(_dispatch, sync_event, event_id, delay))
+                _save(current, dict(current.autoclass, sync=sync))
+                return
+    finally:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT pg_advisory_unlock(%s)', [key])

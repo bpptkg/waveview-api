@@ -15,6 +15,7 @@ def event(settings, monkeypatch):
     from waveview.contrib.autoclass import task
 
     monkeypatch.setattr(task, '_dispatch', Mock())
+    monkeypatch.setattr(task.notify_event, 'delay', lambda *args: None)
     user = User.objects.create(username='detector', email='detector@example.test')
     organization = Organization.objects.create(slug='test', name='Test', author=user)
     volcano = Volcano.objects.create(slug='merapi', name='Merapi', organization=organization)

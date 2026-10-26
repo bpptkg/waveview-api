@@ -121,12 +121,15 @@ class BulletinLoader:
         refids = [unquote(event["eventid"]) for event in events]
         Event.objects.filter(
             catalog_id=self.context.catalog.id,
+            autoclass__isnull=True,
             time__gte=start,
             time__lt=end,
         ).exclude(refid__in=refids).delete()
 
     def update_amplitudes(self, events: list[Event]) -> None:
         for index, event in enumerate(events):
+            if event.autoclass:
+                continue
             logger.info(
                 f"Updating amplitudes for event {event.id} ({index + 1}/{len(events)})..."
             )

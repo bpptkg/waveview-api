@@ -4,6 +4,7 @@ import pytest
 
 from waveview.event.models import Event, EventType
 from waveview.event.serializers.event import EventPayloadSerializer
+
 from .test_pipeline import run_prediction
 
 pytestmark = pytest.mark.django_db
@@ -92,3 +93,33 @@ def test_response_has_no_placeholder_visual_for_seismic_only_event(event, monkey
     event.type.observation_type = "pyroclastic_flow"
     event.type.save()
     assert EventDetailSerializer(event).data["observation"] is None
+
+
+def test_manual_decision_records_actor_time_and_type_without_replacing_detector(
+    event, monkeypatch
+):
+    from django.utils import timezone
+
+    from waveview.users.models import User
+
+    run_prediction(event, monkeypatch)
+    operator = User.objects.create(username="operator", email="operator@example.test")
+    before = timezone.now()
+    serializer = EventPayloadSerializer(
+        event,
+        data={
+            "evaluation_mode": "manual",
+            "evaluation_status": "confirmed",
+        },
+        partial=True,
+        context={"request": SimpleNamespace(user=operator)},
+    )
+    assert serializer.is_valid(), serializer.errors
+    saved = serializer.save()
+    audit = saved.autoclass["validation"]
+    assert audit["actor_id"] == str(operator.pk)
+    assert timezone.datetime.fromisoformat(audit["at"]) >= before
+    assert audit["type"] == "VTB"
+    assert audit["status"] == "confirmed"
+    assert saved.author_id == event.author_id
+    assert saved.autoclass["result"]["jenis"] == "VTB"

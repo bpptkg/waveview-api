@@ -2,6 +2,7 @@ from typing import Dict, Type
 from uuid import UUID
 
 from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
@@ -288,6 +289,13 @@ class EventPayloadSerializer(serializers.Serializer):
                 setattr(instance, key, value)
         if user not in instance.collaborators.all():
             instance.collaborators.add(user)
+        if instance.autoclass and instance.evaluation_mode == EvaluationMode.MANUAL:
+            instance.autoclass["validation"] = {
+                "actor_id": str(user.pk),
+                "at": timezone.now().isoformat(),
+                "type": instance.type.code if instance.type else None,
+                "status": instance.evaluation_status,
+            }
         instance.save()
 
         Attachment.objects.filter(id__in=attachment_ids).update(event=instance)

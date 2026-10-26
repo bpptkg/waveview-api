@@ -4,10 +4,12 @@ from unittest.mock import Mock
 import pytest
 from django.utils import timezone
 
-from waveview.event.models import Event, EventType
-from .conftest import result_for
 from waveview.contrib.autoclass import task
 from waveview.contrib.autoclass.client import PredictionError, predict
+from waveview.contrib.autoclass.task import _dispatch
+from waveview.event.models import Event, EventType
+
+from .conftest import result_for
 
 pytestmark = pytest.mark.django_db
 
@@ -154,6 +156,16 @@ def test_retry_exhausts_and_recovery_reclaims_lease(event, monkeypatch):
         {"waktu_utc": "2020-01-01 00:00:00"},
         {"eventid": "wrong"},
         {"top3": [{"kelas": "BAD", "p": 1}]},
+        {"kelas": 42},
+        {"kelas_10": {"unexpected": "object"}},
+        {"saran": 42},
+        {"saran": [{"unexpected": "object"}]},
+        {"catatan": {"unexpected": "object"}},
+        {"cek_tektonik": "unexpected"},
+        {"cek_tektonik": {"saran": {"unexpected": "object"}}},
+        {"arah_sumber": {"unexpected": "object"}},
+        {"tanda_awan_panas": {"unexpected": "object"}},
+        {"cek_tektonik": {"snr": float("inf")}},
     ],
 )
 def test_client_rejects_wrong_prediction_contract(event, monkeypatch, change):
@@ -238,7 +250,7 @@ def test_rolled_back_detector_work_is_not_persisted(event):
 
 def test_sinoas_creates_durable_work(event):
     from waveview.contrib.sinoas.context import SinoasContext
-    from waveview.contrib.sinoas.detector import Detector, DetectedEvent
+    from waveview.contrib.sinoas.detector import DetectedEvent, Detector
 
     context = SinoasContext(
         organization=event.catalog.volcano.organization,
@@ -273,3 +285,166 @@ def test_autopicker_creates_durable_work(event, monkeypatch):
     detected = Event.objects.exclude(pk=event.pk).get()
     assert detected.autoclass["state"] == "pending"
     assert detected.autoclass["source"] == "stelte"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_autopicker_event_survives_notification_broker_failure(event, monkeypatch):
+    from waveview.contrib.autopicker.task import create_event
+
+    def unavailable(*args):
+        raise ConnectionError("broker down")
+
+    monkeypatch.setattr(
+        "waveview.contrib.autopicker.task.notify_event.delay", unavailable
+    )
+    create_event(
+        {
+            "t_on": event.time.isoformat(),
+            "t_off": (event.time + timedelta(seconds=35)).isoformat(),
+            "picks": [
+                {
+                    "stream_id": "VG.MEPAC.00.HHZ",
+                    "t_pick": event.time.isoformat(),
+                    "offset": 0,
+                }
+            ],
+        }
+    )
+    detected = Event.objects.exclude(pk=event.pk).get()
+    assert detected.autoclass["state"] == "pending"
+
+
+@pytest.mark.parametrize(
+    "transition",
+    [
+        "disabled",
+        "stale",
+        "manual_change",
+        "retries_exhausted",
+        "stale_during_prediction",
+    ],
+)
+def test_terminal_transition_notifies_only_after_commit(
+    event, monkeypatch, settings, django_capture_on_commit_callbacks, transition
+):
+    task.enqueue_event(event)
+    event.refresh_from_db()
+    notices = []
+    monkeypatch.setattr(
+        task.notify_event, "delay", lambda operation, payload: notices.append(payload)
+    )
+    if transition == "disabled":
+        settings.AUTOCLASS_CATALOG_IDS = []
+    elif transition == "stale":
+        Event.objects.filter(pk=event.pk).update(time=None)
+    elif transition == "manual_change":
+        Event.objects.filter(pk=event.pk).update(evaluation_mode="manual")
+    elif transition == "retries_exhausted":
+        event.autoclass.update(
+            state="running",
+            attempts=4,
+            started_at=(timezone.now() - timedelta(seconds=601)).isoformat(),
+        )
+        event.save(update_fields=["autoclass"])
+    else:
+
+        def prediction(e):
+            Event.objects.filter(pk=e.pk).update(time=None)
+            return result_for(e)
+
+        monkeypatch.setattr(task, "predict", prediction)
+    with django_capture_on_commit_callbacks(execute=True):
+        task.classify_event(str(event.pk))
+        assert notices == []
+    event.refresh_from_db()
+    assert event.autoclass["state"] in ("failed", "skipped", "stale")
+    assert notices
+    assert notices[-1]["event_id"] == str(event.pk)
+
+
+def test_future_time_is_held_without_dispatch(event, monkeypatch):
+    event.time = timezone.now() + timedelta(hours=1)
+    event.save(update_fields=["time"])
+    dispatched = Mock()
+    monkeypatch.setattr(task, "_dispatch", dispatched)
+    task.enqueue_event(event)
+    event.refresh_from_db()
+    assert event.autoclass["state"] == "failed"
+    assert event.autoclass["error"] == "invalid_time"
+    assert event.autoclass["attempts"] == 0
+    dispatched.assert_not_called()
+
+
+def test_missing_mapping_preserves_auto_and_original_result(event, monkeypatch):
+    EventType.objects.filter(
+        organization=event.catalog.volcano.organization, code="VTB"
+    ).delete()
+    run_prediction(event, monkeypatch)
+    assert event.type.code == "AUTO"
+    assert event.autoclass["error"] == "mapping_missing"
+    assert event.autoclass["result"]["jenis"] == "VTB"
+    assert event.autoclass["applied"] is False
+
+
+def test_disabling_pilot_during_inference_keeps_auto(event, monkeypatch, settings):
+    task.enqueue_event(event)
+
+    def prediction(e):
+        settings.AUTOCLASS_CATALOG_IDS = []
+        return result_for(e)
+
+    monkeypatch.setattr(task, "predict", prediction)
+    task.classify_event(str(event.pk))
+    event.refresh_from_db()
+    assert event.type.code == "AUTO"
+    assert event.autoclass["state"] == "skipped"
+    assert event.autoclass["error"] == "disabled"
+
+
+def test_expired_attempt_response_cannot_replace_newer_prediction(event, monkeypatch):
+    task.enqueue_event(event)
+    calls = []
+
+    def prediction(e):
+        calls.append(e.autoclass["attempt_id"])
+        if len(calls) == 1:
+            current = Event.objects.get(pk=e.pk)
+            current.autoclass["started_at"] = (
+                timezone.now() - timedelta(seconds=601)
+            ).isoformat()
+            current.save(update_fields=["autoclass"])
+            task.classify_event(str(e.pk))
+            return result_for(e, jenis="VTB")
+        return result_for(e, jenis="MP")
+
+    monkeypatch.setattr(task, "predict", prediction)
+    task.classify_event(str(event.pk))
+    event.refresh_from_db()
+    assert len(set(calls)) == 2
+    assert event.type.code == "MP"
+    assert event.autoclass["result"]["jenis"] == "MP"
+    assert event.autoclass["attempts"] == 2
+
+
+def test_failed_task_publish_is_durable_and_recovered(
+    event, monkeypatch, django_capture_on_commit_callbacks
+):
+    monkeypatch.setattr(task, "_dispatch", _dispatch)
+    monkeypatch.setattr(
+        task.classify_event,
+        "apply_async",
+        Mock(side_effect=ConnectionError("broker down")),
+    )
+    with django_capture_on_commit_callbacks(execute=True):
+        task.enqueue_event(event)
+    event.refresh_from_db()
+    assert event.autoclass["state"] == "pending"
+    assert event.autoclass["attempts"] == 0
+    published = []
+    monkeypatch.setattr(
+        task.classify_event,
+        "apply_async",
+        lambda **kwargs: published.append(kwargs["args"]),
+    )
+    task.recover_events()
+    assert published == [[str(event.pk)]]

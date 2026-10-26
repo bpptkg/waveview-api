@@ -13,8 +13,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from waveview.celery import app
-from waveview.contrib.autoclass.client import TYPES, PredictionError, predict
 from waveview.contrib.autoclass.bma import push_bulletin
+from waveview.contrib.autoclass.client import TYPES, PredictionError, predict
 from waveview.event.models import Event, EventType
 from waveview.event.observers import OperationType
 from waveview.notifications.types import NotifyEventData
@@ -57,10 +57,10 @@ def _dispatch(job, event_id, delay=0):
 def _notify(event):
     if event.author_id is None:
         return
-    payload = NotifyEventData.from_event(
-        str(event.author_id), str(event.catalog.volcano.organization_id), event
-    )
     try:
+        payload = NotifyEventData.from_event(
+            str(event.author_id), str(event.catalog.volcano.organization_id), event
+        )
         notify_event.delay(OperationType.UPDATE, payload.to_dict())
     except Exception:
         logger.exception("Could not notify autoclass update for event %s", event.id)
@@ -69,6 +69,7 @@ def _notify(event):
 def _save(event, data):
     event.autoclass = data
     Event.objects.filter(pk=event.pk).update(autoclass=data, updated_at=timezone.now())
+    transaction.on_commit(partial(_notify, event))
 
 
 def _schedule(event, data):
@@ -216,7 +217,6 @@ def classify_event(event_id):
         _save(event, data)
         if event.evaluation_mode == "manual":
             schedule_sync(event)
-        transaction.on_commit(partial(_notify, event))
 
 
 @app.task(name="waveview.contrib.autoclass.recover_events")
@@ -285,7 +285,7 @@ def sync_event(event_id):
             )
             if event is None or not event.autoclass or not enabled(event):
                 return
-            data, sync = event.autoclass, event.autoclass.get("sync", {})
+            sync = event.autoclass.get("sync", {})
             if event.evaluation_mode != "manual" or event.evaluation_status not in (
                 "confirmed",
                 "reviewed",

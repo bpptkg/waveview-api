@@ -87,4 +87,6 @@ def create_event(detection_result: dict) -> None:
     payload = NotifyEventData.from_event(
         str(user.id), str(volcano.organization.id), event
     )
-    notify_event.delay(OperationType.CREATE, payload.to_dict())
+    transaction.on_commit(
+        lambda: notify_event.delay(OperationType.CREATE, payload.to_dict()), robust=True
+    )

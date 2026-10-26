@@ -15,6 +15,7 @@ from waveview.contrib.sinoas.context import SinoasContext
 from waveview.contrib.sinoas.detector import DetectedEvent, Detector
 from waveview.event.models import Event, EventType
 from waveview.event.serializers.event import EventPayloadSerializer
+
 from .conftest import result_for
 
 pytestmark = [

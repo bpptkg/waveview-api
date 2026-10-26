@@ -25,6 +25,15 @@ class BulletinSynchronizer:
         self.client = context.client
 
     def update(self, event: Event, dry_run: bool = False) -> None:
+        if event.autoclass:
+            if not dry_run:
+                from waveview.contrib.autoclass.task import schedule_sync
+
+                schedule_sync(event)
+            logger.info(
+                "Pilot bulletin %s uses the validated autoclass sync queue", event.id
+            )
+            return
         payload = BulletinPayloadBuilder(event).build()
         event_id = event.id.hex
         logger.info(f"Uploading bulletin for event {event.id} with payload: {payload}")

@@ -1,7 +1,8 @@
 """Single-event contract with the pinned, private autoclass service."""
 
+import json
 import math
-from datetime import timezone
+from datetime import UTC
 from urllib.parse import urlsplit
 
 import requests
@@ -46,9 +47,7 @@ def predict(event):
             headers={"X-Token": settings.AUTOCLASS_TOKEN},
             json={
                 "eventid": str(event.id),
-                "waktu": event.time.astimezone(timezone.utc)
-                .isoformat()
-                .replace("+00:00", "Z"),
+                "waktu": event.time.astimezone(UTC).isoformat().replace("+00:00", "Z"),
                 "utc": True,
                 "simpan": False,
                 "tunggu": False,
@@ -70,12 +69,14 @@ def predict(event):
         result = response.json()
         if isinstance(result, dict) and result.get("status") == "gagal":
             raise PredictionError("data_unavailable", True)
+        # PostgreSQL JSON and every consumer require finite JSON values.
+        json.dumps(result, allow_nan=False)
         valid = (
             isinstance(result, dict)
             and result.get("status") == "ok"
             and result.get("eventid") == str(event.id)
             and result.get("waktu_utc")
-            == event.time.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            == event.time.astimezone(UTC).strftime("%Y-%m-%d %H:%M:%S")
             and result.get("model") == "model_merapi_v6_m1353"
             and result.get("versi") == "0.3.0"
             and result.get("jenis") in TYPES
@@ -89,6 +90,30 @@ def predict(event):
                 and row.get("kelas") in TYPES
                 and probability(row.get("p"))
                 for row in result.get("top3", [])
+            )
+            and all(
+                result.get(key) is None or isinstance(result[key], str)
+                for key in (
+                    "kelas",
+                    "kelas_10",
+                    "arah_sumber",
+                    "catatan",
+                    "tanda_awan_panas",
+                )
+            )
+            and (
+                result.get("saran") is None
+                or isinstance(result["saran"], list)
+                and all(isinstance(item, str) for item in result["saran"])
+            )
+            and (
+                result.get("cek_tektonik") is None
+                or isinstance(result["cek_tektonik"], dict)
+                and all(
+                    result["cek_tektonik"].get(key) is None
+                    or isinstance(result["cek_tektonik"][key], str)
+                    for key in ("saran", "tanda")
+                )
             )
         )
         if not valid:

@@ -1,14 +1,20 @@
 from datetime import timedelta
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
 from waveview.contrib.autoclass import task
-from waveview.contrib.bma.bulletin.observer import BulletinObserver
 from waveview.contrib.bma.bulletin.loader import BulletinLoader, BulletinLoaderContext
+from waveview.contrib.bma.bulletin.observer import BulletinObserver
 from waveview.contrib.bma.bulletin.serializers import BulletinPayloadSerializer
+from waveview.contrib.bma.bulletin.sync import (
+    BulletinSynchronizer,
+    BulletinSynchronizerContext,
+)
 from waveview.event.models import Event, EventType
 from waveview.event.serializers.event import EventPayloadSerializer
+
 from .test_pipeline import run_prediction
 
 pytestmark = pytest.mark.django_db
@@ -27,6 +33,58 @@ def confirm(event):
     )
     assert serializer.is_valid(), serializer.errors
     return serializer.save()
+
+
+@pytest.mark.parametrize("confirmed", [False, True])
+def test_administrative_sync_uses_pilot_queue_and_current_decision(
+    event, monkeypatch, confirmed
+):
+    run_prediction(event, monkeypatch)
+    stale = Event.objects.get(pk=event.pk)
+    if confirmed:
+        kind = EventType.objects.get(
+            organization=event.catalog.volcano.organization, code="MP"
+        )
+        Event.objects.filter(pk=event.pk).update(type=kind)
+        confirm(event)
+    writes = []
+    monkeypatch.setattr(task, "push_bulletin", lambda e: writes.append(e.type.code))
+    client = Mock()
+    synchronizer = BulletinSynchronizer(
+        BulletinSynchronizerContext(
+            client=client,
+            organization=event.catalog.volcano.organization,
+            volcano=event.catalog.volcano,
+            catalog=event.catalog,
+        )
+    )
+    synchronizer.update(stale)
+    client.update.assert_not_called()
+    task.sync_event(str(event.pk))
+    event.refresh_from_db()
+    assert writes == (["MP"] if confirmed else [])
+    assert event.autoclass["sync"]["state"] == (
+        "synced" if confirmed else "waiting_validation"
+    )
+
+
+def test_administrative_sync_dry_run_keeps_pilot_work_unchanged(event, monkeypatch):
+    run_prediction(event, monkeypatch)
+    event = confirm(event)
+    before = event.autoclass
+    client = Mock()
+    synchronizer = BulletinSynchronizer(
+        BulletinSynchronizerContext(
+            client=client,
+            organization=event.catalog.volcano.organization,
+            volcano=event.catalog.volcano,
+            catalog=event.catalog,
+        )
+    )
+    synchronizer.update(event, dry_run=True)
+    event.refresh_from_db()
+    assert event.autoclass == before
+    client.update.assert_not_called()
 
 
 def test_preliminary_cannot_bypass_sync_via_old_observer(event, monkeypatch):
@@ -81,6 +139,22 @@ def test_bma_failure_does_not_repeat_inference(event, monkeypatch):
     assert event.autoclass["state"] == "succeeded"
     assert event.autoclass["attempts"] == 1
     assert event.autoclass["sync"]["state"] == "retrying"
+
+
+def test_bma_sync_completion_notifies_after_commit(
+    event, monkeypatch, django_capture_on_commit_callbacks
+):
+    run_prediction(event, monkeypatch)
+    event = confirm(event)
+    notices = []
+    monkeypatch.setattr(task, "_notify", lambda e: notices.append(e.id))
+    monkeypatch.setattr(task, "push_bulletin", lambda e: None)
+    with django_capture_on_commit_callbacks(execute=True):
+        task.sync_event(str(event.pk))
+        assert notices == []
+    event.refresh_from_db()
+    assert event.autoclass["sync"]["state"] == "synced"
+    assert notices == [event.pk]
 
 
 def test_sync_reconciles_manual_change_during_request(event, monkeypatch):
@@ -143,6 +217,7 @@ def test_import_and_clean_cannot_duplicate_or_confirm_native_event(
 def test_concurrent_sync_is_serialized_without_blocking_validation(event, monkeypatch):
     import threading
     from concurrent.futures import ThreadPoolExecutor
+
     from django.db import close_old_connections
 
     run_prediction(event, monkeypatch)
@@ -197,6 +272,7 @@ def test_real_bma_transport_upserts_then_patches_exact_event(
     import json
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
     from waveview.appconfig.models import EventObserverConfig
     from waveview.contrib.autoclass.bma import push_bulletin
 

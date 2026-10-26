@@ -96,6 +96,8 @@ class EventDetailSerializer(EventSerializer):
         serializer = serializer_map.get(observation_type)
         if serializer:
             instance = getattr(event, observation_type, None)
+            if instance is None:
+                return None
             observation = serializer(instance)
             return observation.data
         return None

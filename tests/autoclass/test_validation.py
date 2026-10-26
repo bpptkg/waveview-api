@@ -54,3 +54,11 @@ def test_manual_type_and_prediction_are_separate(event, monkeypatch):
     result = serializer.save()
     assert result.type_id == kind.id
     assert result.autoclass['result']['jenis'] == 'VTB'
+
+
+def test_response_has_no_placeholder_visual_for_seismic_only_event(event, monkeypatch):
+    from waveview.event.serializers.event import EventDetailSerializer
+    run_prediction(event, monkeypatch, jenis='APG')
+    event.type.observation_type = 'pyroclastic_flow'
+    event.type.save()
+    assert EventDetailSerializer(event).data['observation'] is None

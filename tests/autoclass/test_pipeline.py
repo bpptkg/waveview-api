@@ -165,6 +165,7 @@ def test_retry_exhausts_and_recovery_reclaims_lease(event, monkeypatch):
         {"cek_tektonik": {"saran": {"unexpected": "object"}}},
         {"arah_sumber": {"unexpected": "object"}},
         {"tanda_awan_panas": {"unexpected": "object"}},
+        {"diproses_utc": {"unexpected": "object"}},
         {"cek_tektonik": {"snr": float("inf")}},
     ],
 )
@@ -185,10 +186,15 @@ def test_client_preserves_fractional_utc_and_disables_sinks(event, monkeypatch):
         assert kwargs["json"]["tunggu"] is False
         assert kwargs["headers"]["X-Token"] == "test-token"
         assert kwargs["allow_redirects"] is False
-        return Mock(status_code=200, json=lambda: result_for(event))
+        return Mock(
+            status_code=200,
+            json=lambda: result_for(event, diproses_utc="2026-10-26 03:02:35"),
+        )
 
     monkeypatch.setattr("waveview.contrib.autoclass.client.requests.post", post)
-    assert predict(event)["jenis"] == "VTB"
+    result = predict(event)
+    assert result["jenis"] == "VTB"
+    assert result["diproses_utc"] == "2026-10-26 03:02:35"
 
 
 def test_recovery_reclaims_expired_work_and_late_attempt_cannot_apply(

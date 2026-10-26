@@ -99,6 +99,7 @@ def predict(event):
                     "arah_sumber",
                     "catatan",
                     "tanda_awan_panas",
+                    "diproses_utc",
                 )
             )
             and (

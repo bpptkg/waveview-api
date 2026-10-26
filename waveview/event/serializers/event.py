@@ -47,6 +47,7 @@ class EventSerializer(serializers.Serializer):
     type = EventTypeSerializer()
     type_certainty = serializers.CharField(help_text=_("Event type certainty."))
     note = serializers.CharField(help_text=_("Event note."))
+    autoclass = serializers.JSONField(read_only=True, allow_null=True)
     method = serializers.CharField(help_text=_("Event method."))
     evaluation_mode = serializers.ChoiceField(
         help_text=_("Event evaluation mode."), choices=EvaluationMode.choices

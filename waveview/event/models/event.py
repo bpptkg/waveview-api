@@ -131,6 +131,7 @@ class Event(models.Model):
     note = models.TextField(
         null=True, blank=True, default="", help_text=_("Additional event information.")
     )
+    autoclass = models.JSONField(null=True, blank=True, editable=False)
     method = models.CharField(
         max_length=255,
         null=True,

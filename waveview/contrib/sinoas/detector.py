@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import pandas as pd
+from django.db import transaction
+from waveview.contrib.autoclass.task import enqueue_event
 
 from waveview.contrib.sinoas.context import SinoasContext
 from waveview.event.header import EvaluationMode, EvaluationStatus, EventTypeCertainty
@@ -82,6 +84,7 @@ class Detector:
         )
         self.create_event(event)
 
+    @transaction.atomic
     def create_event(self, detected: DetectedEvent) -> None:
         if self.context is None:
             logger.error("Context is not set.")
@@ -119,3 +122,4 @@ class Detector:
             author=user,
         )
         event.collaborators.add(user)
+        enqueue_event(event)

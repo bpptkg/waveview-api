@@ -295,7 +295,6 @@ class EventPayloadSerializer(serializers.Serializer):
         self.update_amplitude(instance, amplitude_manual_inputs, user)
         if instance.autoclass:
             from waveview.contrib.autoclass.task import schedule_sync
-
             schedule_sync(instance)
         return instance
 

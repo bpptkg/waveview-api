@@ -188,9 +188,7 @@ class BulletinPayloadSerializer(serializers.Serializer):
 
         eventid = validated_data["eventid"]
         try:
-            native = Event.objects.filter(
-                pk=UUID(eventid), catalog_id=catalog_id, autoclass__isnull=False
-            ).first()
+            native = Event.objects.filter(pk=UUID(eventid), catalog_id=catalog_id, autoclass__isnull=False).first()
         except ValueError:
             native = None
         if native is not None:

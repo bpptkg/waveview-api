@@ -156,9 +156,7 @@ class EventDetailEndpoint(Endpoint):
             event = Event.objects.get(catalog=catalog, id=event_id)
             if event.autoclass:
                 with connection.cursor() as cursor:
-                    cursor.execute(
-                        "SELECT pg_advisory_xact_lock(%s)", [event.id.int % (2**63)]
-                    )
+                    cursor.execute('SELECT pg_advisory_xact_lock(%s)', [event.id.int % (2 ** 63)])
             refid = event.refid
             payload = NotifyEventData.from_event(
                 str(request.user.id), str(organization.id), event

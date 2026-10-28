@@ -50,6 +50,21 @@ Configuration and activation
    allow the pilot catalog UUID. Change ``AUTOCLASS_REVISION`` whenever the
    model/configuration changes; old queued inputs become stale.
 
+Model cutover
+-------------
+
+The backend accepts only the pinned model/version, so a mismatched service
+response fails the job permanently. Change the model with inference disabled:
+
+1. Empty ``AUTOCLASS_CATALOG_IDS`` and restart Celery worker and beat.
+2. Deploy the new autoclass service and wait until its API health check passes.
+3. Deploy the backend with the matching validator and ``AUTOCLASS_REVISION``,
+   then restart worker and beat.
+4. Only then restore the allowlist and restart worker and beat again.
+
+Events detected while the allowlist is empty are never classified later. They
+remain available for manual validation.
+
 Thermal classification remains disabled pending agreement on river mappings and
 the live thermal contract. Enabling this integration does not enable new
 detectors or external alert observers.

@@ -9,7 +9,7 @@ Run autoclass for native VEPS events created manually and refresh its result whe
 - Queue predictions for native VEPS events in the configured Merapi pilot catalog, including manually created, confirmed events.
 - Requeue on event-time edits, including after manual validation, and ignore any older in-flight result.
 - Keep a manual event's selected type unchanged; store and show autoclass as a prediction only.
-- Preserve the existing automatic-event behavior: apply a result only while the event remains AUTO, automatic, and preliminary.
+- Preserve automatic-event behavior: apply a result only while the event remains automatic and preliminary, and its type is still AUTO or still matches the previous autoclass-applied type.
 - Do not classify imported BMA events, change the model, or alter thermal classification and BMA publication rules.
 
 ## Approaches
@@ -22,7 +22,7 @@ Run autoclass for native VEPS events created manually and refresh its result whe
 - Reuse the existing `Event.autoclass` state, Celery task, model revision, and catalog allowlist; no schema or model change is planned.
 - Scope manual predictions to native VEPS events (`method=veps`, no imported `refid`) in the configured pilot catalog. Detector-created events keep their current eligibility.
 - A changed event time invalidates any prior prediction/work, resets retry state, and schedules a fresh prediction for the new time. This also applies after manual validation; late responses for the old time must not apply.
-- Manual event type and validation fields are preserved regardless of autoclass result. Autoclass metadata remains a prediction and continues through existing event display and notification paths.
+- Manual event type and validation fields are preserved regardless of autoclass result. An operator type edit during inference also blocks that result from replacing the selected type. Autoclass metadata remains a prediction and continues through existing event display and notification paths.
 - Reuse the existing post-validation BMA synchronization behavior; this change does not add a new BMA write path.
 
 ## Validation

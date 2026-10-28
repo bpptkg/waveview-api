@@ -205,6 +205,37 @@ def test_old_time_prediction_cannot_replace_requeued_prediction(event, monkeypat
     assert event.type.code == "AUTO"
 
 
+def test_type_edit_while_prediction_runs_is_not_overwritten(event, monkeypatch):
+    task.enqueue_event(event)
+    serializer = EventPayloadSerializer(
+        context={"request": SimpleNamespace(user=event.author)}
+    )
+    manual_type = EventType.objects.get(
+        organization=event.catalog.volcano.organization, code="MP"
+    )
+
+    def inference(running_event):
+        serializer.update(running_event, {"type_id": manual_type.id})
+        return result_for(running_event, jenis="VTB", kelas="VTB")
+
+    monkeypatch.setattr(task, "predict", inference)
+    task.classify_event(str(event.id))
+
+    event.refresh_from_db()
+    assert event.type.code == "MP"
+    assert event.autoclass["result"]["jenis"] == "VTB"
+    assert event.autoclass["applied"] is False
+
+    serializer.update(event, {"time": event.time + timedelta(seconds=5)})
+    monkeypatch.setattr(
+        task, "predict", lambda e: result_for(e, jenis="VTB", kelas="VTB")
+    )
+    task.classify_event(str(event.id))
+    event.refresh_from_db()
+    assert event.type.code == "MP"
+    assert event.autoclass["applied"] is False
+
+
 def test_reclassification_updates_automatic_type_when_time_changes(event, monkeypatch):
     run_prediction(event, monkeypatch)
     serializer = EventPayloadSerializer(

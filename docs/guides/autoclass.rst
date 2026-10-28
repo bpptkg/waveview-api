@@ -8,12 +8,16 @@ No TensorFlow dependency is added to WaveView API.
 Data and workflow
 -----------------
 
-Native Merapi AUTO events created by STE/LTE or SINOAS in an allowed catalog
-receive durable work metadata in the nullable ``Event.autoclass`` JSON field.
-Celery calls the private autoclass API after event time +150 seconds. A valid
-result fills the type only while the event is still automatic/preliminary and
-its input time and model revision match. Manual decisions always take precedence.
-The original prediction remains available after validation or correction.
+Native Merapi AUTO events created by STE/LTE or SINOAS, and manually created
+VEPS events in an allowed catalog, receive durable work metadata in the nullable
+``Event.autoclass`` JSON field. Celery calls the private autoclass API after
+event time +150 seconds. A valid result fills the type only while a detector
+event is still automatic/preliminary and its type is AUTO or still matches its
+previous autoclass-applied type. Manual VEPS events keep the operator-selected
+type; autoclass is stored as a prediction only. Changing the event time queues a
+fresh prediction for the new time and ignores any late result for the previous
+time. Editing other fields does not queue another prediction. Manual decisions
+always take precedence.
 The latest manual decision records its actor, UTC time, type and status in
 ``autoclass.validation`` without replacing the detector author.
 

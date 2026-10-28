@@ -321,10 +321,13 @@ CELERY_IMPORTS = (
     "waveview.tasks.send_trace_buffer",
     "waveview.tasks.update_inventory",
     "waveview.contrib.autopicker.task",
+    "waveview.contrib.autoclass.task",
     "waveview.contrib.bma.thermal_direction.task",
 )
 CELERYBEAT_SCHEDULE_FILENAME = str(Path(tempfile.gettempdir()) / "waveview-celerybeat")
-CELERYBEAT_SCHEDULE = {}
+CELERYBEAT_SCHEDULE = {
+    'recover-autoclass': {'task': 'waveview.contrib.autoclass.recover_events', 'schedule': 60.0},
+}
 
 redis = urlparse(REDIS_URL)
 CHANNEL_LAYERS = {
@@ -353,6 +356,10 @@ AMPLITUDE_CALCULATOR_REGISTRY = [
 SINOAS_WINSTON_URL = env("SINOAS_WINSTON_URL", default="http://127.0.0.1:16030")
 BMA_URL = env("BMA_URL", default="https://bma.cendana15.com")
 BMA_API_KEY = env("BMA_API_KEY", default="")
+AUTOCLASS_CATALOG_IDS = env.list('AUTOCLASS_CATALOG_IDS', default=[])
+AUTOCLASS_URL = env('AUTOCLASS_URL', default='')
+AUTOCLASS_TOKEN = env('AUTOCLASS_TOKEN', default='')
+AUTOCLASS_REVISION = env('AUTOCLASS_REVISION', default='merapi-v6ga-m1348-0.3.1')
 THERMAL_DIRECTION_DELAY = env.int("THERMAL_DIRECTION_DELAY", default=120)
 
 DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"

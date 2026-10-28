@@ -1,4 +1,5 @@
 from uuid import UUID
+from django.db import connection, transaction
 
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
@@ -130,6 +131,7 @@ class EventDetailEndpoint(Endpoint):
             status.HTTP_204_NO_CONTENT: openapi.Response("No Content"),
         },
     )
+    @transaction.atomic
     def delete(
         self,
         request: Request,
@@ -152,6 +154,9 @@ class EventDetailEndpoint(Endpoint):
 
         try:
             event = Event.objects.get(catalog=catalog, id=event_id)
+            if event.autoclass:
+                with connection.cursor() as cursor:
+                    cursor.execute('SELECT pg_advisory_xact_lock(%s)', [event.id.int % (2 ** 63)])
             refid = event.refid
             payload = NotifyEventData.from_event(
                 str(request.user.id), str(organization.id), event

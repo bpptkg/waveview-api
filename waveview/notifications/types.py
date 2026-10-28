@@ -53,8 +53,8 @@ class NotifyEventData:
         return cls(
             organization_id=organization_id,
             event_id=str(event.id),
-            event_time=event.time.isoformat(),
-            event_type_code=event.type.code,
+            event_time=event.time.isoformat() if event.time else "",
+            event_type_code=event.type.code if event.type else "",
             event_duration=event.duration,
             actor_id=actor_id,
             catalog_name=event.catalog.name,

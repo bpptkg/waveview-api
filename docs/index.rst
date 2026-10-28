@@ -17,6 +17,7 @@ Volcano monitoring.
     guides/picker_configuration
     guides/event_observer
     guides/thermal_direction
+    guides/autoclass
     guides/troubleshooting
     guides/rest_api
     guides/websocket

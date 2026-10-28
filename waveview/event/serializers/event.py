@@ -2,6 +2,7 @@ from typing import Dict, Type
 from uuid import UUID
 
 from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
@@ -47,6 +48,7 @@ class EventSerializer(serializers.Serializer):
     type = EventTypeSerializer()
     type_certainty = serializers.CharField(help_text=_("Event type certainty."))
     note = serializers.CharField(help_text=_("Event note."))
+    autoclass = serializers.JSONField(read_only=True, allow_null=True)
     method = serializers.CharField(help_text=_("Event method."))
     evaluation_mode = serializers.ChoiceField(
         help_text=_("Event evaluation mode."), choices=EvaluationMode.choices
@@ -95,6 +97,8 @@ class EventDetailSerializer(EventSerializer):
         serializer = serializer_map.get(observation_type)
         if serializer:
             instance = getattr(event, observation_type, None)
+            if instance is None:
+                return None
             observation = serializer(instance)
             return observation.data
         return None
@@ -212,6 +216,8 @@ class EventPayloadSerializer(serializers.Serializer):
         return value
 
     def validate_observation(self, value: dict | None) -> dict | None:
+        if value is None and self.instance is not None and self.instance.autoclass:
+            return None
         type_id = self.initial_data.get("type_id")
         if not type_id:
             return None
@@ -273,6 +279,7 @@ class EventPayloadSerializer(serializers.Serializer):
 
     @transaction.atomic
     def update(self, instance: Event, validated_data: dict) -> Event:
+        instance = Event.objects.select_for_update().get(pk=instance.pk)
         user = self.context["request"].user
         attachment_ids = validated_data.pop("attachment_ids", [])
         observation = validated_data.pop("observation", None)
@@ -282,17 +289,29 @@ class EventPayloadSerializer(serializers.Serializer):
                 setattr(instance, key, value)
         if user not in instance.collaborators.all():
             instance.collaborators.add(user)
+        if instance.autoclass and instance.evaluation_mode == EvaluationMode.MANUAL:
+            instance.autoclass["validation"] = {
+                "actor_id": str(user.pk),
+                "at": timezone.now().isoformat(),
+                "type": instance.type.code if instance.type else None,
+                "status": instance.evaluation_status,
+            }
         instance.save()
 
         Attachment.objects.filter(id__in=attachment_ids).update(event=instance)
         self.update_observation(instance, observation)
         self.update_amplitude(instance, amplitude_manual_inputs, user)
+        if instance.autoclass:
+            from waveview.contrib.autoclass.task import schedule_sync
+            schedule_sync(instance)
         return instance
 
     def update_observation(self, instance: Event, observation: dict | None) -> Event:
         observation_type = instance.type.observation_type
         if observation_type in ObservationType.values:
             if observation is None:
+                if instance.autoclass:
+                    return instance
                 raise serializers.ValidationError(
                     _("Observation data could not be empty.")
                 )

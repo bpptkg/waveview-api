@@ -32,6 +32,10 @@ class BulletinObserver(EventObserver):
             return
 
         payload = BulletinPayloadBuilder(event).build()
+        if event.autoclass:
+            from waveview.contrib.autoclass.task import schedule_sync
+            schedule_sync(event)
+            return
         logger.info(f"Creating bulletin for event {event_id} with payload: {payload}")
 
         conf = BulletinData.from_dict(data)
@@ -49,6 +53,10 @@ class BulletinObserver(EventObserver):
             return
 
         payload = BulletinPayloadBuilder(event).build()
+        if event.autoclass:
+            from waveview.contrib.autoclass.task import schedule_sync
+            schedule_sync(event)
+            return
         logger.info(f"Updating bulletin for event {event_id} with payload: {payload}")
 
         conf = BulletinData.from_dict(data)

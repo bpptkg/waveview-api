@@ -2,6 +2,8 @@ import logging
 
 from celery import shared_task
 from django.utils import timezone
+from django.db import transaction
+from waveview.contrib.autoclass.task import enqueue_event
 
 from waveview.contrib.bpptkg.realtime_detect_pick import DetectionResult
 from waveview.event.header import EvaluationMode, EvaluationStatus
@@ -17,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
+@transaction.atomic
 def create_event(detection_result: dict) -> None:
     result = DetectionResult.from_dict(detection_result)
 
@@ -79,8 +82,11 @@ def create_event(detection_result: dict) -> None:
         author=user,
     )
     event.collaborators.add(user)
+    enqueue_event(event)
 
     payload = NotifyEventData.from_event(
         str(user.id), str(volcano.organization.id), event
     )
-    notify_event.delay(OperationType.CREATE, payload.to_dict())
+    transaction.on_commit(
+        lambda: notify_event.delay(OperationType.CREATE, payload.to_dict()), robust=True
+    )

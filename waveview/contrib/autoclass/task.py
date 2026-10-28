@@ -38,9 +38,20 @@ def eligible(event):
         and event.time is not None
         and event.method in ("stelte", "sinoas")
         and event.type is not None
-        and event.type.code == "AUTO"
+        and (event.type.code == "AUTO" or event.autoclass is not None)
         and event.evaluation_mode == "automatic"
         and event.evaluation_status == "preliminary"
+    )
+
+
+def classifiable(event):
+    return eligible(event) or (
+        enabled(event)
+        and not event.refid
+        and event.time is not None
+        and event.method == "veps"
+        and event.type is not None
+        and event.evaluation_mode == "manual"
     )
 
 
@@ -81,18 +92,25 @@ def _schedule(event, data):
 
 @transaction.atomic
 def enqueue_event(event):
+    if str(event.catalog_id) not in settings.AUTOCLASS_CATALOG_IDS:
+        return
+    original_event = event
     event = (
         Event.objects.select_for_update(of=("self",))
         .select_related("type", "catalog__volcano")
         .get(pk=event.pk)
     )
-    if not eligible(event) or event.autoclass is not None:
+    if not classifiable(event):
+        return
+    input_time = event.time.isoformat()
+    previous = event.autoclass or {}
+    if previous.get("input_time") == input_time:
         return
     now = timezone.now()
     data = {
         "state": "pending",
         "source": event.method,
-        "input_time": event.time.isoformat(),
+        "input_time": input_time,
         "revision": settings.AUTOCLASS_REVISION,
         "attempts": 0,
         "result": None,
@@ -100,9 +118,12 @@ def enqueue_event(event):
         "due_at": max(now, event.time + timedelta(seconds=150)).isoformat(),
         "sync": {"state": "waiting_validation", "attempts": 0},
     }
+    if previous.get("validation"):
+        data["validation"] = previous["validation"]
     if event.time > now + timedelta(minutes=5):
         data.update(state="failed", error="invalid_time")
     _save(event, data)
+    original_event.autoclass = data
     if data["state"] == "pending":
         _schedule(event, data)
 
@@ -132,7 +153,7 @@ def classify_event(event_id):
         ):
             _save(event, dict(data, state="stale"))
             return
-        if not eligible(event):
+        if not classifiable(event):
             _save(event, dict(data, state="skipped", error="manual_change"))
             return
         if data["state"] == "running" and parse_datetime(
@@ -186,7 +207,11 @@ def classify_event(event_id):
             return
         if error:
             data.update(state="failed", error=error.code)
-            if error.retryable and data["attempts"] <= len(RETRIES) and eligible(event):
+            if (
+                error.retryable
+                and data["attempts"] <= len(RETRIES)
+                and classifiable(event)
+            ):
                 data.update(
                     state="retrying",
                     due_at=(

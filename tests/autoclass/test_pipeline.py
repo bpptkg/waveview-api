@@ -1,4 +1,5 @@
 from datetime import timedelta
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -8,6 +9,7 @@ from waveview.contrib.autoclass import task
 from waveview.contrib.autoclass.client import PredictionError, predict
 from waveview.contrib.autoclass.task import _dispatch
 from waveview.event.models import Event, EventType
+from waveview.event.serializers.event import EventPayloadSerializer
 
 from .conftest import result_for
 
@@ -71,6 +73,154 @@ def test_prediction_maps_type_without_validation(event, monkeypatch, kind, code)
     assert event.method == "stelte"
     assert event.autoclass["state"] == "succeeded"
     assert event.autoclass["result"]["jenis"] == kind
+
+
+def test_manual_veps_prediction_keeps_operator_type(event, monkeypatch):
+    event.type = EventType.objects.get(
+        organization=event.catalog.volcano.organization, code="MP"
+    )
+    event.method = "veps"
+    event.evaluation_mode = "manual"
+    event.evaluation_status = "confirmed"
+    event.save()
+
+    run_prediction(event, monkeypatch)
+
+    assert event.type.code == "MP"
+    assert event.evaluation_status == "confirmed"
+    assert event.autoclass["result"]["jenis"] == "VTB"
+    assert event.autoclass["applied"] is False
+
+
+def test_manual_veps_event_creation_enqueues_prediction(event):
+    event_type = EventType.objects.get(
+        organization=event.catalog.volcano.organization, code="MP"
+    )
+    serializer = EventPayloadSerializer(
+        context={
+            "request": SimpleNamespace(user=event.author),
+            "catalog_id": event.catalog_id,
+        }
+    )
+
+    created = serializer.create(
+        {
+            "station_of_first_arrival_id": None,
+            "time": event.time,
+            "duration": 35,
+            "type_id": event_type.id,
+            "note": "manual event",
+            "attachment_ids": [],
+            "method": "veps",
+            "evaluation_mode": "manual",
+            "evaluation_status": "confirmed",
+            "observation": None,
+            "amplitude_manual_inputs": [],
+        }
+    )
+
+    assert created.autoclass["state"] == "pending"
+    assert created.type.code == "MP"
+
+
+def test_time_change_requeues_prediction_but_other_edits_do_not(event, monkeypatch):
+    event.autoclass = {
+        "state": "succeeded",
+        "source": "veps",
+        "input_time": event.time.isoformat(),
+        "revision": "merapi-v6-test",
+        "attempts": 1,
+        "attempt_id": "old-attempt",
+        "result": result_for(event),
+        "applied": False,
+        "validation": {"type": "MP", "status": "confirmed"},
+    }
+    event.type = EventType.objects.get(
+        organization=event.catalog.volcano.organization, code="MP"
+    )
+    event.method = "veps"
+    event.evaluation_mode = "manual"
+    event.evaluation_status = "confirmed"
+    event.save()
+    serializer = EventPayloadSerializer(
+        context={"request": SimpleNamespace(user=event.author)}
+    )
+
+    new_time = event.time + timedelta(seconds=5)
+    serializer.update(event, {"time": new_time})
+    event.refresh_from_db()
+    assert event.autoclass["state"] == "pending"
+    assert event.autoclass["input_time"] == new_time.isoformat()
+    assert event.autoclass["attempts"] == 0
+    assert "attempt_id" not in event.autoclass
+    assert event.autoclass["result"] is None
+    assert event.autoclass["validation"]["type"] == "MP"
+    assert event.autoclass["validation"]["status"] == "confirmed"
+    assert event.autoclass["validation"]["actor_id"] == str(event.author_id)
+    assert event.type.code == "MP"
+
+    monkeypatch.setattr(
+        task, "predict", lambda e: result_for(e, jenis="RF", kelas="RF")
+    )
+    task.classify_event(str(event.id))
+    event.refresh_from_db()
+    assert event.autoclass["result"]["jenis"] == "RF"
+    assert event.type.code == "MP"
+    assert event.evaluation_status == "confirmed"
+
+    task._dispatch.reset_mock()
+    serializer.update(event, {"note": "updated note"})
+    serializer.update(
+        event,
+        {
+            "type_id": EventType.objects.get(
+                organization=event.catalog.volcano.organization, code="LF"
+            ).id
+        },
+    )
+    assert not any(
+        call.args[0] == task.classify_event for call in task._dispatch.call_args_list
+    )
+
+
+def test_old_time_prediction_cannot_replace_requeued_prediction(event, monkeypatch):
+    task.enqueue_event(event)
+    serializer = EventPayloadSerializer(
+        context={"request": SimpleNamespace(user=event.author)}
+    )
+
+    def inference(running_event):
+        serializer.update(
+            running_event, {"time": running_event.time + timedelta(seconds=5)}
+        )
+        return result_for(running_event)
+
+    monkeypatch.setattr(task, "predict", inference)
+    task.classify_event(str(event.id))
+
+    event.refresh_from_db()
+    assert event.autoclass["state"] == "pending"
+    assert event.autoclass["input_time"] == event.time.isoformat()
+    assert event.autoclass["result"] is None
+    assert event.type.code == "AUTO"
+
+
+def test_reclassification_updates_automatic_type_when_time_changes(event, monkeypatch):
+    run_prediction(event, monkeypatch)
+    serializer = EventPayloadSerializer(
+        context={"request": SimpleNamespace(user=event.author)}
+    )
+    serializer.update(event, {"time": event.time + timedelta(seconds=5)})
+    monkeypatch.setattr(
+        task, "predict", lambda e: result_for(e, jenis="MP", kelas="MP")
+    )
+
+    task.classify_event(str(event.id))
+
+    event.refresh_from_db()
+    assert event.autoclass["result"]["jenis"] == "MP"
+    assert event.autoclass["applied"] is True
+    assert event.type.code == "MP"
 
 
 def test_inference_deduplicates_success(event, monkeypatch):

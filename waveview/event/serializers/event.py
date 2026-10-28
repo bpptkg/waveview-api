@@ -275,11 +275,15 @@ class EventPayloadSerializer(serializers.Serializer):
         Attachment.objects.filter(id__in=attachment_ids).update(event=event)
         self.update_observation(event, observation)
         self.update_amplitude(event, amplitude_manual_inputs, user)
+        from waveview.contrib.autoclass.task import enqueue_event
+
+        enqueue_event(event)
         return event
 
     @transaction.atomic
     def update(self, instance: Event, validated_data: dict) -> Event:
         instance = Event.objects.select_for_update().get(pk=instance.pk)
+        previous_time = instance.time
         user = self.context["request"].user
         attachment_ids = validated_data.pop("attachment_ids", [])
         observation = validated_data.pop("observation", None)
@@ -301,6 +305,10 @@ class EventPayloadSerializer(serializers.Serializer):
         Attachment.objects.filter(id__in=attachment_ids).update(event=instance)
         self.update_observation(instance, observation)
         self.update_amplitude(instance, amplitude_manual_inputs, user)
+        if instance.time != previous_time:
+            from waveview.contrib.autoclass.task import enqueue_event
+
+            enqueue_event(instance)
         if instance.autoclass:
             from waveview.contrib.autoclass.task import schedule_sync
             schedule_sync(instance)

@@ -77,8 +77,8 @@ def predict(event):
             and result.get("eventid") == str(event.id)
             and result.get("waktu_utc")
             == event.time.astimezone(UTC).strftime("%Y-%m-%d %H:%M:%S")
-            and result.get("model") == "model_merapi_v6_m1353"
-            and result.get("versi") == "0.3.0"
+            and result.get("model") == "model_merapi_v6ga_m1348"
+            and result.get("versi") == "0.3.1"
             and result.get("jenis") in TYPES
             and probability(result.get("prob_jenis"))
             and result.get("arah") in (None, "kiri", "kanan")

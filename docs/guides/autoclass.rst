@@ -33,13 +33,13 @@ Configuration and activation
 1. Deploy migration ``event.0005_event_autoclass`` before using the JSON field.
 2. Run the autoclass repository's authenticated ``serve`` mode on the private
    Docker network. Its VEPS Compose override replaces cron and publishes no host
-   port. The wheel/model remain version 0.3.0 / ``model_merapi_v6_m1353``.
+   port. The wheel/model are version 0.3.1 / ``model_merapi_v6ga_m1348``.
 3. Configure the backend environment, leaving the allowlist empty::
 
        AUTOCLASS_CATALOG_IDS=
        AUTOCLASS_URL=http://autoclass:8765
        AUTOCLASS_TOKEN=<same secret as AUTOCLASS_API_TOKEN>
-       AUTOCLASS_REVISION=merapi-v6-0.3.0
+       AUTOCLASS_REVISION=merapi-v6ga-m1348-0.3.1
 
 4. Configure an enabled ``bma.bulletin`` observer for the volcano. Its
    ``server_url`` must match ``BMA_URL``. Its CRUD token and ``BMA_API_KEY`` for

@@ -30,7 +30,7 @@ pytestmark = [
 def test_detector_to_api_to_manual_validation_to_bma(event, monkeypatch, settings):
     root = Path(os.environ["AUTOCLASS_CHECKOUT"])
     monkeypatch.syspath_prepend(
-        str(root / "vendor" / "autoclass-0.3.0-py3-none-any.whl")
+        str(root / "vendor" / "autoclass-0.3.1-py3-none-any.whl")
     )
     monkeypatch.syspath_prepend(str(root))
     from worker.api import make_server
@@ -44,7 +44,7 @@ def test_detector_to_api_to_manual_validation_to_bma(event, monkeypatch, setting
     detected = Event.objects.exclude(pk=event.pk).get()
 
     class Predictor:
-        clf = SimpleNamespace(name="model_merapi_v6_m1353")
+        clf = SimpleNamespace(name="model_merapi_v6ga_m1348")
 
         def predict_waktu(self, when, **options):
             assert when == detected.time.isoformat().replace("+00:00", "Z")

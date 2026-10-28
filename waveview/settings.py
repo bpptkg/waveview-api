@@ -359,7 +359,7 @@ BMA_API_KEY = env("BMA_API_KEY", default="")
 AUTOCLASS_CATALOG_IDS = env.list('AUTOCLASS_CATALOG_IDS', default=[])
 AUTOCLASS_URL = env('AUTOCLASS_URL', default='')
 AUTOCLASS_TOKEN = env('AUTOCLASS_TOKEN', default='')
-AUTOCLASS_REVISION = env('AUTOCLASS_REVISION', default='merapi-v6-0.3.0')
+AUTOCLASS_REVISION = env('AUTOCLASS_REVISION', default='merapi-v6ga-m1348-0.3.1')
 THERMAL_DIRECTION_DELAY = env.int("THERMAL_DIRECTION_DELAY", default=120)
 
 DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"

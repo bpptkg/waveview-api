@@ -18,7 +18,7 @@ from .v1.demxyz import DEMXYZEndpoint
 from .v1.download_events import DownloadEventsEndpoint
 from .v1.event_attachment_detail import EventAttachmentDetailEndpoint
 from .v1.event_attachment_index import EventAttachmentUploadEndpoint
-from .v1.event_autoclass_preview import EventAutoclassPreviewEndpoint
+from .v1.catalog_autoclass_preview import CatalogAutoclassPreviewEndpoint
 from .v1.event_bookmark import BookmarkEventEndpoint
 from .v1.event_detail import EventDetailEndpoint
 from .v1.event_index import EventIndexEndpoint
@@ -90,11 +90,6 @@ EVENT_URLS = [
         name="waveview-api-1-event-bookmark",
     ),
     path(
-        "<uuid:event_id>/autoclass-preview/",
-        EventAutoclassPreviewEndpoint.as_view(),
-        name="waveview-api-1-event-autoclass-preview",
-    ),
-    path(
         "<uuid:event_id>/origin/",
         include(EVENT_ORIGIN_URLS),
     ),
@@ -115,6 +110,11 @@ CATALOG_URLS = [
     path(
         "<uuid:catalog_id>/events/",
         include(EVENT_URLS),
+    ),
+    path(
+        "<uuid:catalog_id>/autoclass-preview/",
+        CatalogAutoclassPreviewEndpoint.as_view(),
+        name="waveview-api-1-catalog-autoclass-preview",
     ),
     path(
         "<uuid:catalog_id>/seismicity/",

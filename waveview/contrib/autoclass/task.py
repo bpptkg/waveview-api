@@ -30,11 +30,15 @@ logger = logging.getLogger(__name__)
 RETRIES = (30, 120, 300)
 
 
-def enabled(event):
+def _catalog_enabled(catalog):
     return (
-        str(event.catalog_id) in settings.AUTOCLASS_CATALOG_IDS
-        and event.catalog.volcano.slug == "merapi"
+        str(catalog.id) in settings.AUTOCLASS_CATALOG_IDS
+        and catalog.volcano.slug == "merapi"
     )
+
+
+def enabled(event):
+    return _catalog_enabled(event.catalog)
 
 
 def _automatic_event(event):
@@ -384,8 +388,13 @@ def sync_event(event_id):
 PREVIEW_TTL = 600
 
 
-def _preview_key(event_id, when):
-    return f"autoclass:preview:{event_id}:{when}"
+def _preview_time(when):
+    # The model takes whole seconds; rounding keeps the cache key stable while dragging.
+    return when.astimezone(UTC).replace(microsecond=0).isoformat()
+
+
+def _preview_key(catalog_id, when):
+    return f"autoclass:preview:{catalog_id}:{when}"
 
 
 def _preview_view(result):
@@ -403,40 +412,40 @@ def _preview_view(result):
     }
 
 
-def request_preview(event, when):
-    """Predict a draft time without writing the event; results are cached briefly."""
-    if not enabled(event):
+def request_preview(catalog, when):
+    """Predict a draft time for a catalog; nothing is written, results cached briefly."""
+    if not _catalog_enabled(catalog):
         return {"state": "disabled"}
-    when = when.astimezone(UTC).isoformat()
-    key = _preview_key(event.id, when)
+    when = _preview_time(when)
+    key = _preview_key(catalog.id, when)
     if cache.add(key, {"state": "pending"}, PREVIEW_TTL):
         try:
-            preview_event.apply_async(args=[str(event.id), when])
+            preview_event.apply_async(args=[str(catalog.id), when])
         except Exception:
             logger.exception(
-                "Could not dispatch autoclass preview for event %s", event.id
+                "Could not dispatch autoclass preview for catalog %s", catalog.id
             )
             cache.delete(key)
             return {"state": "unavailable"}
     return cache.get(key) or {"state": "pending"}
 
 
-def preview_state(event, when):
-    if not enabled(event):
+def preview_state(catalog, when):
+    if not _catalog_enabled(catalog):
         return {"state": "disabled"}
-    key = _preview_key(event.id, when.astimezone(UTC).isoformat())
+    key = _preview_key(catalog.id, _preview_time(when))
     return cache.get(key) or {"state": "missing"}
 
 
 @app.task(name="waveview.contrib.autoclass.preview_event")
-def preview_event(event_id, when):
-    key = _preview_key(event_id, when)
+def preview_event(catalog_id, when):
+    key = _preview_key(catalog_id, when)
     try:
-        result = predict_at(event_id, parse_datetime(when))
+        result = predict_at(f"preview-{catalog_id}", parse_datetime(when))
         data = {"state": "ok", "result": _preview_view(result)}
     except PredictionError as exc:
         data = {"state": exc.code}
     except Exception:
-        logger.exception("Autoclass preview failed for event %s", event_id)
+        logger.exception("Autoclass preview failed for catalog %s", catalog_id)
         data = {"state": "unavailable"}
     cache.set(key, data, PREVIEW_TTL)

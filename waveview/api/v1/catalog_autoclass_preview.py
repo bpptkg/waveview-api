@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,36 +14,32 @@ from rest_framework.response import Response
 from waveview.api.base import Endpoint
 from waveview.api.permissions import IsOrganizationMember
 from waveview.contrib.autoclass.task import preview_state, request_preview
-from waveview.event.models import Event
 from waveview.organization.permissions import PermissionType
 
 
 class AutoclassPreviewPayloadSerializer(serializers.Serializer):
     time = serializers.DateTimeField(
-        help_text=_("Draft event time. Not saved to the event.")
+        help_text=_("Draft event time. Not saved to any event.")
     )
 
 
-class EventAutoclassPreviewEndpoint(Endpoint):
+class CatalogAutoclassPreviewEndpoint(Endpoint):
     permission_classes = [IsAuthenticated, IsOrganizationMember]
 
-    def get_event(self, request, organization_id, volcano_id, catalog_id, event_id):
+    def get_catalog_for_preview(
+        self, request, organization_id, volcano_id, catalog_id
+    ):
         organization = self.get_organization(organization_id)
         self.check_object_permissions(request, organization)
         volcano = self.get_volcano(organization, volcano_id)
         catalog = self.get_catalog(volcano, catalog_id)
         is_author = organization.author == request.user
         has_permission = is_author or request.user.has_permission(
-            organization_id, PermissionType.UPDATE_EVENT
-        )
+            organization_id, PermissionType.CREATE_EVENT
+        ) or request.user.has_permission(organization_id, PermissionType.UPDATE_EVENT)
         if not has_permission:
-            raise PermissionDenied(_("You do not have permission to update events."))
-        try:
-            return Event.objects.select_related("catalog__volcano").get(
-                catalog=catalog, id=event_id
-            )
-        except Event.DoesNotExist:
-            raise NotFound(_("Event not found."))
+            raise PermissionDenied(_("You do not have permission to edit events."))
+        return catalog
 
     def validate_time(self, data):
         serializer = AutoclassPreviewPayloadSerializer(data=data)
@@ -57,8 +53,8 @@ class EventAutoclassPreviewEndpoint(Endpoint):
         operation_id="Start Autoclass Preview",
         operation_description=(
             """
-            Start an autoclass prediction for a draft event time. The event is
-            not modified. Poll the GET endpoint with the same time for the result.
+            Start an autoclass prediction for a draft event time in a catalog.
+            Nothing is saved. Poll the GET endpoint with the same time for the result.
             """
         ),
         tags=["Event"],
@@ -74,13 +70,12 @@ class EventAutoclassPreviewEndpoint(Endpoint):
         organization_id: UUID,
         volcano_id: UUID,
         catalog_id: UUID,
-        event_id: UUID,
     ) -> Response:
-        event = self.get_event(
-            request, organization_id, volcano_id, catalog_id, event_id
+        catalog = self.get_catalog_for_preview(
+            request, organization_id, volcano_id, catalog_id
         )
         when = self.validate_time(request.data)
-        state = request_preview(event, when)
+        state = request_preview(catalog, when)
         code = (
             status.HTTP_202_ACCEPTED
             if state["state"] == "pending"
@@ -92,7 +87,7 @@ class EventAutoclassPreviewEndpoint(Endpoint):
         operation_id="Get Autoclass Preview",
         operation_description=(
             """
-            Read the autoclass preview result for a draft event time.
+            Read the autoclass preview result for a draft event time in a catalog.
             """
         ),
         tags=["Event"],
@@ -105,10 +100,9 @@ class EventAutoclassPreviewEndpoint(Endpoint):
         organization_id: UUID,
         volcano_id: UUID,
         catalog_id: UUID,
-        event_id: UUID,
     ) -> Response:
-        event = self.get_event(
-            request, organization_id, volcano_id, catalog_id, event_id
+        catalog = self.get_catalog_for_preview(
+            request, organization_id, volcano_id, catalog_id
         )
         when = self.validate_time(request.query_params)
-        return Response(preview_state(event, when), status=status.HTTP_200_OK)
+        return Response(preview_state(catalog, when), status=status.HTTP_200_OK)

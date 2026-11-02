@@ -3,10 +3,11 @@
 import logging
 import math
 import uuid
-from datetime import timedelta
+from datetime import UTC, timedelta
 from functools import partial
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -14,7 +15,12 @@ from django.utils.dateparse import parse_datetime
 
 from waveview.celery import app
 from waveview.contrib.autoclass.bma import push_bulletin
-from waveview.contrib.autoclass.client import TYPES, PredictionError, predict
+from waveview.contrib.autoclass.client import (
+    TYPES,
+    PredictionError,
+    predict,
+    predict_at,
+)
 from waveview.event.models import Event, EventType
 from waveview.event.observers import OperationType
 from waveview.notifications.types import NotifyEventData
@@ -373,3 +379,64 @@ def sync_event(event_id):
     finally:
         with connection.cursor() as cursor:
             cursor.execute("SELECT pg_advisory_unlock(%s)", [key])
+
+
+PREVIEW_TTL = 600
+
+
+def _preview_key(event_id, when):
+    return f"autoclass:preview:{event_id}:{when}"
+
+
+def _preview_view(result):
+    cek = result.get("cek_tektonik") or {}
+    return {
+        "type_code": TYPES[result["jenis"]],
+        "prob_jenis": result["prob_jenis"],
+        "arah": result.get("arah"),
+        "prob_arah": result.get("prob_arah"),
+        "top3": [
+            {"type_code": TYPES[row["kelas"]], "p": row["p"]}
+            for row in result.get("top3", [])
+        ],
+        "cek_tektonik": cek.get("saran"),
+    }
+
+
+def request_preview(event, when):
+    """Predict a draft time without writing the event; results are cached briefly."""
+    if not enabled(event):
+        return {"state": "disabled"}
+    when = when.astimezone(UTC).isoformat()
+    key = _preview_key(event.id, when)
+    if cache.add(key, {"state": "pending"}, PREVIEW_TTL):
+        try:
+            preview_event.apply_async(args=[str(event.id), when])
+        except Exception:
+            logger.exception(
+                "Could not dispatch autoclass preview for event %s", event.id
+            )
+            cache.delete(key)
+            return {"state": "unavailable"}
+    return cache.get(key) or {"state": "pending"}
+
+
+def preview_state(event, when):
+    if not enabled(event):
+        return {"state": "disabled"}
+    key = _preview_key(event.id, when.astimezone(UTC).isoformat())
+    return cache.get(key) or {"state": "missing"}
+
+
+@app.task(name="waveview.contrib.autoclass.preview_event")
+def preview_event(event_id, when):
+    key = _preview_key(event_id, when)
+    try:
+        result = predict_at(event_id, parse_datetime(when))
+        data = {"state": "ok", "result": _preview_view(result)}
+    except PredictionError as exc:
+        data = {"state": exc.code}
+    except Exception:
+        logger.exception("Autoclass preview failed for event %s", event_id)
+        data = {"state": "unavailable"}
+    cache.set(key, data, PREVIEW_TTL)

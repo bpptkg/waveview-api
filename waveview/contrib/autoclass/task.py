@@ -102,10 +102,13 @@ def _notify(event):
         logger.exception("Could not notify autoclass update for event %s", event.id)
 
 
-def _save(event, data):
+def _save(event, data, notify=False):
+    # Only final outcomes reach clients: every notification makes each open
+    # browser refetch, so pending/running/retrying/sync bookkeeping stays silent.
     event.autoclass = data
     Event.objects.filter(pk=event.pk).update(autoclass=data, updated_at=timezone.now())
-    transaction.on_commit(partial(_notify, event))
+    if notify:
+        transaction.on_commit(partial(_notify, event))
 
 
 def _schedule(event, data):
@@ -171,17 +174,19 @@ def classify_event(event_id):
             return
         now = timezone.now()
         if not enabled(event):
-            _save(event, dict(data, state="skipped", error="disabled"))
+            _save(event, dict(data, state="skipped", error="disabled"), notify=True)
             return
         if (
             event.time is None
             or data["input_time"] != event.time.isoformat()
             or data["revision"] != settings.AUTOCLASS_REVISION
         ):
-            _save(event, dict(data, state="stale"))
+            _save(event, dict(data, state="stale"), notify=True)
             return
         if not classifiable(event):
-            _save(event, dict(data, state="skipped", error="manual_change"))
+            _save(
+                event, dict(data, state="skipped", error="manual_change"), notify=True
+            )
             return
         if data["state"] == "running" and parse_datetime(
             data["started_at"]
@@ -190,7 +195,11 @@ def classify_event(event_id):
         if parse_datetime(data["due_at"]) > now:
             return
         if data["attempts"] >= 4:
-            _save(event, dict(data, state="failed", error="retries_exhausted"))
+            _save(
+                event,
+                dict(data, state="failed", error="retries_exhausted"),
+                notify=True,
+            )
             return
         attempt = uuid.uuid4().hex
         data.update(
@@ -227,10 +236,14 @@ def classify_event(event_id):
             or data["input_time"] != event.time.isoformat()
             or data["revision"] != settings.AUTOCLASS_REVISION
         ):
-            _save(event, dict(data, state="stale", result=result))
+            _save(event, dict(data, state="stale", result=result), notify=True)
             return
         if not enabled(event):
-            _save(event, dict(data, state="skipped", result=result, error="disabled"))
+            _save(
+                event,
+                dict(data, state="skipped", result=result, error="disabled"),
+                notify=True,
+            )
             return
         if error:
             data.update(state="failed", error=error.code)
@@ -267,7 +280,7 @@ def classify_event(event_id):
                     data["applied_type"] = event_type.code
                     Event.objects.filter(pk=event.pk).update(type=event_type)
                     data["applied"] = True
-        _save(event, data)
+        _save(event, data, notify=data["state"] != "retrying")
         if event.evaluation_mode == "manual":
             schedule_sync(event)
 
@@ -378,7 +391,11 @@ def sync_event(event_id):
                     transaction.on_commit(
                         partial(_dispatch, sync_event, event_id, delay)
                     )
-                _save(current, dict(current.autoclass, sync=sync))
+                _save(
+                    current,
+                    dict(current.autoclass, sync=sync),
+                    notify=sync["state"] != "retrying",
+                )
                 return
     finally:
         with connection.cursor() as cursor:

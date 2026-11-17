@@ -21,6 +21,7 @@ from waveview.contrib.autoclass.client import (
     predict,
     predict_at,
 )
+from waveview.contrib.autoclass.webhook import notify_sinoas
 from waveview.event.models import Event, EventType
 from waveview.event.observers import OperationType
 from waveview.notifications.types import NotifyEventData
@@ -281,6 +282,8 @@ def classify_event(event_id):
                     Event.objects.filter(pk=event.pk).update(type=event_type)
                     data["applied"] = True
         _save(event, data, notify=data["state"] != "retrying")
+        if data["state"] == "succeeded" and event.method in ("stelte", "sinoas"):
+            notify_sinoas("classified", event)
         if event.evaluation_mode == "manual":
             schedule_sync(event)
 

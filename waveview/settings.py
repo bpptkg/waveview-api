@@ -360,6 +360,8 @@ AUTOCLASS_CATALOG_IDS = env.list('AUTOCLASS_CATALOG_IDS', default=[])
 AUTOCLASS_URL = env('AUTOCLASS_URL', default='')
 AUTOCLASS_TOKEN = env('AUTOCLASS_TOKEN', default='')
 AUTOCLASS_REVISION = env('AUTOCLASS_REVISION', default='merapi-v6ga-m1348-0.3.1')
+SINOAS_WEBHOOK_URL = env('SINOAS_WEBHOOK_URL', default='')
+SINOAS_WEBHOOK_TOKEN = env('SINOAS_WEBHOOK_TOKEN', default='')
 THERMAL_DIRECTION_DELAY = env.int("THERMAL_DIRECTION_DELAY", default=120)
 
 DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"

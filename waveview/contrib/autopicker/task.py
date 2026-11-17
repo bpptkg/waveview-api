@@ -4,6 +4,7 @@ from celery import shared_task
 from django.utils import timezone
 from django.db import transaction
 from waveview.contrib.autoclass.task import enqueue_event
+from waveview.contrib.autoclass.webhook import notify_sinoas
 
 from waveview.contrib.bpptkg.realtime_detect_pick import DetectionResult
 from waveview.event.header import EvaluationMode, EvaluationStatus
@@ -83,6 +84,7 @@ def create_event(detection_result: dict) -> None:
     )
     event.collaborators.add(user)
     enqueue_event(event)
+    notify_sinoas("created", event)
 
     payload = NotifyEventData.from_event(
         str(user.id), str(volcano.organization.id), event

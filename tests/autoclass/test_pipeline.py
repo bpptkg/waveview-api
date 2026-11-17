@@ -635,3 +635,68 @@ def test_failed_task_publish_is_durable_and_recovered(
     )
     task.recover_events()
     assert published == [[str(event.pk)]]
+
+
+def _capture_notices(monkeypatch):
+    notices = []
+    monkeypatch.setattr(
+        task.notify_event, "delay", lambda operation, payload: notices.append(payload)
+    )
+    return notices
+
+
+def _make_due(event, *path):
+    event.refresh_from_db()
+    target = event.autoclass
+    for key in path:
+        target = target[key]
+    target["due_at"] = (timezone.now() - timedelta(seconds=1)).isoformat()
+    event.save(update_fields=["autoclass"])
+
+
+def test_classification_lifecycle_notifies_only_final_result(
+    event, monkeypatch, django_capture_on_commit_callbacks
+):
+    notices = _capture_notices(monkeypatch)
+    predict_mock = Mock(
+        side_effect=[PredictionError("data_unavailable", True), result_for(event)]
+    )
+    monkeypatch.setattr(task, "predict", predict_mock)
+    with django_capture_on_commit_callbacks(execute=True):
+        task.enqueue_event(event)
+    with django_capture_on_commit_callbacks(execute=True):
+        task.classify_event(str(event.id))
+    event.refresh_from_db()
+    assert event.autoclass["state"] == "retrying"
+    _make_due(event)
+    with django_capture_on_commit_callbacks(execute=True):
+        task.classify_event(str(event.id))
+    event.refresh_from_db()
+    assert event.autoclass["state"] == "succeeded"
+    # pending, running, retrying and the second running stay silent.
+    assert len(notices) == 1
+
+
+def test_bma_sync_lifecycle_notifies_only_final_sync(
+    event, monkeypatch, django_capture_on_commit_callbacks
+):
+    from .test_bma import confirm
+
+    event = run_prediction(event, monkeypatch)
+    notices = _capture_notices(monkeypatch)
+    push = Mock(side_effect=[OSError("BMA unavailable"), None])
+    monkeypatch.setattr(task, "push_bulletin", push)
+    with django_capture_on_commit_callbacks(execute=True):
+        event = confirm(event)
+    assert notices == []
+    with django_capture_on_commit_callbacks(execute=True):
+        task.sync_event(str(event.pk))
+    event.refresh_from_db()
+    assert event.autoclass["sync"]["state"] == "retrying"
+    assert notices == []
+    _make_due(event, "sync")
+    with django_capture_on_commit_callbacks(execute=True):
+        task.sync_event(str(event.pk))
+    event.refresh_from_db()
+    assert event.autoclass["sync"]["state"] == "synced"
+    assert len(notices) == 1

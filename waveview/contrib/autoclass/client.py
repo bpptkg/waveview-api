@@ -32,6 +32,10 @@ def probability(value):
 
 
 def predict(event):
+    return predict_at(str(event.id), event.time)
+
+
+def predict_at(eventid, when):
     base = settings.AUTOCLASS_URL.rstrip("/")
     url = urlsplit(base)
     if (
@@ -46,8 +50,8 @@ def predict(event):
             base + "/predict",
             headers={"X-Token": settings.AUTOCLASS_TOKEN},
             json={
-                "eventid": str(event.id),
-                "waktu": event.time.astimezone(UTC).isoformat().replace("+00:00", "Z"),
+                "eventid": eventid,
+                "waktu": when.astimezone(UTC).isoformat().replace("+00:00", "Z"),
                 "utc": True,
                 "simpan": False,
                 "tunggu": False,
@@ -74,9 +78,9 @@ def predict(event):
         valid = (
             isinstance(result, dict)
             and result.get("status") == "ok"
-            and result.get("eventid") == str(event.id)
+            and result.get("eventid") == eventid
             and result.get("waktu_utc")
-            == event.time.astimezone(UTC).strftime("%Y-%m-%d %H:%M:%S")
+            == when.astimezone(UTC).strftime("%Y-%m-%d %H:%M:%S")
             and result.get("model") == "model_merapi_v6ga_m1348"
             and result.get("versi") == "0.3.1"
             and result.get("jenis") in TYPES

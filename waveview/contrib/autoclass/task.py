@@ -3,10 +3,11 @@
 import logging
 import math
 import uuid
-from datetime import timedelta
+from datetime import UTC, timedelta
 from functools import partial
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -14,7 +15,12 @@ from django.utils.dateparse import parse_datetime
 
 from waveview.celery import app
 from waveview.contrib.autoclass.bma import push_bulletin
-from waveview.contrib.autoclass.client import TYPES, PredictionError, predict
+from waveview.contrib.autoclass.client import (
+    TYPES,
+    PredictionError,
+    predict,
+    predict_at,
+)
 from waveview.event.models import Event, EventType
 from waveview.event.observers import OperationType
 from waveview.notifications.types import NotifyEventData
@@ -24,11 +30,15 @@ logger = logging.getLogger(__name__)
 RETRIES = (30, 120, 300)
 
 
-def enabled(event):
+def _catalog_enabled(catalog):
     return (
-        str(event.catalog_id) in settings.AUTOCLASS_CATALOG_IDS
-        and event.catalog.volcano.slug == "merapi"
+        str(catalog.id) in settings.AUTOCLASS_CATALOG_IDS
+        and catalog.volcano.slug == "merapi"
     )
+
+
+def enabled(event):
+    return _catalog_enabled(event.catalog)
 
 
 def _automatic_event(event):
@@ -92,10 +102,13 @@ def _notify(event):
         logger.exception("Could not notify autoclass update for event %s", event.id)
 
 
-def _save(event, data):
+def _save(event, data, notify=False):
+    # Only final outcomes reach clients: every notification makes each open
+    # browser refetch, so pending/running/retrying/sync bookkeeping stays silent.
     event.autoclass = data
     Event.objects.filter(pk=event.pk).update(autoclass=data, updated_at=timezone.now())
-    transaction.on_commit(partial(_notify, event))
+    if notify:
+        transaction.on_commit(partial(_notify, event))
 
 
 def _schedule(event, data):
@@ -161,17 +174,19 @@ def classify_event(event_id):
             return
         now = timezone.now()
         if not enabled(event):
-            _save(event, dict(data, state="skipped", error="disabled"))
+            _save(event, dict(data, state="skipped", error="disabled"), notify=True)
             return
         if (
             event.time is None
             or data["input_time"] != event.time.isoformat()
             or data["revision"] != settings.AUTOCLASS_REVISION
         ):
-            _save(event, dict(data, state="stale"))
+            _save(event, dict(data, state="stale"), notify=True)
             return
         if not classifiable(event):
-            _save(event, dict(data, state="skipped", error="manual_change"))
+            _save(
+                event, dict(data, state="skipped", error="manual_change"), notify=True
+            )
             return
         if data["state"] == "running" and parse_datetime(
             data["started_at"]
@@ -180,7 +195,11 @@ def classify_event(event_id):
         if parse_datetime(data["due_at"]) > now:
             return
         if data["attempts"] >= 4:
-            _save(event, dict(data, state="failed", error="retries_exhausted"))
+            _save(
+                event,
+                dict(data, state="failed", error="retries_exhausted"),
+                notify=True,
+            )
             return
         attempt = uuid.uuid4().hex
         data.update(
@@ -217,10 +236,14 @@ def classify_event(event_id):
             or data["input_time"] != event.time.isoformat()
             or data["revision"] != settings.AUTOCLASS_REVISION
         ):
-            _save(event, dict(data, state="stale", result=result))
+            _save(event, dict(data, state="stale", result=result), notify=True)
             return
         if not enabled(event):
-            _save(event, dict(data, state="skipped", result=result, error="disabled"))
+            _save(
+                event,
+                dict(data, state="skipped", result=result, error="disabled"),
+                notify=True,
+            )
             return
         if error:
             data.update(state="failed", error=error.code)
@@ -257,7 +280,7 @@ def classify_event(event_id):
                     data["applied_type"] = event_type.code
                     Event.objects.filter(pk=event.pk).update(type=event_type)
                     data["applied"] = True
-        _save(event, data)
+        _save(event, data, notify=data["state"] != "retrying")
         if event.evaluation_mode == "manual":
             schedule_sync(event)
 
@@ -368,8 +391,78 @@ def sync_event(event_id):
                     transaction.on_commit(
                         partial(_dispatch, sync_event, event_id, delay)
                     )
-                _save(current, dict(current.autoclass, sync=sync))
+                _save(
+                    current,
+                    dict(current.autoclass, sync=sync),
+                    notify=sync["state"] != "retrying",
+                )
                 return
     finally:
         with connection.cursor() as cursor:
             cursor.execute("SELECT pg_advisory_unlock(%s)", [key])
+
+
+PREVIEW_TTL = 600
+
+
+def _preview_time(when):
+    # The model takes whole seconds; rounding keeps the cache key stable while dragging.
+    return when.astimezone(UTC).replace(microsecond=0).isoformat()
+
+
+def _preview_key(catalog_id, when):
+    return f"autoclass:preview:{catalog_id}:{when}"
+
+
+def _preview_view(result):
+    cek = result.get("cek_tektonik") or {}
+    return {
+        "type_code": TYPES[result["jenis"]],
+        "prob_jenis": result["prob_jenis"],
+        "arah": result.get("arah"),
+        "prob_arah": result.get("prob_arah"),
+        "top3": [
+            {"type_code": TYPES[row["kelas"]], "p": row["p"]}
+            for row in result.get("top3", [])
+        ],
+        "cek_tektonik": cek.get("saran"),
+    }
+
+
+def request_preview(catalog, when):
+    """Predict a draft time for a catalog; nothing is written, results cached briefly."""
+    if not _catalog_enabled(catalog):
+        return {"state": "disabled"}
+    when = _preview_time(when)
+    key = _preview_key(catalog.id, when)
+    if cache.add(key, {"state": "pending"}, PREVIEW_TTL):
+        try:
+            preview_event.apply_async(args=[str(catalog.id), when])
+        except Exception:
+            logger.exception(
+                "Could not dispatch autoclass preview for catalog %s", catalog.id
+            )
+            cache.delete(key)
+            return {"state": "unavailable"}
+    return cache.get(key) or {"state": "pending"}
+
+
+def preview_state(catalog, when):
+    if not _catalog_enabled(catalog):
+        return {"state": "disabled"}
+    key = _preview_key(catalog.id, _preview_time(when))
+    return cache.get(key) or {"state": "missing"}
+
+
+@app.task(name="waveview.contrib.autoclass.preview_event")
+def preview_event(catalog_id, when):
+    key = _preview_key(catalog_id, when)
+    try:
+        result = predict_at(f"preview-{catalog_id}", parse_datetime(when))
+        data = {"state": "ok", "result": _preview_view(result)}
+    except PredictionError as exc:
+        data = {"state": exc.code}
+    except Exception:
+        logger.exception("Autoclass preview failed for catalog %s", catalog_id)
+        data = {"state": "unavailable"}
+    cache.set(key, data, PREVIEW_TTL)

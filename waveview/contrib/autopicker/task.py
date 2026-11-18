@@ -3,6 +3,7 @@ import logging
 from celery import shared_task
 from django.utils import timezone
 from django.db import transaction
+from obspy import UTCDateTime
 from waveview.contrib.autoclass.task import enqueue_event
 
 from waveview.contrib.bpptkg.realtime_detect_pick import DetectionResult
@@ -23,10 +24,22 @@ logger = logging.getLogger(__name__)
 def create_event(detection_result: dict) -> None:
     result = DetectionResult.from_dict(detection_result)
 
-    pick = result.get_sof_pick()
-    if pick is None:
-        logger.error("No SOF pick found in the detection result.")
-        return
+    if "sof_station" in detection_result:
+        # Dari autopicker multi-stasiun (run_multi.py): SOF dan waktu event sudah
+        # ditentukan dari pick berkualitas (kelas 0-2). SOF boleh kosong bila tidak
+        # ada pick berkualitas; event tetap dibuat.
+        sof = detection_result.get("sof_station") or ""
+        t_event = UTCDateTime(detection_result.get("event_time") or detection_result["t_on"])
+        duration = result.t_off - t_event
+    else:
+        # Dari autopicker lama (run.py): SOF = pick MEPAC, lalu MEPSL.
+        pick = result.get_sof_pick()
+        if pick is None:
+            logger.error("No SOF pick found in the detection result.")
+            return
+        sof = pick.stream_id.split(".")[1]
+        t_event = pick.t_pick
+        duration = result.get_duration()
 
     user = User.objects.get_or_create(
         email="autopicker@cendana15.com",
@@ -57,7 +70,6 @@ def create_event(detection_result: dict) -> None:
         return
 
     try:
-        sof = pick.stream_id.split(".")[1]
         if sof:
             station_of_first_arrival = Station.objects.get(code=sof)
         else:
@@ -66,8 +78,7 @@ def create_event(detection_result: dict) -> None:
         logger.warning(f"Station with code '{sof}' does not exist.")
         station_of_first_arrival = None
 
-    time = timezone.make_aware(pick.t_pick.datetime, timezone=timezone.utc)
-    duration = result.get_duration()
+    time = timezone.make_aware(t_event.datetime, timezone=timezone.utc)
 
     event = Event.objects.create(
         catalog=catalog,

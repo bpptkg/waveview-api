@@ -33,8 +33,13 @@ Enable the observer
 The class must stay in ``EVENT_OBSERVER_REGISTRY``. Delete events are ignored.
 Create and update both queue
 ``waveview.contrib.bma.thermal_direction.classify_thermal_direction``. The task
-runs only when ``Event.type.code`` or ``Event.type.name`` is ``RF`` or ``APG``
-(case-insensitive, exact match).
+runs only when ``Event.type.code`` or ``Event.type.name`` is ``RF``, ``APG``,
+``ROCKFALL``, or ``AWANPANAS`` (case-insensitive, exact match). VEPS stores
+rockfall and awan panas guguran as ``ROCKFALL`` and ``AWANPANAS``.
+
+Autoclass changes the event type with a queryset update, which does not reach
+observers. When autoclass applies ``ROCKFALL`` or ``AWANPANAS``, it queues this
+observer directly, so the result arrives about 150 + 120 seconds after the event.
 
 What gets stored
 ================
@@ -50,8 +55,8 @@ rest of the note alone::
     [/thermal-direction]
 
 BMA stores the winning river name on the bulletin field ``arah_kubah_termal``.
-``refid`` is the bulletin id. When ``refid`` is empty, the task looks up
-``/api/v1/bulletin/`` around the event time. The update is:
+The bulletin id is ``refid`` when set, otherwise the event UUID hex, the same id
+the ``bma.bulletin`` observer writes. The update is:
 
 ``PATCH {BMA_URL}/api/v1/crud/bulletin/<id>/arah_kubah_termal/``
 

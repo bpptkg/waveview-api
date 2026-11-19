@@ -73,9 +73,8 @@ def classify_thermal_direction(event_id: str) -> None:
         push_bulletin_direction(
             base_url=base_url,
             api_key=api_key,
-            bulletin_id=str(event.refid) if event.refid else None,
+            bulletin_id=str(event.refid) if event.refid else event.id.hex,
             result=result,
-            event_time=event.time,
         )
     except Exception:
         logger.exception(

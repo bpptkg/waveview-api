@@ -11,7 +11,8 @@ SPIKE_DELTA_C = 5.0
 TIDAK_TERDETEKSI = "Tidak terdeteksi"
 ARAH_KIRI = "Kiri"
 ARAH_KANAN = "Kanan"
-RF_APG_TYPES = frozenset({"rf", "apg"})
+# VEPS stores RF/APG as ROCKFALL/AWANPANAS; APG is awan panas guguran.
+RF_APG_TYPES = frozenset({"rf", "apg", "rockfall", "awanpanas"})
 
 DISPLAY_NAMES = {
     "krasak": "Krasak",

@@ -22,10 +22,12 @@ from waveview.contrib.autoclass.client import (
     predict_at,
 )
 from waveview.contrib.autoclass.webhook import notify_sinoas
+from waveview.contrib.bma.thermal_direction.classifier import is_rf_or_apg
 from waveview.event.models import Event, EventType
 from waveview.event.observers import OperationType
 from waveview.notifications.types import NotifyEventData
 from waveview.tasks.notify_event import notify_event
+from waveview.tasks.notify_event_observer import notify_event_observer
 
 logger = logging.getLogger(__name__)
 RETRIES = (30, 120, 300)
@@ -101,6 +103,19 @@ def _notify(event):
         notify_event.delay(OperationType.UPDATE, payload.to_dict())
     except Exception:
         logger.exception("Could not notify autoclass update for event %s", event.id)
+
+
+def _queue_thermal(event):
+    # Queryset update skips observers, so ask the thermal one directly.
+    try:
+        notify_event_observer.delay(
+            OperationType.UPDATE,
+            str(event.id),
+            str(event.catalog.volcano_id),
+            names=["bma.thermal_direction"],
+        )
+    except Exception:
+        logger.exception("Could not queue thermal direction for event %s", event.id)
 
 
 def _save(event, data, notify=False):
@@ -281,6 +296,8 @@ def classify_event(event_id):
                     data["applied_type"] = event_type.code
                     Event.objects.filter(pk=event.pk).update(type=event_type)
                     data["applied"] = True
+                    if is_rf_or_apg(event_type.code, event_type.name):
+                        transaction.on_commit(partial(_queue_thermal, event))
         _save(event, data, notify=data["state"] != "retrying")
         if data["state"] == "succeeded" and event.method in ("stelte", "sinoas"):
             notify_sinoas("classified", event)

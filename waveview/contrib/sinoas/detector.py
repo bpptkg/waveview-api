@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import pandas as pd
 from django.db import transaction
 from waveview.contrib.autoclass.task import enqueue_event
+from waveview.contrib.autoclass.webhook import notify_sinoas
 
 from waveview.contrib.sinoas.context import SinoasContext
 from waveview.event.header import EvaluationMode, EvaluationStatus, EventTypeCertainty
@@ -123,3 +124,4 @@ class Detector:
         )
         event.collaborators.add(user)
         enqueue_event(event)
+        notify_sinoas("created", event)

@@ -18,8 +18,12 @@ def sent(settings, monkeypatch):
     return delay
 
 
-def test_created_payload_has_no_autoclass(event, sent):
-    webhook.notify_sinoas("created", event)
+def test_created_payload_has_no_autoclass(
+    event, sent, django_capture_on_commit_callbacks
+):
+    # on_commit callbacks never fire inside the test transaction unless captured.
+    with django_capture_on_commit_callbacks(execute=True):
+        webhook.notify_sinoas("created", event)
     body = sent.call_args.args[0]
     assert body["kind"] == "created"
     assert body["event_id"] == str(event.id)
@@ -35,10 +39,13 @@ def test_disabled_without_url(event, settings, monkeypatch):
     delay.assert_not_called()
 
 
-def test_classified_sent_after_success(event, sent, monkeypatch):
+def test_classified_sent_after_success(
+    event, sent, monkeypatch, django_capture_on_commit_callbacks
+):
     task.enqueue_event(event)
     monkeypatch.setattr(task, "predict", lambda e: result_for(e))
-    task.classify_event(str(event.id))
+    with django_capture_on_commit_callbacks(execute=True):
+        task.classify_event(str(event.id))
     body = sent.call_args.args[0]
     assert body["kind"] == "classified"
     assert body["autoclass"]["jenis"] == "VTB"
@@ -46,9 +53,11 @@ def test_classified_sent_after_success(event, sent, monkeypatch):
     assert body["autoclass"]["applied"] is True
 
 
-def test_broker_failure_is_swallowed(event, sent):
+def test_broker_failure_is_swallowed(event, sent, django_capture_on_commit_callbacks):
     sent.side_effect = RuntimeError("broker down")
-    webhook.notify_sinoas("created", event)
+    with django_capture_on_commit_callbacks(execute=True):
+        webhook.notify_sinoas("created", event)
+    sent.assert_called_once()
 
 
 def test_post_sends_token(settings, monkeypatch):

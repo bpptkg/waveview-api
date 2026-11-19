@@ -75,6 +75,29 @@ def test_prediction_maps_type_without_validation(event, monkeypatch, kind, code)
     assert event.autoclass["result"]["jenis"] == kind
 
 
+@pytest.mark.parametrize("kind,queued", [("RF", True), ("APG", True), ("VTA", False)])
+def test_applied_rf_apg_type_queues_thermal_direction(
+    event, monkeypatch, django_capture_on_commit_callbacks, kind, queued
+):
+    calls = []
+    monkeypatch.setattr(
+        task.notify_event_observer, "delay", lambda *a, **kw: calls.append((a, kw))
+    )
+    with django_capture_on_commit_callbacks(execute=True):
+        run_prediction(
+            event, monkeypatch, jenis=kind, kelas="APRF_1" if kind != "VTA" else kind
+        )
+    if queued:
+        assert calls == [
+            (
+                ("update", str(event.id), str(event.catalog.volcano_id)),
+                {"names": ["bma.thermal_direction"]},
+            )
+        ]
+    else:
+        assert calls == []
+
+
 def test_manual_veps_prediction_keeps_operator_type(event, monkeypatch):
     event.type = EventType.objects.get(
         organization=event.catalog.volcano.organization, code="MP"

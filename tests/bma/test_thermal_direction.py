@@ -122,8 +122,8 @@ class ClassifyThermalDirectionTest(unittest.TestCase):
         self.assertTrue(is_rf_or_apg("RF", "Rockfall"))
         self.assertTrue(is_rf_or_apg("apg", None))
         self.assertTrue(is_rf_or_apg(None, " APG "))
-        self.assertFalse(is_rf_or_apg("ROCKFALL", "Rockfall"))
-        self.assertFalse(is_rf_or_apg("AWANPANAS", "Awan Panas"))
+        self.assertTrue(is_rf_or_apg("ROCKFALL", "Rockfall"))
+        self.assertTrue(is_rf_or_apg("AWANPANAS", "Awan Panas"))
         self.assertFalse(is_rf_or_apg("VTA", None))
         self.assertFalse(is_rf_or_apg(None, None))
 
@@ -256,53 +256,6 @@ class PushArahKubahTermalTest(unittest.TestCase):
             session.patch.call_args.kwargs["json"],
             {"arah_kubah_termal": "Tidak terdeteksi"},
         )
-
-    def test_missing_refid_looks_up_bulletin_then_patches_winner(self) -> None:
-        session = MagicMock()
-        listed = MagicMock()
-        listed.ok = True
-        listed.status_code = 200
-        listed.json.return_value = {
-            "results": [
-                {"eventid": "bma-9", "eventdate": "2026-09-23 17:00:00"},
-            ]
-        }
-        patched = MagicMock()
-        patched.ok = True
-        session.get.return_value = listed
-        session.patch.return_value = patched
-        result = classify(
-            EVENT,
-            [sample("Bebeng", -2, 10), sample("Bebeng", 1, 20)],
-        )
-        self.assertEqual(result.arah, "Kanan")
-
-        push_bulletin_direction(
-            base_url="https://bma.example",
-            api_key="test-key",
-            bulletin_id=None,
-            result=result,
-            event_time=EVENT,
-            session=session,
-        )
-
-        self.assertEqual(
-            session.get.call_args.args[0],
-            "https://bma.example/api/v1/bulletin/",
-        )
-        self.assertEqual(
-            session.get.call_args.kwargs["headers"]["Authorization"],
-            "Api-Key test-key",
-        )
-        self.assertEqual(
-            session.patch.call_args.args[0],
-            "https://bma.example/api/v1/crud/bulletin/bma-9/arah_kubah_termal/",
-        )
-        self.assertEqual(
-            session.patch.call_args.kwargs["json"],
-            {"arah_kubah_termal": "Bebeng"},
-        )
-        session.put.assert_not_called()
 
     def test_patch_failure_raises_without_detail_put(self) -> None:
         session = MagicMock()

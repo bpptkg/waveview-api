@@ -11,9 +11,10 @@ The classifier follows the river sets used by BPPTKG:
 - Kiri: Krasak, Boyong, Sat
 - Kanan: Bebeng, Putih, Lamat, Senowo
 
-Rivers outside those sets, including Kuning and Gendol, keep their river name
-in ``hasil_akhir`` and use ``Tidak terdeteksi`` for ``arah``. If no river rises
-at least 5°C above its pre-event median, both fields are ``Tidak terdeteksi``.
+Only BMA areas in those sets are used; ``Sat_1`` and ``Sat_2`` count as Sat,
+and non-river areas (Asap, Kubah_BD, Ref_Ki, Ref_Ka) are ignored. If no river
+rises at least 5°C above its pre-event median, both fields are
+``Tidak terdeteksi``.
 
 Enable the observer
 ===================
@@ -71,6 +72,6 @@ bpptkg/bma#11. Merge and deploy that change after the CHANGE COLUMN SQL,
 then deploy this writer.
 
 The thermal query is ``GET {BMA_URL}/api/v1/thermal-axis-jrg/`` with
-``eventdate``, ``datetime_before`` (10 minutes before), ``datetime_after``
-(2 minutes after), and the river names Sat, Bebeng, Krasak, Putih, Boyong,
-Kuning, and Gendol. Times are UTC.
+``start`` (10 minutes before), ``end`` (2 minutes after), and
+``field_types=max_temp``. BMA reads ``start``/``end`` as naive WIB
+(``YYYY-MM-DD HH:MM:SS``); a ``Z`` suffix makes it return 500.

@@ -1,18 +1,23 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import requests
 
-from waveview.contrib.bma.thermal_direction.classifier import ThermalSample
+from waveview.contrib.bma.thermal_direction.classifier import (
+    LEFT_RIVERS,
+    RIGHT_RIVERS,
+    ThermalSample,
+    river_key,
+)
 
-QUERY_RIVERS = ("Sat", "Bebeng", "Krasak", "Putih", "Boyong", "Kuning", "Gendol")
 WINDOW_BEFORE = timedelta(minutes=10)
 WINDOW_AFTER = timedelta(minutes=2)
-RIVER_KEYS = ("river", "sungai", "name", "axis", "river_name")
-TIME_KEYS = ("datetime", "time", "timestamp", "date")
-TEMP_KEYS = ("temperature", "temp", "suhu", "value", "max_temp")
-_WRAPPER_KEYS = ("results", "data", "samples")
+# BMA parses naive start/end as WIB; an explicit "Z" makes it return 500.
+BMA_TZ = ZoneInfo("Asia/Jakarta")
+_AREA_SUFFIX = re.compile(r"_\d+$")
 
 
 class ThermalAxisError(Exception):
@@ -34,12 +39,11 @@ class ThermalAxisClient:
 
     def fetch(self, event_time: datetime) -> list[ThermalSample]:
         event_time = _as_utc(event_time)
-        params: list[tuple[str, str]] = [
-            ("eventdate", _format_utc(event_time)),
-            ("datetime_before", _format_utc(event_time - WINDOW_BEFORE)),
-            ("datetime_after", _format_utc(event_time + WINDOW_AFTER)),
-        ]
-        params.extend(("river", river) for river in QUERY_RIVERS)
+        params = {
+            "start": _format_wib(event_time - WINDOW_BEFORE),
+            "end": _format_wib(event_time + WINDOW_AFTER),
+            "field_types": "max_temp",
+        }
         url = f"{self.base_url}/api/v1/thermal-axis-jrg/"
         try:
             response = self.session.get(
@@ -60,102 +64,28 @@ class ThermalAxisClient:
         return parse_thermal_payload(response.json())
 
 
-def parse_thermal_payload(payload: object) -> list[ThermalSample]:
-    rows = _unwrap(payload)
+def parse_thermal_payload(payload: dict) -> list[ThermalSample]:
+    """
+    Read BMA's {"fields": [{"results": [{"area", "data": [{"timestamp", "temp"}]}]}]}.
+    Non-river areas (Asap, Kubah_BD, Ref_*) are dropped; Sat_1/Sat_2 become Sat.
+    """
     samples: list[ThermalSample] = []
-    if isinstance(rows, dict):
-        for river, items in rows.items():
-            if not isinstance(items, list):
+    for field in payload.get("fields", []):
+        for result in field.get("results", []):
+            river = _AREA_SUFFIX.sub("", str(result.get("area", "")))
+            if river_key(river) not in LEFT_RIVERS | RIGHT_RIVERS:
                 continue
-            for item in items:
-                if isinstance(item, dict):
-                    parsed = _parse_row(item, default_river=str(river))
-                    if parsed is not None:
-                        samples.append(parsed)
-        return samples
-    if isinstance(rows, list):
-        for item in rows:
-            if isinstance(item, dict):
-                parsed = _parse_row(item)
-                if parsed is not None:
-                    samples.append(parsed)
+            for row in result.get("data", []):
+                if row.get("temp") is None or not row.get("timestamp"):
+                    continue
+                samples.append(
+                    ThermalSample(
+                        river=river,
+                        time=_as_utc(datetime.fromisoformat(row["timestamp"])),
+                        temperature=float(row["temp"]),
+                    )
+                )
     return samples
-
-
-def _unwrap(payload: object) -> object:
-    if not isinstance(payload, dict):
-        return payload
-    for key in _WRAPPER_KEYS:
-        inner = payload.get(key)
-        if isinstance(inner, list):
-            return inner
-        if isinstance(inner, dict):
-            if _is_river_map(inner):
-                return inner
-            return _unwrap(inner)
-    if _is_river_map(payload):
-        return payload
-    return payload
-
-
-def _is_river_map(payload: dict) -> bool:
-    return bool(payload) and all(isinstance(value, list) for value in payload.values())
-
-
-def _parse_row(
-    row: dict, default_river: str | None = None
-) -> ThermalSample | None:
-    river = default_river
-    for key in RIVER_KEYS:
-        if row.get(key):
-            river = str(row[key])
-            break
-    if not river or not str(river).strip():
-        return None
-    raw_time = next((row.get(key) for key in TIME_KEYS if row.get(key)), None)
-    raw_temp = next(
-        (
-            row.get(key)
-            for key in TEMP_KEYS
-            if row.get(key) is not None and row.get(key) != ""
-        ),
-        None,
-    )
-    if raw_time is None or raw_temp is None:
-        return None
-    try:
-        temperature = float(raw_temp)
-    except (TypeError, ValueError):
-        return None
-    parsed_time = _parse_time(raw_time)
-    if parsed_time is None:
-        return None
-    return ThermalSample(river=str(river), time=parsed_time, temperature=temperature)
-
-
-def _parse_time(value: object) -> datetime | None:
-    if isinstance(value, datetime):
-        return _as_utc(value)
-    if not isinstance(value, str):
-        return None
-    text = value.strip()
-    if text.endswith("Z"):
-        text = text[:-1] + "+00:00"
-    parsed: datetime | None
-    try:
-        parsed = datetime.fromisoformat(text)
-    except ValueError:
-        parsed = None
-        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"):
-            try:
-                parsed = datetime.strptime(value.strip(), fmt)
-                break
-            except ValueError:
-                parsed = None
-        if parsed is None:
-            return None
-    # ponytail: naive timestamps are UTC, the same clock as the query params.
-    return _as_utc(parsed)
 
 
 def _as_utc(value: datetime) -> datetime:
@@ -164,5 +94,5 @@ def _as_utc(value: datetime) -> datetime:
     return value.astimezone(timezone.utc)
 
 
-def _format_utc(value: datetime) -> str:
-    return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+def _format_wib(value: datetime) -> str:
+    return value.astimezone(BMA_TZ).strftime("%Y-%m-%d %H:%M:%S")

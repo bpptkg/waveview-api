@@ -129,22 +129,32 @@ class ClassifyThermalDirectionTest(unittest.TestCase):
 
 
 class ThermalAxisClientTest(unittest.TestCase):
-    def test_fetch_sends_api_key_window_and_rivers(self) -> None:
+    def test_fetch_sends_wib_window_and_parses_river_areas(self) -> None:
         session = MagicMock()
         response = MagicMock()
         response.ok = True
-        response.json.return_value = [
-            {
-                "river": "Krasak",
-                "datetime": "2026-09-23T09:55:00Z",
-                "temperature": 21.5,
-            },
-            {
-                "sungai": "Bebeng",
-                "time": "2026-09-23T10:01:00+00:00",
-                "suhu": "30",
-            },
-        ]
+        response.json.return_value = {
+            "fields": [
+                {
+                    "field_type": "max_temp",
+                    "results": [
+                        {
+                            "area": "Krasak",
+                            "data": [{"timestamp": "2026-09-23T16:55:00+07:00", "temp": 21.5}],
+                        },
+                        {
+                            "area": "Sat_2",
+                            "data": [{"timestamp": "2026-09-23T17:01:00+07:00", "temp": 30.0}],
+                        },
+                        {
+                            "area": "Asap",
+                            "data": [{"timestamp": "2026-09-23T17:01:00+07:00", "temp": 99.0}],
+                        },
+                        {"area": "Bebeng", "data": [{"timestamp": "2026-09-23T17:01:00+07:00", "temp": None}]},
+                    ],
+                }
+            ]
+        }
         session.get.return_value = response
         client = ThermalAxisClient(
             "https://bma.example/base",
@@ -162,33 +172,19 @@ class ThermalAxisClientTest(unittest.TestCase):
         )
         self.assertEqual(kwargs["headers"]["Authorization"], "Api-Key test-key")
         self.assertNotIn("test-key", url)
-        params = kwargs["params"]
-        self.assertIn(("eventdate", "2026-09-23T10:00:00Z"), params)
-        self.assertIn(("datetime_before", "2026-09-23T09:50:00Z"), params)
-        self.assertIn(("datetime_after", "2026-09-23T10:02:00Z"), params)
-        for river in ("Sat", "Bebeng", "Krasak", "Putih", "Boyong", "Kuning", "Gendol"):
-            self.assertIn(("river", river), params)
-        self.assertEqual(samples[0].river, "Krasak")
-        self.assertEqual(samples[0].temperature, 21.5)
-        self.assertEqual(samples[1].river, "Bebeng")
-        self.assertEqual(samples[1].temperature, 30.0)
+        self.assertEqual(
+            kwargs["params"],
+            {
+                "start": "2026-09-23 16:50:00",
+                "end": "2026-09-23 17:02:00",
+                "field_types": "max_temp",
+            },
+        )
+        self.assertEqual(
+            [(s.river, s.temperature) for s in samples],
+            [("Krasak", 21.5), ("Sat", 30.0)],
+        )
         self.assertEqual(samples[1].time, datetime(2026, 9, 23, 10, 1, tzinfo=timezone.utc))
-
-    def test_fetch_parses_rivers_grouped_by_name(self) -> None:
-        session = MagicMock()
-        response = MagicMock()
-        response.ok = True
-        response.json.return_value = {
-            "results": {
-                "Sat": [{"datetime": "2026-09-23T09:58:00Z", "temp": 12}],
-            }
-        }
-        session.get.return_value = response
-        client = ThermalAxisClient("https://bma.example", "test-key", session=session)
-        samples = client.fetch(EVENT)
-        self.assertEqual(len(samples), 1)
-        self.assertEqual(samples[0].river, "Sat")
-        self.assertEqual(samples[0].temperature, 12)
 
     def test_http_error_does_not_include_api_key(self) -> None:
         session = MagicMock()

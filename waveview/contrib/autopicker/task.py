@@ -14,6 +14,7 @@ from waveview.event.observers import OperationType
 from waveview.inventory.models import Station
 from waveview.notifications.types import NotifyEventData
 from waveview.tasks.notify_event import notify_event
+from waveview.tasks.notify_event_observer import notify_event_observer
 from waveview.users.models import User
 from waveview.volcano.models import Volcano
 
@@ -102,4 +103,15 @@ def create_event(detection_result: dict) -> None:
     )
     transaction.on_commit(
         lambda: notify_event.delay(OperationType.CREATE, payload.to_dict()), robust=True
+    )
+    # Amplitudes and ML from the autopicker onset/offset, as the API does for manual
+    # picks. Only bpptkg.magnitude: the other observers push to external systems.
+    transaction.on_commit(
+        lambda: notify_event_observer.delay(
+            OperationType.CREATE,
+            str(event.id),
+            str(volcano.id),
+            names="bpptkg.magnitude",
+        ),
+        robust=True,
     )

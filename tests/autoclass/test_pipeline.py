@@ -9,6 +9,7 @@ from waveview.contrib.autoclass import task
 from waveview.contrib.autoclass.client import PredictionError, predict
 from waveview.contrib.autoclass.task import _dispatch
 from waveview.event.models import Event, EventType
+from waveview.event.observers import OperationType
 from waveview.event.serializers.event import EventPayloadSerializer
 
 from .conftest import result_for
@@ -473,39 +474,55 @@ def test_sinoas_creates_durable_work(event):
     assert detected.autoclass["source"] == "sinoas"
 
 
-def test_autopicker_creates_durable_work(event, monkeypatch):
+def test_autopicker_creates_durable_work(
+    event, monkeypatch, django_capture_on_commit_callbacks
+):
     from waveview.contrib.autopicker.task import create_event
 
     monkeypatch.setattr(
         "waveview.contrib.autopicker.task.notify_event.delay", lambda *args: None
     )
-    create_event(
-        {
-            "t_on": event.time.isoformat(),
-            "t_off": (event.time + timedelta(seconds=35)).isoformat(),
-            "picks": [
-                {
-                    "stream_id": "VG.MEPAC.00.HHZ",
-                    "t_pick": event.time.isoformat(),
-                    "offset": 0,
-                }
-            ],
-        }
+    observer = Mock()
+    monkeypatch.setattr(
+        "waveview.contrib.autopicker.task.notify_event_observer.delay", observer
     )
+    with django_capture_on_commit_callbacks(execute=True):
+        create_event(
+            {
+                "t_on": event.time.isoformat(),
+                "t_off": (event.time + timedelta(seconds=35)).isoformat(),
+                "picks": [
+                    {
+                        "stream_id": "VG.MEPAC.00.HHZ",
+                        "t_pick": event.time.isoformat(),
+                        "offset": 0,
+                    }
+                ],
+            }
+        )
     detected = Event.objects.exclude(pk=event.pk).get()
     assert detected.autoclass["state"] == "pending"
     assert detected.autoclass["source"] == "stelte"
+    observer.assert_called_once_with(
+        OperationType.CREATE,
+        str(detected.id),
+        str(detected.catalog.volcano_id),
+        names="bpptkg.magnitude",
+    )
 
 
 @pytest.mark.django_db(transaction=True)
 def test_autopicker_event_survives_notification_broker_failure(event, monkeypatch):
     from waveview.contrib.autopicker.task import create_event
 
-    def unavailable(*args):
+    def unavailable(*args, **kwargs):
         raise ConnectionError("broker down")
 
     monkeypatch.setattr(
         "waveview.contrib.autopicker.task.notify_event.delay", unavailable
+    )
+    monkeypatch.setattr(
+        "waveview.contrib.autopicker.task.notify_event_observer.delay", unavailable
     )
     create_event(
         {

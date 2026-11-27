@@ -166,3 +166,5 @@ backup.sh
 crontab/
 .aider*
 storage/
+
+.worktrees/

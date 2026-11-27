@@ -1,10 +1,13 @@
 import math
 from datetime import timedelta
+from unittest.mock import Mock
 
 import pytest
+import requests
+from django.core.management import call_command
 from django.utils import timezone
 
-from waveview.contrib.bma.bulletin.autohypo import apply_autohypo
+from waveview.contrib.bma.bulletin.autohypo import apply_autohypo, sync_autohypo
 from waveview.event.models import Catalog, Event, Origin
 from waveview.volcano.models import Volcano
 
@@ -228,3 +231,115 @@ def test_apply_does_not_notify_observers(event, monkeypatch):
     )
     apply_autohypo(event.catalog, row(event))
     assert called == []
+
+
+def test_sync_unwraps_data_and_continues_after_a_skipped_row(event):
+    verify(event)
+    importer = Mock()
+    importer.fetch.return_value = {
+        "data": [
+            row(event, eventtype="ROCKFALL"),
+            row(event),
+        ]
+    }
+    results = sync_autohypo(
+        event.catalog,
+        timezone.now() - timedelta(hours=1),
+        timezone.now(),
+        importer=importer,
+    )
+    assert [item.status for item in results] == ["skipped", "written"]
+    assert Origin.objects.filter(event=event, method="nlloc").count() == 1
+
+
+def test_sync_empty_list_writes_nothing(event):
+    verify(event)
+    importer = Mock()
+    importer.fetch.return_value = []
+    assert (
+        sync_autohypo(
+            event.catalog,
+            timezone.now() - timedelta(hours=1),
+            timezone.now(),
+            importer=importer,
+        )
+        == []
+    )
+    assert Origin.objects.filter(method="nlloc").count() == 0
+
+
+def test_sync_http_error_writes_nothing(event):
+    verify(event)
+    importer = Mock()
+    importer.fetch.side_effect = requests.HTTPError("bulletin down")
+    with pytest.raises(requests.HTTPError):
+        sync_autohypo(
+            event.catalog,
+            timezone.now() - timedelta(hours=1),
+            timezone.now(),
+            importer=importer,
+        )
+    assert Origin.objects.filter(method="nlloc").count() == 0
+
+
+def test_command_requires_org(capsys):
+    call_command("sync_autohypo_origins")
+    assert "Organization slug is required." in capsys.readouterr().err
+
+
+def test_command_unknown_org(capsys):
+    call_command("sync_autohypo_origins", org="missing", volcano="merapi")
+    assert "does not exist" in capsys.readouterr().err
+
+
+def test_command_missing_volcano(event, capsys):
+    call_command("sync_autohypo_origins", org="test", volcano="missing")
+    assert "does not exist" in capsys.readouterr().err
+
+
+def test_command_missing_catalog(event, capsys):
+    Catalog.objects.filter(pk=event.catalog_id).delete()
+    call_command("sync_autohypo_origins", org="test", volcano="merapi")
+    assert "does not exist" in capsys.readouterr().err
+
+
+def test_command_hours_override_and_dry_run(event, monkeypatch):
+    seen = {}
+
+    def fake_sync(catalog, start, end, dry_run=False, importer=None):
+        seen["catalog"] = catalog.pk
+        seen["start"] = start
+        seen["end"] = end
+        seen["dry_run"] = dry_run
+        return []
+
+    monkeypatch.setattr(
+        "waveview.event.management.commands.sync_autohypo_origins.sync_autohypo",
+        fake_sync,
+    )
+    call_command(
+        "sync_autohypo_origins",
+        org="test",
+        volcano="merapi",
+        hours=6,
+        dry_run=True,
+    )
+    assert seen["catalog"] == event.catalog_id
+    assert seen["dry_run"] is True
+    assert seen["end"] - seen["start"] == timedelta(hours=6)
+
+
+def test_command_defaults_to_one_day(event, monkeypatch):
+    seen = {}
+
+    def fake_sync(catalog, start, end, dry_run=False, importer=None):
+        seen["start"] = start
+        seen["end"] = end
+        return []
+
+    monkeypatch.setattr(
+        "waveview.event.management.commands.sync_autohypo_origins.sync_autohypo",
+        fake_sync,
+    )
+    call_command("sync_autohypo_origins", org="test", volcano="merapi")
+    assert seen["end"] - seen["start"] == timedelta(days=1)

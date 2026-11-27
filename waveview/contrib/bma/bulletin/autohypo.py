@@ -1,11 +1,17 @@
+import logging
 import math
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
+from django.conf import settings
 from django.db import transaction
 
+from waveview.contrib.bma.bulletin.loader import BulletinImporter
 from waveview.event.header import EvaluationMode, EvaluationStatus
 from waveview.event.models import Catalog, Event, Origin
+
+logger = logging.getLogger(__name__)
 
 VERIFIED = {
     EvaluationStatus.CONFIRMED,
@@ -130,3 +136,41 @@ def apply_autohypo(catalog: Catalog, row: dict, dry_run: bool = False) -> ApplyR
         longitude=longitude,
         depth=depth,
     )
+
+
+def bulletin_rows(payload: object) -> list[dict]:
+    if isinstance(payload, dict):
+        data = payload.get("data")
+        if isinstance(data, list):
+            return [item for item in data if isinstance(item, dict)]
+        return []
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    return []
+
+
+def sync_autohypo(
+    catalog: Catalog,
+    start: datetime,
+    end: datetime,
+    dry_run: bool = False,
+    importer: BulletinImporter | None = None,
+) -> list[ApplyResult]:
+    if importer is None:
+        importer = BulletinImporter(settings.BMA_URL, settings.BMA_API_KEY)
+    payload = importer.fetch(start, end)
+    results = []
+    for item in bulletin_rows(payload):
+        result = apply_autohypo(catalog, item, dry_run=dry_run)
+        logger.info(
+            "autohypo %s event=%s reason=%s preferred=%s lat=%s lon=%s depth=%s",
+            result.status,
+            result.event_id,
+            result.reason,
+            result.preferred,
+            result.latitude,
+            result.longitude,
+            result.depth,
+        )
+        results.append(result)
+    return results
